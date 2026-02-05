@@ -1,5 +1,7 @@
-#include <iostream>
+#include <print>
 
-int main(int, char**){
-    std::cout << "Hello, from mewo!\n";
+int main(int, char**)
+{
+  std::println("mewo C++ version: {}", __cplusplus);
+  return 0;
 }

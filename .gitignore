@@ -1,2 +1,8 @@
-# Built output
+# Builds
 build/
+
+# Apple
+.DS_Store
+
+# clangd
+.cache/
