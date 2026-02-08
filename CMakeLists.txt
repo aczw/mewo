@@ -11,8 +11,12 @@ set(DAWN_BUILD_TESTS OFF CACHE BOOL "")
 set(DAWN_WERROR ON CACHE BOOL "")
 add_subdirectory(third_party/dawn EXCLUDE_FROM_ALL)
 
+# Set up SDL
+add_subdirectory(third_party/SDL EXCLUDE_FROM_ALL)
+
 add_executable(mewo src/main.cpp)
 
+# Common C++ compiler options
 target_compile_features(mewo PRIVATE cxx_std_23)
 target_compile_options(mewo PRIVATE -Wall -Wextra -Werror -Wpedantic -Wconversion)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
@@ -28,4 +32,6 @@ else()
 endif()
 set_target_properties(mewo PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
 
+# Link to third-party libraries
 target_link_libraries(mewo PRIVATE dawn::webgpu_dawn)
+target_link_libraries(mewo PRIVATE SDL3::SDL3)
