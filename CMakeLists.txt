@@ -14,9 +14,10 @@ add_subdirectory(third_party/dawn EXCLUDE_FROM_ALL)
 # Set up SDL
 add_subdirectory(third_party/SDL EXCLUDE_FROM_ALL)
 
+set(MEWO_IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui)
+
 # Set up Dear ImGui as a set of compiled objects that are then linked against. Allows me
 # to treat it as a separate library without actually being one 
-set(MEWO_IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui)
 add_library(imgui OBJECT
   ${MEWO_IMGUI_DIR}/imconfig.h
   ${MEWO_IMGUI_DIR}/imgui_demo.cpp
@@ -38,6 +39,7 @@ add_library(imgui OBJECT
   ${MEWO_IMGUI_DIR}/misc/cpp/imgui_stdlib.h
   ${MEWO_IMGUI_DIR}/misc/cpp/imgui_stdlib.cpp
 )
+
 # imgui_impl_wgpu.cpp conditionally includes macOS-specific headers, so we need to
 # treat it as a Obj-C file on macOS. On other OSes it's a regular C++ file.
 if(APPLE)
@@ -47,6 +49,8 @@ if(APPLE)
     COMPILE_FLAGS "--language objective-c++" 
   )
 endif()
+
+# Setting this definition to PUBLIC lets it propagate to Mewo when it links against it
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_WEBGPU_BACKEND_DAWN)
 # Let Dear ImGui find its own files, and set it to PUBLIC so that it also propagates to Mewo
 # when it links against the target. Also include the `backends/` folder so I don't have to prefix
@@ -63,6 +67,7 @@ target_compile_options(mewo PRIVATE
   # Skipped fields are zero-initialized or default constructed, which I want
   -Wno-missing-designated-field-initializers
 )
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(mewo PRIVATE -O2 -g)
@@ -74,6 +79,14 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "App
 else()
   message(FATAL_ERROR "Unsupported compiler used. Supported compilers are Clang (LLVM/Apple)")
 endif()
+
+if(WIN32)
+  target_compile_definitions(mewo PRIVATE
+    WIN32_LEAN_AND_MEAN
+    NOMINMAX
+  )
+endif()
+
 set_target_properties(mewo PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
 
 # Link to third-party libraries

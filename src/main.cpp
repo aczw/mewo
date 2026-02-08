@@ -1,6 +1,3 @@
-#include "SDL3/SDL_error.h"
-#include "SDL3/SDL_video.h"
-
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <imgui.h>
@@ -15,6 +12,10 @@
 #include <limits>
 #include <print>
 #include <utility>
+
+#if defined(SDL_PLATFORM_WIN32)
+#include <windows.h>
+#endif
 
 namespace {
 
@@ -127,8 +128,13 @@ int main(int, char*[])
     .System = "cocoa",
     .RawWindow = static_cast<void*>(
         SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nullptr)),
+#elif defined(SDL_PLATFORM_WIN32)
+    .System = "win32",
+    .RawWindow = static_cast<void*>(
+        SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr)),
+    .RawInstance = static_cast<void*>(GetModuleHandle(nullptr)),
 #else
-#error "TODO: implement for Windows"
+#error "Unsupported platform. Supported platforms are macOS and Windows"
 #endif
   };
 
