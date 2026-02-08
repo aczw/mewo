@@ -14,6 +14,44 @@ add_subdirectory(third_party/dawn EXCLUDE_FROM_ALL)
 # Set up SDL
 add_subdirectory(third_party/SDL EXCLUDE_FROM_ALL)
 
+# Set up Dear ImGui as a set of compiled objects that are then linked against. Allows me
+# to treat it as a separate library without actually being one 
+set(MEWO_IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui)
+add_library(imgui OBJECT
+  ${MEWO_IMGUI_DIR}/imconfig.h
+  ${MEWO_IMGUI_DIR}/imgui_demo.cpp
+  ${MEWO_IMGUI_DIR}/imgui_draw.cpp
+  ${MEWO_IMGUI_DIR}/imgui_internal.h
+  ${MEWO_IMGUI_DIR}/imgui_tables.cpp
+  ${MEWO_IMGUI_DIR}/imgui_widgets.cpp
+  ${MEWO_IMGUI_DIR}/imgui.cpp
+  ${MEWO_IMGUI_DIR}/imgui.h
+  ${MEWO_IMGUI_DIR}/imstb_rectpack.h
+  ${MEWO_IMGUI_DIR}/imstb_textedit.h
+  ${MEWO_IMGUI_DIR}/imstb_truetype.h
+
+  ${MEWO_IMGUI_DIR}/backends/imgui_impl_sdl3.h
+  ${MEWO_IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
+  ${MEWO_IMGUI_DIR}/backends/imgui_impl_wgpu.h
+  ${MEWO_IMGUI_DIR}/backends/imgui_impl_wgpu.cpp
+
+  ${MEWO_IMGUI_DIR}/misc/cpp/imgui_stdlib.h
+  ${MEWO_IMGUI_DIR}/misc/cpp/imgui_stdlib.cpp
+)
+# imgui_impl_wgpu.cpp conditionally includes macOS-specific headers, so we need to
+# treat it as a Obj-C file on macOS. On other OSes it's a regular C++ file.
+if(APPLE)
+  set_source_files_properties(${MEWO_IMGUI_DIR}/backends/imgui_impl_wgpu.cpp PROPERTIES
+    # I do not enjoy hard coding compile flags like this, but this would only ever be
+    # compiled on macOS, and both Clang and GCC (uhhhhhh on Apple???) support this flag
+    COMPILE_FLAGS "--language objective-c++" 
+  )
+endif()
+target_compile_definitions(imgui PUBLIC IMGUI_IMPL_WEBGPU_BACKEND_DAWN)
+# So that Dear ImGui can find its own files
+target_include_directories(imgui PRIVATE ${MEWO_IMGUI_DIR}) 
+target_link_libraries(imgui PRIVATE dawn::webgpu_dawn SDL3::SDL3)
+
 add_executable(mewo src/main.cpp)
 
 # Common C++ compiler options
@@ -33,5 +71,8 @@ endif()
 set_target_properties(mewo PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
 
 # Link to third-party libraries
-target_link_libraries(mewo PRIVATE dawn::webgpu_dawn)
-target_link_libraries(mewo PRIVATE SDL3::SDL3)
+target_link_libraries(mewo PRIVATE
+  dawn::webgpu_dawn
+  SDL3::SDL3
+  imgui
+)
