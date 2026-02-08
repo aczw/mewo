@@ -14,7 +14,7 @@ IncludeBlocks: Regroup
 IncludeCategories:
   - Regex: '^".*"'
     Priority: 1
-  - Regex: '^<(SDL3|webgpu)/?.*>'
+  - Regex: '^<(imgui|SDL3|webgpu)/?.*>'
     Priority: 2
   - Regex: '^<.*>'
     Priority: 3

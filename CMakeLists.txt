@@ -48,15 +48,21 @@ if(APPLE)
   )
 endif()
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_WEBGPU_BACKEND_DAWN)
-# So that Dear ImGui can find its own files
-target_include_directories(imgui PRIVATE ${MEWO_IMGUI_DIR}) 
+# Let Dear ImGui find its own files, and set it to PUBLIC so that it also propagates to Mewo
+# when it links against the target. Also include the `backends/` folder so I don't have to prefix
+# files in the folder with it when I #include them.
+target_include_directories(imgui PUBLIC ${MEWO_IMGUI_DIR} ${MEWO_IMGUI_DIR}/backends) 
 target_link_libraries(imgui PRIVATE dawn::webgpu_dawn SDL3::SDL3)
 
 add_executable(mewo src/main.cpp)
 
 # Common C++ compiler options
 target_compile_features(mewo PRIVATE cxx_std_23)
-target_compile_options(mewo PRIVATE -Wall -Wextra -Werror -Wpedantic -Wconversion)
+target_compile_options(mewo PRIVATE 
+  -Wall -Wextra -Werror -Wpedantic -Wconversion
+  # Skipped fields are zero-initialized or default constructed, which I want
+  -Wno-missing-designated-field-initializers
+)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(mewo PRIVATE -O2 -g)
