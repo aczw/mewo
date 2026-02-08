@@ -17,8 +17,7 @@
       "displayName": "Debug (Clang)",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++",
-        "CMAKE_CXX_FLAGS": "-Wall -Wextra -Werror -Wpedantic -Wconversion -O2 -g"
+        "CMAKE_CXX_COMPILER": "clang++"
       }
     }
   ]
