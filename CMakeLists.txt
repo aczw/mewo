@@ -9,7 +9,7 @@ set(DAWN_USE_GLFW OFF CACHE BOOL "") # We're using SDL
 set(DAWN_BUILD_SAMPLES OFF CACHE BOOL "")
 set(DAWN_BUILD_TESTS OFF CACHE BOOL "")
 set(DAWN_WERROR ON CACHE BOOL "")
-add_subdirectory(third_party/dawn)
+add_subdirectory(third_party/dawn EXCLUDE_FROM_ALL)
 
 add_executable(mewo src/main.cpp)
 
