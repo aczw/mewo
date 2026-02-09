@@ -15,7 +15,7 @@ add_subdirectory(third_party/dawn EXCLUDE_FROM_ALL)
 
 # Set up SDL, building it as a static library
 set(SDL_SHARED OFF CACHE BOOL "")
-set(SDL_STATIC ON  CACHE BOOL "")
+set(SDL_STATIC ON CACHE BOOL "")
 add_subdirectory(third_party/SDL EXCLUDE_FROM_ALL)
 
 set(MEWO_IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui)
