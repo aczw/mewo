@@ -9,9 +9,13 @@ set(DAWN_USE_GLFW OFF CACHE BOOL "") # We're using SDL
 set(DAWN_BUILD_SAMPLES OFF CACHE BOOL "")
 set(DAWN_BUILD_TESTS OFF CACHE BOOL "")
 set(DAWN_WERROR ON CACHE BOOL "")
+# Ask Dawn to look in system paths for dynamic libraries like libvulkan
+set(DAWN_FORCE_SYSTEM_COMPONENT_LOAD ON CACHE BOOL "")
 add_subdirectory(third_party/dawn EXCLUDE_FROM_ALL)
 
-# Set up SDL
+# Set up SDL, building it as a static library
+set(SDL_SHARED OFF CACHE BOOL "")
+set(SDL_STATIC ON  CACHE BOOL "")
 add_subdirectory(third_party/SDL EXCLUDE_FROM_ALL)
 
 set(MEWO_IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui)
