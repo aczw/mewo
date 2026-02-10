@@ -46,7 +46,7 @@ add_library(imgui OBJECT
 
 # imgui_impl_wgpu.cpp conditionally includes macOS-specific headers, so we need to
 # treat it as a Obj-C file on macOS. On other OSes it's a regular C++ file.
-if(APPLE)
+if(APPLE AND CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   set_source_files_properties(${MEWO_IMGUI_DIR}/backends/imgui_impl_wgpu.cpp PROPERTIES
     # I do not enjoy hard coding compile flags like this, but this would only ever be
     # compiled on macOS, and both Clang and GCC (uhhhhhh on Apple???) support this flag
@@ -62,16 +62,26 @@ target_compile_definitions(imgui PUBLIC IMGUI_IMPL_WEBGPU_BACKEND_DAWN)
 target_include_directories(imgui PUBLIC ${MEWO_IMGUI_DIR} ${MEWO_IMGUI_DIR}/backends) 
 target_link_libraries(imgui PRIVATE dawn::webgpu_dawn SDL3::SDL3)
 
-add_executable(mewo src/main.cpp)
+add_executable(mewo 
+  src/main.cpp
+
+  src/exception.hpp
+  src/exception.cpp
+  src/mewo.hpp
+  src/mewo.cpp
+  src/query.hpp
+)
 
 # Common C++ compiler options
 target_compile_features(mewo PRIVATE cxx_std_23)
+set_target_properties(mewo PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
 target_compile_options(mewo PRIVATE 
   -Wall -Wextra -Werror -Wpedantic -Wconversion
   # Skipped fields are zero-initialized or default constructed, which I want
   -Wno-missing-designated-field-initializers
 )
 
+# Set compiler flags based on compiler and build type
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(mewo PRIVATE -O2 -g)
@@ -84,6 +94,7 @@ else()
   message(FATAL_ERROR "Unsupported compiler used. Supported compilers are Clang (LLVM/Apple)")
 endif()
 
+# Affects <windows.h>
 if(WIN32)
   target_compile_definitions(mewo PRIVATE
     WIN32_LEAN_AND_MEAN
@@ -91,7 +102,11 @@ if(WIN32)
   )
 endif()
 
-set_target_properties(mewo PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  # It's very difficult to detect if the program is in debug mode from the environment
+  # so I use my own check for detection
+  target_compile_definitions(mewo PRIVATE MEWO_IS_DEBUG)
+endif()
 
 # Link to third-party libraries
 target_link_libraries(mewo PRIVATE
