@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 4.0.0)
 
 project(mewo VERSION 0.0.1 LANGUAGES C CXX)
 
+set(MEWO_THIRD_PARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+
 # Set up Dawn
 set(DAWN_FETCH_DEPENDENCIES ON CACHE BOOL "") # Dawn dependencies requires Python
 set(DAWN_ENABLE_INSTALL OFF CACHE BOOL "") # Disables Dawn from installing binaries/headers
@@ -11,14 +13,14 @@ set(DAWN_BUILD_TESTS OFF CACHE BOOL "")
 set(DAWN_WERROR ON CACHE BOOL "")
 # Ask Dawn to look in system paths for dynamic libraries like libvulkan
 set(DAWN_FORCE_SYSTEM_COMPONENT_LOAD ON CACHE BOOL "")
-add_subdirectory(third_party/dawn EXCLUDE_FROM_ALL)
+add_subdirectory(${MEWO_THIRD_PARTY_DIR}/dawn EXCLUDE_FROM_ALL)
 
 # Set up SDL, building it as a static library
 set(SDL_SHARED OFF CACHE BOOL "")
 set(SDL_STATIC ON CACHE BOOL "")
-add_subdirectory(third_party/SDL EXCLUDE_FROM_ALL)
+add_subdirectory(${MEWO_THIRD_PARTY_DIR}/SDL EXCLUDE_FROM_ALL)
 
-set(MEWO_IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui)
+set(MEWO_IMGUI_DIR ${MEWO_THIRD_PARTY_DIR}/imgui)
 
 # Set up Dear ImGui as a set of compiled objects that are then linked against. Allows me
 # to treat it as a separate library without actually being one 
@@ -62,15 +64,26 @@ target_compile_definitions(imgui PUBLIC IMGUI_IMPL_WEBGPU_BACKEND_DAWN)
 target_include_directories(imgui PUBLIC ${MEWO_IMGUI_DIR} ${MEWO_IMGUI_DIR}/backends) 
 target_link_libraries(imgui PRIVATE dawn::webgpu_dawn SDL3::SDL3)
 
-add_executable(mewo 
-  src/main.cpp
+set(MEWO_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(MEWO_SDL_DIR ${MEWO_SRC_DIR}/sdl)
 
-  src/exception.hpp
-  src/exception.cpp
-  src/mewo.hpp
-  src/mewo.cpp
-  src/query.hpp
+add_executable(mewo 
+  ${MEWO_SDL_DIR}/context.cpp
+  ${MEWO_SDL_DIR}/context.hpp
+  ${MEWO_SDL_DIR}/window.cpp
+  ${MEWO_SDL_DIR}/window.hpp
+
+  ${MEWO_SRC_DIR}/exception.cpp
+  ${MEWO_SRC_DIR}/exception.hpp
+  ${MEWO_SRC_DIR}/main.cpp
+  ${MEWO_SRC_DIR}/mewo.cpp
+  ${MEWO_SRC_DIR}/mewo.hpp
+  ${MEWO_SRC_DIR}/query.hpp
 )
+
+# So I can always reference files starting from the source directory
+# instead of ugly relative paths
+target_include_directories(mewo PRIVATE ${MEWO_SRC_DIR})
 
 # Common C++ compiler options
 target_compile_features(mewo PRIVATE cxx_std_23)

@@ -7,18 +7,21 @@
 
 int main(int, char*[])
 {
+  int status = EXIT_SUCCESS;
+
   try {
-    mewo::run();
+    mewo::Mewo mewo;
+    mewo.run();
   } catch (const mewo::Exception& ex) {
     std::println("Unhandled Mewo exception. {}", ex.what());
-    return EXIT_FAILURE;
+    status = EXIT_FAILURE;
   } catch (const std::exception& ex) {
     std::println("Unhandled system exception. {}", ex.what());
-    return EXIT_FAILURE;
+    status = EXIT_FAILURE;
   } catch (...) {
     std::println("Unknown exception occurred");
-    return EXIT_FAILURE;
+    status = EXIT_FAILURE;
   }
 
-  return EXIT_SUCCESS;
+  return status;
 }

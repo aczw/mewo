@@ -9,8 +9,6 @@
 #include <imgui_impl_wgpu.h>
 #include <webgpu/webgpu_cpp.h>
 
-#include <format>
-
 #if defined(SDL_PLATFORM_WIN32)
 #include <windows.h>
 #endif
@@ -19,26 +17,12 @@ namespace mewo {
 
 namespace {
 
-constexpr int SCREEN_W = 1280;
-constexpr int SCREEN_H = 720;
-
-constexpr auto SDL_WINDOW_FLAGS = SDL_WINDOW_HIGH_PIXEL_DENSITY;
-constexpr auto SDL_INIT_FLAGS = SDL_INIT_VIDEO;
-
 constexpr uint64_t WGPU_WAIT_TIMEOUT_MAX = std::numeric_limits<uint64_t>::max();
 
 }
 
-void run()
+void Mewo::run()
 {
-  if (!SDL_Init(SDL_INIT_FLAGS))
-    throw Exception("Failed to initialize SDL: {}", SDL_GetError());
-
-  SDL_Window* window = SDL_CreateWindow("Mewo 0.0.1-alpha", SCREEN_W, SCREEN_H, SDL_WINDOW_FLAGS);
-
-  if (!window)
-    throw Exception("Failed to create SDL window: {}", SDL_GetError());
-
   auto timed_wait_any = wgpu::InstanceFeatureName::TimedWaitAny;
   wgpu::InstanceDescriptor instance_desc = {
     .requiredFeatureCount = 1,
@@ -100,7 +84,7 @@ void run()
   if (!device || device_wait_status != wgpu::WaitStatus::Success)
     throw Exception("Call to wgpu::Adapter::RequestDevice failed");
 
-  SDL_PropertiesID properties_id = SDL_GetWindowProperties(window);
+  SDL_PropertiesID properties_id = SDL_GetWindowProperties(window.get());
 
   if (properties_id == 0)
     throw Exception("Failed to get SDL window properties: {}", SDL_GetError());
@@ -134,7 +118,7 @@ void run()
 
   int width_in_pixels = 0;
   int height_in_pixels = 0;
-  if (!SDL_GetWindowSizeInPixels(window, &width_in_pixels, &height_in_pixels))
+  if (!SDL_GetWindowSizeInPixels(window.get(), &width_in_pixels, &height_in_pixels))
     throw Exception("Failed to get SDL window pixel size: {}", SDL_GetError());
 
   wgpu::SurfaceConfiguration surface_configuration = {
@@ -167,7 +151,7 @@ void run()
   imgui_wgpu_init_info.RenderTargetFormat
       = static_cast<WGPUTextureFormat>(surface_configuration.format);
   ImGui_ImplWGPU_Init(&imgui_wgpu_init_info);
-  ImGui_ImplSDL3_InitForOther(window);
+  ImGui_ImplSDL3_InitForOther(window.get());
 
   bool will_quit = false;
   SDL_Event event = {};
@@ -178,7 +162,7 @@ void run()
 
       if (event.type == SDL_EVENT_QUIT
           || (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED
-              && event.window.windowID == SDL_GetWindowID(window))) {
+              && event.window.windowID == SDL_GetWindowID(window.get()))) {
         will_quit = true;
       }
     }
@@ -236,10 +220,6 @@ void run()
   ImGui::DestroyContext();
 
   surface.Unconfigure();
-
-  SDL_DestroyWindow(window);
-  SDL_QuitSubSystem(SDL_INIT_FLAGS);
-  SDL_Quit();
 }
 
 }
