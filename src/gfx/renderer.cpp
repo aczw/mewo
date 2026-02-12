@@ -20,7 +20,24 @@ namespace mewo::gfx {
 
 static constexpr uint64_t WGPU_WAIT_TIMEOUT_MAX = std::numeric_limits<uint64_t>::max();
 
-Renderer::Renderer(sdl::Window& window)
+static std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextureStatus status)
+{
+  switch (status) {
+    // clang-format off
+  case wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal: return "SuccessOptimal";
+  case wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal: return "SuccessSuboptimal";
+  case wgpu::SurfaceGetCurrentTextureStatus::Timeout: return "Timeout";
+  case wgpu::SurfaceGetCurrentTextureStatus::Outdated: return "Outdated";
+  case wgpu::SurfaceGetCurrentTextureStatus::Lost: return "Lost";
+  case wgpu::SurfaceGetCurrentTextureStatus::Error: return "Error";
+    // clang-format on
+
+  default:
+    std::unreachable();
+  }
+}
+
+Renderer::Renderer(const sdl::Window& window)
 {
   auto timed_wait_any = wgpu::InstanceFeatureName::TimedWaitAny;
   wgpu::InstanceDescriptor instance_desc = {
@@ -163,12 +180,50 @@ Renderer::Renderer(sdl::Window& window)
 
 Renderer::~Renderer() { surface_.Unconfigure(); }
 
-const wgpu::Device& Renderer::device() { return device_; }
+const wgpu::Device& Renderer::device() const { return device_; }
 
-const wgpu::Surface& Renderer::surface() { return surface_; }
+const wgpu::Surface& Renderer::surface() const { return surface_; }
 
-const wgpu::SurfaceConfiguration& Renderer::surface_config() { return surface_config_; }
+const wgpu::SurfaceConfiguration& Renderer::surface_config() const { return surface_config_; }
 
-const wgpu::Queue& Renderer::queue() { return queue_; }
+const wgpu::Queue& Renderer::queue() const { return queue_; }
+
+FrameContext Renderer::prepare_new_frame() const
+{
+  if (device_lost_error_.has_value()) {
+    const Error& error = device_lost_error_.value();
+    throw Exception(
+        "WebGPU device lost. Reason: \"{}.\" Message: \"{}\"", error.error_type, error.message);
+  }
+
+  if (uncaptured_error_.has_value()) {
+    const Error& error = uncaptured_error_.value();
+    throw Exception(
+        "Uncaptured WebGPU error. Type: \"{}.\" Message: \"{}\"", error.error_type, error.message);
+  }
+
+  wgpu::SurfaceTexture surface_texture;
+  surface_.GetCurrentTexture(&surface_texture);
+
+  if (auto status = surface_texture.status;
+      status != wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal
+      && status != wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal) {
+    throw Exception("WebGPU surface texture status: {}", get_surface_texture_status(status));
+  }
+
+  static const wgpu::TextureViewDescriptor SURFACE_VIEW_DESC = {
+    .label = "surface-texture-view",
+    .format = surface_config_.format,
+    .dimension = wgpu::TextureViewDimension::e2D,
+    .aspect = wgpu::TextureAspect::All,
+  };
+
+  static const wgpu::CommandEncoderDescriptor COMMAND_ENCODER_DESC = { .label = "command-encoder" };
+
+  return {
+    .surface_view = surface_texture.texture.CreateView(&SURFACE_VIEW_DESC),
+    .encoder = device_.CreateCommandEncoder(&COMMAND_ENCODER_DESC),
+  };
+}
 
 }

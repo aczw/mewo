@@ -75,11 +75,14 @@ add_executable(mewo
   ${MEWO_SDL_DIR}/window.hpp
 
   ${MEWO_GFX_DIR}/error.hpp
+  ${MEWO_GFX_DIR}/frame_context.hpp
   ${MEWO_GFX_DIR}/renderer.cpp
   ${MEWO_GFX_DIR}/renderer.hpp
 
   ${MEWO_SRC_DIR}/exception.cpp
   ${MEWO_SRC_DIR}/exception.hpp
+  ${MEWO_SRC_DIR}/gui.cpp
+  ${MEWO_SRC_DIR}/gui.hpp
   ${MEWO_SRC_DIR}/main.cpp
   ${MEWO_SRC_DIR}/mewo.cpp
   ${MEWO_SRC_DIR}/mewo.hpp

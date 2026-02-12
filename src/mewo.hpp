@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gfx/renderer.hpp"
+#include "gui.hpp"
 #include "sdl/context.hpp"
 #include "sdl/window.hpp"
 
@@ -17,6 +18,8 @@ class Mewo {
   sdl::Window window_;
 
   gfx::Renderer renderer_;
+
+  Gui gui_;
 };
 
 }

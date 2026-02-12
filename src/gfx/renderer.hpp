@@ -1,6 +1,7 @@
 #pragma once
 
 #include "error.hpp"
+#include "frame_context.hpp"
 #include "sdl/window.hpp"
 
 #include <webgpu/webgpu_cpp.h>
@@ -11,16 +12,20 @@ namespace mewo::gfx {
 
 class Renderer {
   public:
-  Renderer(sdl::Window& window);
+  Renderer(const sdl::Window& window);
   ~Renderer();
 
   Renderer(const Renderer&) = delete;
   Renderer& operator=(const Renderer&) = delete;
 
-  const wgpu::Device& device();
-  const wgpu::Surface& surface();
-  const wgpu::SurfaceConfiguration& surface_config();
-  const wgpu::Queue& queue();
+  const wgpu::Device& device() const;
+  const wgpu::Surface& surface() const;
+  const wgpu::SurfaceConfiguration& surface_config() const;
+  const wgpu::Queue& queue() const;
+
+  /// Checks if any errors have occurred in the graphics context, and throws accordingly.
+  /// Otherwise, it returns a texture view of the current surface and a new command encoder.
+  FrameContext prepare_new_frame() const;
 
   private:
   wgpu::Instance instance_ = {};

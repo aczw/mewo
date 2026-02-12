@@ -2,7 +2,7 @@
 
 namespace mewo::sdl {
 
-/// Initializes and maintains SDL. Copying or moving this object does not make sense.
+/// Initializes and maintains SDL.
 class Context {
   public:
   Context();
