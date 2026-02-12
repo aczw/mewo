@@ -3,6 +3,3 @@ build/
 
 # Apple
 .DS_Store
-
-# clangd
-.cache/

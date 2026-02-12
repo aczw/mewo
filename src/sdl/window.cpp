@@ -2,8 +2,6 @@
 
 #include "exception.hpp"
 
-#include <print>
-
 namespace mewo::sdl {
 
 namespace {
@@ -18,7 +16,6 @@ constexpr auto SDL_WINDOW_FLAGS = SDL_WINDOW_HIGH_PIXEL_DENSITY;
 Window::Window()
     : handle(SDL_CreateWindow("Mewo 0.0.1-alpha", SCREEN_W, SCREEN_H, SDL_WINDOW_FLAGS))
 {
-  std::println("hello!");
   if (!handle) {
     throw Exception("Failed to create SDL window: {}", SDL_GetError());
   }

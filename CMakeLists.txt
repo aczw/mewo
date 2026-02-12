@@ -65,6 +65,7 @@ target_include_directories(imgui PUBLIC ${MEWO_IMGUI_DIR} ${MEWO_IMGUI_DIR}/back
 target_link_libraries(imgui PRIVATE dawn::webgpu_dawn SDL3::SDL3)
 
 set(MEWO_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(MEWO_GFX_DIR ${MEWO_SRC_DIR}/gfx)
 set(MEWO_SDL_DIR ${MEWO_SRC_DIR}/sdl)
 
 add_executable(mewo 
@@ -72,6 +73,10 @@ add_executable(mewo
   ${MEWO_SDL_DIR}/context.hpp
   ${MEWO_SDL_DIR}/window.cpp
   ${MEWO_SDL_DIR}/window.hpp
+
+  ${MEWO_GFX_DIR}/error.hpp
+  ${MEWO_GFX_DIR}/renderer.cpp
+  ${MEWO_GFX_DIR}/renderer.hpp
 
   ${MEWO_SRC_DIR}/exception.cpp
   ${MEWO_SRC_DIR}/exception.hpp
