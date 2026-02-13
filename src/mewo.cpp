@@ -34,6 +34,7 @@ void Mewo::run()
 
     const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
 
+    out_.record(frame_ctx);
     gui_.record(frame_ctx);
 
     static const wgpu::CommandBufferDescriptor CMD_BUF_DESC = { .label = "command-buffer" };

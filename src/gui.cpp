@@ -53,18 +53,20 @@ void Gui::record(const gfx::FrameContext& frame_ctx) const
 
   wgpu::RenderPassColorAttachment color_attachment = {
     .view = surface_view,
-    .loadOp = wgpu::LoadOp::Clear,
+    .loadOp = wgpu::LoadOp::Load,
     .storeOp = wgpu::StoreOp::Store,
-    .clearValue = wgpu::Color { .r = 1.0, .g = 0.0, .b = 0.0, .a = 1.0 },
   };
 
   wgpu::RenderPassDescriptor render_pass_desc = {
+    .label = "imgui-render-pass",
     .colorAttachmentCount = 1,
     .colorAttachments = &color_attachment,
   };
 
   wgpu::RenderPassEncoder render_pass = encoder.BeginRenderPass(&render_pass_desc);
+
   ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), render_pass.Get());
+
   render_pass.End();
 }
 

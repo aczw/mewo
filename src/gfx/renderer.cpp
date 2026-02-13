@@ -99,7 +99,7 @@ Renderer::Renderer(const sdl::Window& window)
 #endif
 
   device_desc.SetDeviceLostCallback(
-      wgpu::CallbackMode::WaitAnyOnly,
+      wgpu::CallbackMode::AllowSpontaneous,
       [](const wgpu::Device&, wgpu::DeviceLostReason type, wgpu::StringView message,
           std::optional<Error>* device_lost_error) {
         auto reason = static_cast<WGPUDeviceLostReason>(type);
@@ -172,8 +172,6 @@ Renderer::Renderer(const sdl::Window& window)
 
     if (!surface_.GetCapabilities(adapter, &surface_capabilities))
       throw Exception("Failed to get WebGPU surface capabilities");
-    if (surface_capabilities.formatCount == 0)
-      throw Exception("No available WebGPU surface formats");
 
     int width_in_pixels = 0;
     int height_in_pixels = 0;
@@ -183,6 +181,7 @@ Renderer::Renderer(const sdl::Window& window)
 
     return {
       .device = device_,
+      // There is always at least 1 format if `wgpu::Surface::GetCapabilities` was successful
       .format = surface_capabilities.formats[0],
       .width = static_cast<uint32_t>(width_in_pixels),
       .height = static_cast<uint32_t>(height_in_pixels),
