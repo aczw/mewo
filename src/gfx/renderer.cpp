@@ -8,9 +8,11 @@
 #include <webgpu/webgpu.h>
 #include <webgpu/webgpu_cpp.h>
 
+#include <array>
 #include <functional>
 #include <limits>
 #include <optional>
+#include <string_view>
 
 #if defined(SDL_PLATFORM_WIN32)
 #include <windows.h>
@@ -18,9 +20,11 @@
 
 namespace mewo::gfx {
 
-static constexpr uint64_t WGPU_WAIT_TIMEOUT_MAX = std::numeric_limits<uint64_t>::max();
+namespace {
 
-static std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextureStatus status)
+constexpr uint64_t WGPU_WAIT_TIMEOUT_MAX = std::numeric_limits<uint64_t>::max();
+
+std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextureStatus status)
 {
   switch (status) {
     // clang-format off
@@ -35,6 +39,8 @@ static std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextur
   default:
     std::unreachable();
   }
+}
+
 }
 
 Renderer::Renderer(const sdl::Window& window)
@@ -75,9 +81,22 @@ Renderer::Renderer(const sdl::Window& window)
   if constexpr (query::is_debug())
     ImGui_ImplWGPU_DebugPrintAdapterInfo(adapter.Get());
 
-  wgpu::DeviceDescriptor device_desc;
-  device_desc.label = "device";
-  device_desc.defaultQueue.label = "default-queue";
+  wgpu::DeviceDescriptor device_desc = { {
+      .label = "device",
+      .defaultQueue = { .label = "default-queue" },
+  } };
+
+#if defined(MEWO_IS_DEBUG)
+  // Dawn-specific functionality to enable/disable certain runtime features
+  std::array DAWN_ENABLED_TOGGLES = { "enable_immediate_error_handling" };
+
+  wgpu::DawnTogglesDescriptor dawn_toggles_desc = { {
+      .enabledToggleCount = DAWN_ENABLED_TOGGLES.size(),
+      .enabledToggles = DAWN_ENABLED_TOGGLES.data(),
+  } };
+
+  device_desc.nextInChain = &dawn_toggles_desc;
+#endif
 
   device_desc.SetDeviceLostCallback(
       wgpu::CallbackMode::WaitAnyOnly,
