@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <string_view>
 
 namespace mewo::gfx {
@@ -11,7 +12,7 @@ namespace mewo::gfx {
 /// Instead, we store that information inside this struct which we check later.
 struct Error {
   std::string_view error_type;
-  std::string_view message;
+  std::string message;
 };
 
 }

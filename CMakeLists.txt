@@ -81,6 +81,8 @@ add_executable(mewo
 
   ${MEWO_SRC_DIR}/exception.cpp
   ${MEWO_SRC_DIR}/exception.hpp
+  ${MEWO_SRC_DIR}/fs.cpp
+  ${MEWO_SRC_DIR}/fs.hpp
   ${MEWO_SRC_DIR}/gui.cpp
   ${MEWO_SRC_DIR}/gui.hpp
   ${MEWO_SRC_DIR}/main.cpp

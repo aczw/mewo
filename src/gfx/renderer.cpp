@@ -56,7 +56,7 @@ Renderer::Renderer(const sdl::Window& window)
   if (!instance_)
     throw Exception("WebGPU instance creation failed");
 
-  wgpu::Adapter adapter = {};
+  wgpu::Adapter adapter;
   wgpu::RequestAdapterOptions adapter_opts = {
     .featureLevel = wgpu::FeatureLevel::Core,
     .powerPreference = wgpu::PowerPreference::HighPerformance,
@@ -104,9 +104,9 @@ Renderer::Renderer(const sdl::Window& window)
           std::optional<Error>* device_lost_error) {
         auto reason = static_cast<WGPUDeviceLostReason>(type);
 
-        *device_lost_error = Error {
+        *device_lost_error = {
           .error_type = ImGui_ImplWGPU_GetDeviceLostReasonName(reason),
-          .message = message,
+          .message = std::string(message),
         };
       },
       &device_lost_error_);
@@ -116,9 +116,9 @@ Renderer::Renderer(const sdl::Window& window)
           std::optional<Error>* uncaptured_error) {
         auto error_type = static_cast<WGPUErrorType>(type);
 
-        *uncaptured_error = Error {
+        *uncaptured_error = {
           .error_type = ImGui_ImplWGPU_GetErrorTypeName(error_type),
-          .message = message,
+          .message = std::string(message),
         };
       },
       &uncaptured_error_);
@@ -210,14 +210,13 @@ FrameContext Renderer::prepare_new_frame() const
 {
   if (device_lost_error_.has_value()) {
     const Error& error = device_lost_error_.value();
-    throw Exception(
-        "WebGPU device lost. Reason: \"{}.\" Message: \"{}\"", error.error_type, error.message);
+    throw Exception("WebGPU device lost. Reason: {}. Message:{}", error.error_type, error.message);
   }
 
   if (uncaptured_error_.has_value()) {
     const Error& error = uncaptured_error_.value();
     throw Exception(
-        "Uncaptured WebGPU error. Type: \"{}.\" Message: \"{}\"", error.error_type, error.message);
+        "Uncaptured WebGPU error. Type: {}. Message: {}", error.error_type, error.message);
   }
 
   wgpu::SurfaceTexture surface_texture;

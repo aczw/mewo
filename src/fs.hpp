@@ -1,0 +1,11 @@
+#pragma once
+
+#include <filesystem>
+#include <string>
+
+namespace mewo::fs {
+
+/// Reads a plain text WGSL shader from disk.
+std::string read_wgsl_shader(const std::filesystem::path& file_path);
+
+}

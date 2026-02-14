@@ -28,11 +28,11 @@ class Renderer {
   FrameContext prepare_new_frame() const;
 
   private:
-  wgpu::Instance instance_ = {};
-  wgpu::Device device_ = {};
-  wgpu::Surface surface_ = {};
-  wgpu::SurfaceConfiguration surface_config_ = {};
-  wgpu::Queue queue_ = {};
+  wgpu::Instance instance_;
+  wgpu::Device device_;
+  wgpu::Surface surface_;
+  wgpu::SurfaceConfiguration surface_config_;
+  wgpu::Queue queue_;
 
   std::optional<Error> device_lost_error_;
   std::optional<Error> uncaptured_error_;

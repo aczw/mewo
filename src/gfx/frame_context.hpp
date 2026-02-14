@@ -5,8 +5,8 @@
 namespace mewo::gfx {
 
 struct FrameContext {
-  wgpu::TextureView surface_view = {};
-  wgpu::CommandEncoder encoder = {};
+  wgpu::TextureView surface_view;
+  wgpu::CommandEncoder encoder;
 };
 
 }

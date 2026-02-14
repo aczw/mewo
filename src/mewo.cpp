@@ -13,6 +13,7 @@ Mewo::Mewo()
     , window_()
     , renderer_(window_)
     , gui_(window_, renderer_)
+    , out_(renderer_)
 {
 }
 

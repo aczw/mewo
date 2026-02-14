@@ -64,9 +64,7 @@ void Gui::record(const gfx::FrameContext& frame_ctx) const
   };
 
   wgpu::RenderPassEncoder render_pass = encoder.BeginRenderPass(&render_pass_desc);
-
   ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), render_pass.Get());
-
   render_pass.End();
 }
 
