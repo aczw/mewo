@@ -18,11 +18,12 @@ class Context {
   Context(const Context&) = delete;
   Context& operator=(const Context&) = delete;
 
+  const ImGuiViewport* viewport() const;
+
+  void prepare_new_frame() const;
   void record(const gfx::FrameContext& frame_ctx) const;
 
   private:
-  void set_up_layout(ImGuiID dockspace_id) const;
-
   ImGuiViewport* viewport_ = nullptr;
 };
 

@@ -34,6 +34,9 @@ void Mewo::run()
     }
 
     const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
+    gui_ctx_.prepare_new_frame();
+
+    layout_.build(gui_ctx_);
 
     out_.record(frame_ctx);
     gui_ctx_.record(frame_ctx);

@@ -82,6 +82,8 @@ add_executable(mewo
 
   ${MEWO_GUI_DIR}/context.cpp
   ${MEWO_GUI_DIR}/context.hpp
+  ${MEWO_GUI_DIR}/layout.cpp
+  ${MEWO_GUI_DIR}/layout.hpp
 
   ${MEWO_SRC_DIR}/exception.cpp
   ${MEWO_SRC_DIR}/exception.hpp

@@ -2,6 +2,7 @@
 
 #include "gfx/renderer.hpp"
 #include "gui/context.hpp"
+#include "gui/layout.hpp"
 #include "out.hpp"
 #include "sdl/context.hpp"
 #include "sdl/window.hpp"
@@ -21,6 +22,7 @@ class Mewo {
   gfx::Renderer renderer_;
 
   gui::Context gui_ctx_;
+  gui::Layout layout_;
 
   Out out_;
 };
