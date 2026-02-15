@@ -12,7 +12,7 @@ Mewo::Mewo()
     : sdl_ctx_()
     , window_()
     , renderer_(window_)
-    , gui_(window_, renderer_)
+    , gui_ctx_(window_, renderer_)
     , out_(renderer_)
 {
 }
@@ -36,7 +36,7 @@ void Mewo::run()
     const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
 
     out_.record(frame_ctx);
-    gui_.record(frame_ctx);
+    gui_ctx_.record(frame_ctx);
 
     static const wgpu::CommandBufferDescriptor CMD_BUF_DESC = { .label = "command-buffer" };
     wgpu::CommandBuffer cmd_buf = frame_ctx.encoder.Finish(&CMD_BUF_DESC);

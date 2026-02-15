@@ -1,7 +1,6 @@
-#include "gui.hpp"
+#include "context.hpp"
 
-#include "imgui.h"
-
+#include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_wgpu.h>
 #include <imgui_internal.h>
@@ -9,13 +8,13 @@
 
 #include <string_view>
 
-namespace mewo {
+namespace mewo::gui {
 
 static constexpr std::string_view MAIN_DOCKSPACE_STR_ID = "main-dockspace";
 static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
 static constexpr std::string_view OUTPUT_WINDOW_NAME = "Output";
 
-Gui::Gui(const sdl::Window& window, const gfx::Renderer& renderer)
+Context::Context(const sdl::Window& window, const gfx::Renderer& renderer)
 {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -39,14 +38,14 @@ Gui::Gui(const sdl::Window& window, const gfx::Renderer& renderer)
   viewport_ = ImGui::GetMainViewport();
 }
 
-Gui::~Gui()
+Context::~Context()
 {
   ImGui_ImplWGPU_Shutdown();
   ImGui_ImplSDL3_Shutdown();
   ImGui::DestroyContext();
 }
 
-void Gui::record(const gfx::FrameContext& frame_ctx) const
+void Context::record(const gfx::FrameContext& frame_ctx) const
 {
   ImGui_ImplWGPU_NewFrame();
   ImGui_ImplSDL3_NewFrame();
@@ -94,7 +93,7 @@ void Gui::record(const gfx::FrameContext& frame_ctx) const
   render_pass.End();
 }
 
-void Gui::set_up_layout(ImGuiID dockspace_id) const
+void Context::set_up_layout(ImGuiID dockspace_id) const
 {
   ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
   ImGui::DockBuilderSetNodeSize(dockspace_id, viewport_->Size);

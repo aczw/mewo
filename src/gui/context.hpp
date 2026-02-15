@@ -7,16 +7,16 @@
 #include <imgui.h>
 #include <webgpu/webgpu_cpp.h>
 
-namespace mewo {
+namespace mewo::gui {
 
 /// Immediate mode GUI rendering using Dear ImGui.
-class Gui {
+class Context {
   public:
-  Gui(const sdl::Window& window, const gfx::Renderer& renderer);
-  ~Gui();
+  Context(const sdl::Window& window, const gfx::Renderer& renderer);
+  ~Context();
 
-  Gui(const Gui&) = delete;
-  Gui& operator=(const Gui&) = delete;
+  Context(const Context&) = delete;
+  Context& operator=(const Context&) = delete;
 
   void record(const gfx::FrameContext& frame_ctx) const;
 

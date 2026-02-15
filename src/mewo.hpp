@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gfx/renderer.hpp"
-#include "gui.hpp"
+#include "gui/context.hpp"
 #include "out.hpp"
 #include "sdl/context.hpp"
 #include "sdl/window.hpp"
@@ -20,7 +20,7 @@ class Mewo {
 
   gfx::Renderer renderer_;
 
-  Gui gui_;
+  gui::Context gui_ctx_;
 
   Out out_;
 };
