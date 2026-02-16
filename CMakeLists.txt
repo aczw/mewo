@@ -57,11 +57,16 @@ if(APPLE AND CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 endif()
 
 # Setting this definition to PUBLIC lets it propagate to Mewo when it links against it
-target_compile_definitions(imgui PUBLIC IMGUI_IMPL_WEBGPU_BACKEND_DAWN)
+target_compile_definitions(imgui PUBLIC
+  IMGUI_IMPL_WEBGPU_BACKEND_DAWN
+  # Use our own imconfig.h file because I don't want to modify Git submodule
+  IMGUI_USER_CONFIG="../../src/gui/imconfig.h"
+)
+
 # Let Dear ImGui find its own files, and set it to PUBLIC so that it also propagates to Mewo
 # when it links against the target. Also include the `backends/` folder so I don't have to prefix
 # files in the folder with it when I #include them.
-target_include_directories(imgui PUBLIC ${MEWO_IMGUI_DIR} ${MEWO_IMGUI_DIR}/backends) 
+target_include_directories(imgui PUBLIC ${MEWO_IMGUI_DIR} ${MEWO_IMGUI_DIR}/backends)
 target_link_libraries(imgui PRIVATE dawn::webgpu_dawn SDL3::SDL3)
 
 set(MEWO_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
