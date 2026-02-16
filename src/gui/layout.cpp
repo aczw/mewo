@@ -35,7 +35,12 @@ void Layout::build(const Context& gui_ctx, const Out& out) const
 
     WGPUTextureView view_raw = out.view().Get();
     auto texture_id = static_cast<ImTextureID>(reinterpret_cast<intptr_t>(view_raw));
-    ImGui::Image(texture_id, ImGui::GetContentRegionAvail());
+
+    float aspect_ratio = 9.f / 16.f;
+
+    ImVec2 content_region = ImGui::GetContentRegionAvail();
+    content_region.y = content_region.x * aspect_ratio;
+    ImGui::Image(texture_id, content_region);
 
     ImGui::End();
   }
