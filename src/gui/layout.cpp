@@ -14,21 +14,24 @@
 
 namespace mewo::gui {
 
-static constexpr std::string_view MAIN_DOCKSPACE_STR_ID = "main-dockspace";
-static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
-static constexpr std::string_view OUTPUT_WINDOW_NAME = "Output";
+namespace {
+
+constexpr std::string_view MAIN_DOCKSPACE_STR_ID = "main-dockspace";
+constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
+constexpr std::string_view OUTPUT_WINDOW_NAME = "Output";
+
+}
 
 void Layout::build(const Context& gui_ctx, Out& out) const
 {
-  ImGuiID dockspace_id = ImGui::GetID(MAIN_DOCKSPACE_STR_ID.data());
-
-  // One time setup, but can only be done after a new frame is initiated
-  if (ImGui::DockBuilderGetNode(dockspace_id) == nullptr)
+  // Once the layout is created, the ID remains constant.
+  if (const ImGuiID dockspace_id = ImGui::GetID(MAIN_DOCKSPACE_STR_ID.data());
+      ImGui::DockBuilderGetNode(dockspace_id) == nullptr) {
     set_up_initial_layout(gui_ctx, dockspace_id);
-
-  // Submit dockspace layout
-  ImGui::DockSpaceOverViewport(
-      dockspace_id, gui_ctx.viewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+  } else {
+    ImGui::DockSpaceOverViewport(
+        dockspace_id, gui_ctx.viewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+  }
 
   {
     ImGui::Begin(EDITOR_WINDOW_NAME.data());
