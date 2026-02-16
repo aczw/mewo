@@ -5,6 +5,7 @@
 
 #include <webgpu/webgpu_cpp.h>
 
+#include <functional>
 #include <string_view>
 
 namespace mewo {
@@ -12,28 +13,21 @@ namespace mewo {
 namespace {
 
 constexpr wgpu::BlendState WGPU_DEFAULT_BLEND_STATE = {};
-constexpr std::string_view WGPU_VERT_ENTRY_POINT = "vs_main";
-constexpr std::string_view WGPU_FRAG_ENTRY_POINT = "fs_main";
+constexpr std::string_view WGPU_ENTRY_POINT = "main";
 
 #if defined(MEWO_IS_DEBUG)
-constexpr std::string_view OUT_SHADER_FILE_PATH = "../../assets/shaders/out.wgsl";
+constexpr std::string_view OUT_VERT_SHADER_FILE_PATH = "../../assets/shaders/out.vert.wgsl";
+constexpr std::string_view OUT_FRAG_SHADER_FILE_PATH = "../../assets/shaders/out.frag.wgsl";
 #else
-#error "TODO: handle "out.wgsl" file path on release mode"
-constexpr std::string_view OUT_SHADER_FILE_PATH = "out.wgsl";
+#error "TODO: handle "out.{frag,vert}.wgsl" file path on release mode"
+constexpr std::string_view OUT_VERT_SHADER_FILE_PATH = "out.vert.wgsl";
+constexpr std::string_view OUT_FRAG_SHADER_FILE_PATH = "out.frag.wgsl";
 #endif
 
 }
 
 Out::Out(const gfx::Renderer& renderer)
 {
-  std::string out_shader_src = fs::read_wgsl_shader(OUT_SHADER_FILE_PATH);
-
-  wgpu::ShaderSourceWGSL out_shader_src_wgsl = { { .code = out_shader_src.c_str() } };
-  wgpu::ShaderModuleDescriptor out_shader_module_desc
-      = { .nextInChain = &out_shader_src_wgsl, .label = "out-shader-module" };
-  wgpu::ShaderModule out_shader_module
-      = renderer.device().CreateShaderModule(&out_shader_module_desc);
-
   const wgpu::SurfaceConfiguration& surface_config = renderer.surface_config();
 
   wgpu::ColorTargetState surface_color_target_state = {
@@ -42,16 +36,36 @@ Out::Out(const gfx::Renderer& renderer)
     .blend = &WGPU_DEFAULT_BLEND_STATE,
   };
 
+  auto out_frag_shader_module = std::invoke([&device = renderer.device()] -> wgpu::ShaderModule {
+    std::string out_frag_shader_src = fs::read_wgsl_shader(OUT_FRAG_SHADER_FILE_PATH);
+
+    wgpu::ShaderSourceWGSL out_frag_shader_wgsl = { { .code = out_frag_shader_src.c_str() } };
+    wgpu::ShaderModuleDescriptor out_frag_shader_module_desc
+        = { .nextInChain = &out_frag_shader_wgsl, .label = "out-frag-shader-module" };
+
+    return device.CreateShaderModule(&out_frag_shader_module_desc);
+  });
+
   wgpu::FragmentState fragment_state = {
-    .module = out_shader_module,
-    .entryPoint = WGPU_FRAG_ENTRY_POINT,
+    .module = out_frag_shader_module,
+    .entryPoint = WGPU_ENTRY_POINT,
     .targetCount = 1,
     .targets = &surface_color_target_state,
   };
 
+  auto out_vert_shader_module = std::invoke([&device = renderer.device()] -> wgpu::ShaderModule {
+    std::string out_vert_shader_src = fs::read_wgsl_shader(OUT_VERT_SHADER_FILE_PATH);
+
+    wgpu::ShaderSourceWGSL out_vert_shader_wgsl = { { .code = out_vert_shader_src.c_str() } };
+    wgpu::ShaderModuleDescriptor out_vert_shader_module_desc
+        = { .nextInChain = &out_vert_shader_wgsl, .label = "out-vert-shader-module" };
+
+    return device.CreateShaderModule(&out_vert_shader_module_desc);
+  });
+
   wgpu::RenderPipelineDescriptor render_pipeline_desc = {
     .label = "out-render-pipeline",
-    .vertex = { .module = out_shader_module, .entryPoint = WGPU_VERT_ENTRY_POINT },
+    .vertex = { .module = out_vert_shader_module, .entryPoint = WGPU_ENTRY_POINT },
     .fragment = &fragment_state,
   };
 
