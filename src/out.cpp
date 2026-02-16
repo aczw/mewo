@@ -34,8 +34,10 @@ Out::Out(const gfx::Renderer& renderer)
   wgpu::ShaderModule out_shader_module
       = renderer.device().CreateShaderModule(&out_shader_module_desc);
 
+  const wgpu::SurfaceConfiguration& surface_config = renderer.surface_config();
+
   wgpu::ColorTargetState surface_color_target_state = {
-    .format = renderer.surface_config().format,
+    .format = surface_config.format,
     // Has to be a valid pointer because blending is disabled by default
     .blend = &WGPU_DEFAULT_BLEND_STATE,
   };
@@ -54,14 +56,27 @@ Out::Out(const gfx::Renderer& renderer)
   };
 
   render_pipeline_ = renderer.device().CreateRenderPipeline(&render_pipeline_desc);
+
+  wgpu::TextureDescriptor texture_desc = {
+    .label = "out-texture",
+    .usage = wgpu::TextureUsage::RenderAttachment | wgpu::TextureUsage::TextureBinding,
+    .size = { .width = surface_config.width, .height = surface_config.height },
+    .format = surface_config.format,
+  };
+
+  texture_ = renderer.device().CreateTexture(&texture_desc);
+
+  wgpu::TextureViewDescriptor view_desc = { .label = "out-view" };
+
+  view_ = texture_.CreateView(&view_desc);
 }
+
+const wgpu::TextureView& Out::view() const { return view_; }
 
 void Out::record(const gfx::FrameContext& frame_ctx) const
 {
-  auto& [surface_view, encoder] = frame_ctx;
-
   wgpu::RenderPassColorAttachment color_attachment = {
-    .view = surface_view,
+    .view = view_,
     .loadOp = wgpu::LoadOp::Clear,
     .storeOp = wgpu::StoreOp::Store,
   };
@@ -72,7 +87,7 @@ void Out::record(const gfx::FrameContext& frame_ctx) const
     .colorAttachments = &color_attachment,
   };
 
-  wgpu::RenderPassEncoder render_pass = encoder.BeginRenderPass(&render_pass_desc);
+  wgpu::RenderPassEncoder render_pass = frame_ctx.encoder.BeginRenderPass(&render_pass_desc);
   render_pass.SetPipeline(render_pipeline_);
   render_pass.Draw(6);
   render_pass.End();

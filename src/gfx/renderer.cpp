@@ -229,7 +229,7 @@ FrameContext Renderer::prepare_new_frame() const
   }
 
   static const wgpu::TextureViewDescriptor SURFACE_VIEW_DESC = {
-    .label = "surface-texture-view",
+    .label = "surface-view",
     .format = surface_config_.format,
     .dimension = wgpu::TextureViewDimension::e2D,
     .aspect = wgpu::TextureAspect::All,

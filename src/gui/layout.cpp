@@ -1,8 +1,8 @@
 #include "layout.hpp"
 
-#include "imgui.h"
-
+#include <imgui.h>
 #include <imgui_internal.h>
+#include <webgpu/webgpu.h>
 
 #include <string_view>
 
@@ -12,7 +12,7 @@ static constexpr std::string_view MAIN_DOCKSPACE_STR_ID = "main-dockspace";
 static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
 static constexpr std::string_view OUTPUT_WINDOW_NAME = "Output";
 
-void Layout::build(const Context& gui_ctx) const
+void Layout::build(const Context& gui_ctx, const Out& out) const
 {
   ImGuiID dockspace_id = ImGui::GetID(MAIN_DOCKSPACE_STR_ID.data());
 
@@ -32,7 +32,11 @@ void Layout::build(const Context& gui_ctx) const
 
   {
     ImGui::Begin(OUTPUT_WINDOW_NAME.data());
-    ImGui::Text("I am the output");
+
+    WGPUTextureView view_raw = out.view().Get();
+    auto texture_id = static_cast<ImTextureID>(reinterpret_cast<intptr_t>(view_raw));
+    ImGui::Image(texture_id, ImGui::GetContentRegionAvail());
+
     ImGui::End();
   }
 }

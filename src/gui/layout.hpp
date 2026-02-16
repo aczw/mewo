@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gui/context.hpp"
+#include "out.hpp"
 
 #include <imgui.h>
 
@@ -9,7 +10,7 @@ namespace mewo::gui {
 class Layout {
   public:
   /// Builds the layout. Called every frame.
-  void build(const Context& gui_ctx) const;
+  void build(const Context& gui_ctx, const Out& out) const;
 
   private:
   /// Sets up the overall docking layout. Only needs to be called once.

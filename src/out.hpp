@@ -12,10 +12,14 @@ class Out {
   public:
   Out(const gfx::Renderer& renderer);
 
+  const wgpu::TextureView& view() const;
+
   void record(const gfx::FrameContext& frame_ctx) const;
 
   private:
   wgpu::RenderPipeline render_pipeline_;
+  wgpu::Texture texture_;
+  wgpu::TextureView view_;
 };
 
 }
