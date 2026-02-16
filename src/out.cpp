@@ -73,6 +73,14 @@ Out::Out(const gfx::Renderer& renderer)
 
 const wgpu::TextureView& Out::view() const { return view_; }
 
+Out::DisplayMode Out::display_mode() const { return display_mode_; }
+
+AspectRatio::Preset Out::aspect_ratio_preset() const { return aspect_ratio_preset_; }
+
+void Out::set_display_mode(DisplayMode display_mode) { display_mode_ = display_mode; }
+
+void Out::set_aspect_ratio_preset(AspectRatio::Preset preset) { aspect_ratio_preset_ = preset; }
+
 void Out::record(const gfx::FrameContext& frame_ctx) const
 {
   wgpu::RenderPassColorAttachment color_attachment = {

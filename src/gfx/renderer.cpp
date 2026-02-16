@@ -2,6 +2,7 @@
 
 #include "exception.hpp"
 #include "query.hpp"
+#include "utility.hpp"
 
 #include <SDL3/SDL.h>
 #include <imgui_impl_wgpu.h>
@@ -37,7 +38,7 @@ std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextureStatus
     // clang-format on
 
   default:
-    std::unreachable();
+    utility::enum_unreachable("wgpu::SurfaceGetCurrentTextureStatus", status);
   }
 }
 

@@ -90,6 +90,8 @@ add_executable(mewo
   ${MEWO_GUI_DIR}/layout.cpp
   ${MEWO_GUI_DIR}/layout.hpp
 
+  ${MEWO_SRC_DIR}/aspect_ratio.cpp
+  ${MEWO_SRC_DIR}/aspect_ratio.hpp
   ${MEWO_SRC_DIR}/exception.cpp
   ${MEWO_SRC_DIR}/exception.hpp
   ${MEWO_SRC_DIR}/fs.cpp
@@ -100,6 +102,7 @@ add_executable(mewo
   ${MEWO_SRC_DIR}/out.cpp
   ${MEWO_SRC_DIR}/out.hpp
   ${MEWO_SRC_DIR}/query.hpp
+  ${MEWO_SRC_DIR}/utility.hpp
 )
 
 # So I can always reference files starting from the source directory

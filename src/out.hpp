@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aspect_ratio.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/renderer.hpp"
 
@@ -13,7 +14,7 @@ class Out {
   public:
   /// Determines the "shape" of the output. Regardless of the choice, it will fill the width
   /// of the current GUI window that it's in.
-  enum class DisplayMode {
+  enum class DisplayMode : int {
     AspectRatio, ///< Uses a predefined aspect ratio and does not care about pixel resolution.
     Resolution, ///< Uses a predefined pixel resolution, possibly resulting in up/downsampling.
   };
@@ -21,6 +22,11 @@ class Out {
   Out(const gfx::Renderer& renderer);
 
   const wgpu::TextureView& view() const;
+  DisplayMode display_mode() const;
+  AspectRatio::Preset aspect_ratio_preset() const;
+
+  void set_display_mode(DisplayMode display_mode);
+  void set_aspect_ratio_preset(AspectRatio::Preset preset);
 
   void record(const gfx::FrameContext& frame_ctx) const;
 
@@ -29,7 +35,8 @@ class Out {
   wgpu::Texture texture_;
   wgpu::TextureView view_;
 
-  [[maybe_unused]] DisplayMode display_mode_ = DisplayMode::AspectRatio;
+  DisplayMode display_mode_ = DisplayMode::AspectRatio;
+  AspectRatio::Preset aspect_ratio_preset_ = AspectRatio::Preset::e16_9;
 };
 
 }

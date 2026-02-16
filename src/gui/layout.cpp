@@ -1,10 +1,16 @@
 #include "layout.hpp"
 
+#include "aspect_ratio.hpp"
+#include "exception.hpp"
+#include "utility.hpp"
+
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <webgpu/webgpu.h>
 
+#include <functional>
 #include <string_view>
+#include <utility>
 
 namespace mewo::gui {
 
@@ -12,7 +18,7 @@ static constexpr std::string_view MAIN_DOCKSPACE_STR_ID = "main-dockspace";
 static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
 static constexpr std::string_view OUTPUT_WINDOW_NAME = "Output";
 
-void Layout::build(const Context& gui_ctx, const Out& out) const
+void Layout::build(const Context& gui_ctx, Out& out) const
 {
   ImGuiID dockspace_id = ImGui::GetID(MAIN_DOCKSPACE_STR_ID.data());
 
@@ -33,14 +39,66 @@ void Layout::build(const Context& gui_ctx, const Out& out) const
   {
     ImGui::Begin(OUTPUT_WINDOW_NAME.data());
 
-    WGPUTextureView view_raw = out.view().Get();
-    auto texture_id = static_cast<ImTextureID>(reinterpret_cast<intptr_t>(view_raw));
+    auto current_mode = out.display_mode();
 
-    float aspect_ratio = 9.f / 16.f;
+    {
+      WGPUTextureView view_raw = out.view().Get();
+      auto texture_id = static_cast<ImTextureID>(reinterpret_cast<intptr_t>(view_raw));
 
-    ImVec2 content_region = ImGui::GetContentRegionAvail();
-    content_region.y = content_region.x * aspect_ratio;
-    ImGui::Image(texture_id, content_region);
+      auto image_size = std::invoke([&out] -> ImVec2 {
+        switch (out.display_mode()) {
+        case Out::DisplayMode::AspectRatio: {
+          float inverse_aspect_ratio = AspectRatio::get_inverse_value(out.aspect_ratio_preset());
+          ImVec2 content_region = ImGui::GetContentRegionAvail();
+          content_region.y = content_region.x * inverse_aspect_ratio;
+
+          return content_region;
+        }
+
+        case Out::DisplayMode::Resolution:
+          throw Exception("TODO: implement resolution display mode for output");
+
+        default:
+          utility::enum_unreachable("Out::DisplayMode", out.display_mode());
+        }
+      });
+
+      ImGui::Image(texture_id, image_size);
+    }
+
+    if (ImGui::Button("Run"))
+      throw Exception("TODO: implement run button");
+
+    {
+      using Mode = Out::DisplayMode;
+
+      int mode_value = std::to_underlying(current_mode);
+
+      ImGui::RadioButton("Aspect ratio", &mode_value, std::to_underlying(Mode::AspectRatio));
+      ImGui::SameLine();
+      ImGui::RadioButton("Resolution", &mode_value, std::to_underlying(Mode::Resolution));
+
+      if (auto display_mode = static_cast<Mode>(mode_value); display_mode != current_mode)
+        out.set_display_mode(display_mode);
+    }
+
+    {
+      using Preset = AspectRatio::Preset;
+
+      Preset current_preset = out.aspect_ratio_preset();
+      int preset_value = std::to_underlying(current_preset);
+
+      ImGui::RadioButton("1:1", &preset_value, std::to_underlying(Preset::e1_1));
+      ImGui::SameLine();
+      ImGui::RadioButton("2:1", &preset_value, std::to_underlying(Preset::e2_1));
+      ImGui::SameLine();
+      ImGui::RadioButton("3:2", &preset_value, std::to_underlying(Preset::e3_2));
+      ImGui::SameLine();
+      ImGui::RadioButton("16:9", &preset_value, std::to_underlying(Preset::e16_9));
+
+      if (auto preset = static_cast<Preset>(preset_value); preset != current_preset)
+        out.set_aspect_ratio_preset(preset);
+    }
 
     ImGui::End();
   }
