@@ -87,17 +87,17 @@ Renderer::Renderer(const sdl::Window& window)
       .defaultQueue = { .label = "default-queue" },
   } };
 
-#if defined(MEWO_IS_DEBUG)
   // Dawn-specific functionality to enable/disable certain runtime features
-  std::array DAWN_ENABLED_TOGGLES = { "enable_immediate_error_handling" };
+  if constexpr (query::is_debug()) {
+    static constexpr std::array DAWN_ENABLED_TOGGLES = { "enable_immediate_error_handling" };
 
-  wgpu::DawnTogglesDescriptor dawn_toggles_desc = { {
-      .enabledToggleCount = DAWN_ENABLED_TOGGLES.size(),
-      .enabledToggles = DAWN_ENABLED_TOGGLES.data(),
-  } };
+    static const wgpu::DawnTogglesDescriptor DAWN_TOGGLES_DESC = { {
+        .enabledToggleCount = DAWN_ENABLED_TOGGLES.size(),
+        .enabledToggles = DAWN_ENABLED_TOGGLES.data(),
+    } };
 
-  device_desc.nextInChain = &dawn_toggles_desc;
-#endif
+    device_desc.nextInChain = &DAWN_TOGGLES_DESC;
+  }
 
   device_desc.SetDeviceLostCallback(
       wgpu::CallbackMode::AllowSpontaneous,
