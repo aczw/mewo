@@ -31,7 +31,8 @@ Out::Out(const gfx::Renderer& renderer, std::string initial_code)
   render_pipeline_desc_ = {
     .label = "out-render-pipeline",
     .vertex = { .module = gfx::create::shader_module_from_wgsl(
-                    device, vert_shader_file_path, "out-vert-shader-module") },
+                    device, vert_shader_file_path, "out-vert-shader-module"),
+        .entryPoint = "main", },
   };
 
   set_fragment_state(device, initial_code);
@@ -61,6 +62,7 @@ void Out::set_fragment_state(const wgpu::Device& device, std::string_view code)
 {
   fragment_state_ = {
     .module = gfx::create::shader_module_from_wgsl(device, code, "out-frag-shader-module"),
+    .entryPoint = "main",
     .targetCount = 1,
     .targets = &color_target_state_,
   };

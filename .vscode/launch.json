@@ -1,0 +1,20 @@
+{
+  // https://go.microsoft.com/fwlink/?linkid=830387
+  "configurations": [
+    {
+      "name": "CodeLLDB",
+      "type": "lldb",
+      "request": "launch",
+      "sourceLanguages": [
+        "cpp",
+        "c"
+      ],
+      "program": "{command:cmake.buildDirectory}/mewo",
+      "cwd": "${command:cmake.buildDirectory}",
+      "windows": {
+        // Include .exe for Windows specifically
+        "program": "${command:cmake.buildDirectory}/mewo.exe"
+      },
+    }
+  ]
+}

@@ -211,13 +211,14 @@ FrameContext Renderer::prepare_new_frame() const
 {
   if (device_lost_error_.has_value()) {
     const Error& error = device_lost_error_.value();
-    throw Exception("WebGPU device lost. Reason: {}. Message:{}", error.error_type, error.message);
+    throw Exception(
+        "WebGPU device lost. Reason: {}. Message (below):\n{}", error.error_type, error.message);
   }
 
   if (uncaptured_error_.has_value()) {
     const Error& error = uncaptured_error_.value();
     throw Exception(
-        "Uncaptured WebGPU error. Type: {}. Message: {}", error.error_type, error.message);
+        "Uncaptured WebGPU error. Type: {}. Message (below):\n{}", error.error_type, error.message);
   }
 
   wgpu::SurfaceTexture surface_texture;
