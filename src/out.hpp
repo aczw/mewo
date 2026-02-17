@@ -6,6 +6,7 @@
 
 #include <webgpu/webgpu_cpp.h>
 
+#include <string>
 #include <string_view>
 
 namespace mewo {
@@ -21,7 +22,7 @@ class Out {
     Resolution, ///< Uses a predefined pixel resolution, possibly resulting in up/downsampling.
   };
 
-  Out(const gfx::Renderer& renderer);
+  Out(const gfx::Renderer& renderer, std::string initial_code);
 
   const wgpu::TextureView& view() const;
   DisplayMode display_mode() const;

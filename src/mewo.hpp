@@ -1,5 +1,6 @@
 #pragma once
 
+#include "editor.hpp"
 #include "gfx/renderer.hpp"
 #include "gui/context.hpp"
 #include "gui/layout.hpp"
@@ -24,6 +25,7 @@ class Mewo {
   gui::Context gui_ctx_;
   gui::Layout layout_;
 
+  Editor editor_;
   Out out_;
 };
 

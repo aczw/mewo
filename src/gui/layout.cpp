@@ -10,7 +10,6 @@
 #include <webgpu/webgpu.h>
 
 #include <functional>
-#include <print>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -20,7 +19,7 @@ namespace mewo::gui {
 static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
 static constexpr std::string_view OUTPUT_WINDOW_NAME = "Output";
 
-void Layout::build(const Context& gui_ctx, Out& out) const
+void Layout::build(const Context& gui_ctx, Editor& editor, Out& out) const
 {
   // Once the layout is created, the ID remains constant.
   if (const ImGuiID dockspace_id = ImGui::GetID("main-dockspace");
@@ -34,10 +33,7 @@ void Layout::build(const Context& gui_ctx, Out& out) const
   {
     ImGui::Begin(EDITOR_WINDOW_NAME.data());
 
-    static std::string test = "I am the editor";
-
-    if (ImGui::InputTextMultiline("##editor", &test))
-      std::println("{}", test);
+    ImGui::InputTextMultiline("##editor", &editor.code());
 
     ImGui::End();
   }

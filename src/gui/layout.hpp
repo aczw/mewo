@@ -1,5 +1,6 @@
 #pragma once
 
+#include "editor.hpp"
 #include "gui/context.hpp"
 #include "out.hpp"
 
@@ -10,7 +11,7 @@ namespace mewo::gui {
 class Layout {
   public:
   /// Builds the layout. Called every frame.
-  void build(const Context& gui_ctx, Out& out) const;
+  void build(const Context& gui_ctx, Editor& editor, Out& out) const;
 
   private:
   /// Sets up the overall docking layout. Only needs to be called once. Can only

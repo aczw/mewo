@@ -1,6 +1,5 @@
 #include "out.hpp"
 
-#include "fs.hpp"
 #include "gfx/create.hpp"
 #include "gfx/renderer.hpp"
 
@@ -17,16 +16,14 @@ constexpr std::string_view WGPU_ENTRY_POINT = "main";
 
 #if defined(MEWO_IS_DEBUG)
 constexpr std::string_view OUT_VERT_SHADER_FILE_PATH = "../../assets/shaders/out.vert.wgsl";
-constexpr std::string_view OUT_FRAG_SHADER_FILE_PATH = "../../assets/shaders/out.frag.wgsl";
 #else
-#error "TODO: handle "out.{frag,vert}.wgsl" file path on release mode"
+#error "TODO: handle "out.vert.wgsl" file path on release mode"
 constexpr std::string_view OUT_VERT_SHADER_FILE_PATH = "out.vert.wgsl";
-constexpr std::string_view OUT_FRAG_SHADER_FILE_PATH = "out.frag.wgsl";
 #endif
 
 }
 
-Out::Out(const gfx::Renderer& renderer)
+Out::Out(const gfx::Renderer& renderer, std::string initial_code)
 {
   const wgpu::Device& device = renderer.device();
   const wgpu::SurfaceConfiguration& surface_config = renderer.surface_config();
@@ -40,7 +37,7 @@ Out::Out(const gfx::Renderer& renderer)
         .entryPoint = WGPU_ENTRY_POINT },
   };
 
-  set_fragment_shader(device, fs::read_wgsl_shader(OUT_FRAG_SHADER_FILE_PATH));
+  set_fragment_shader(device, initial_code);
 
   wgpu::TextureDescriptor texture_desc = {
     .label = "out-texture",
