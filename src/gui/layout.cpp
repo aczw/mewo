@@ -34,7 +34,8 @@ void Layout::build(
   {
     ImGui::Begin(EDITOR_WINDOW_NAME.data());
 
-    ImGui::InputTextMultiline("##editor", &editor.code());
+    ImVec2 window_size = ImGui::GetContentRegionAvail();
+    ImGui::InputTextMultiline("##editor", &editor.code(), window_size);
 
     ImGui::End();
   }
