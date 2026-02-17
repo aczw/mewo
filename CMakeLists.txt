@@ -64,9 +64,13 @@ target_compile_definitions(imgui PUBLIC
 )
 
 # Let Dear ImGui find its own files, and set it to PUBLIC so that it also propagates to Mewo
-# when it links against the target. Also include the `backends/` folder so I don't have to prefix
+# when it links against the target. Also include some subdirectories so I don't have to prefix
 # files in the folder with it when I #include them.
-target_include_directories(imgui PUBLIC ${MEWO_IMGUI_DIR} ${MEWO_IMGUI_DIR}/backends)
+target_include_directories(imgui PUBLIC
+  ${MEWO_IMGUI_DIR}
+  ${MEWO_IMGUI_DIR}/backends
+  ${MEWO_IMGUI_DIR}/misc/cpp
+)
 target_link_libraries(imgui PRIVATE dawn::webgpu_dawn SDL3::SDL3)
 
 set(MEWO_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -80,6 +84,8 @@ add_executable(mewo
   ${MEWO_SDL_DIR}/window.cpp
   ${MEWO_SDL_DIR}/window.hpp
 
+  ${MEWO_GFX_DIR}/create.cpp
+  ${MEWO_GFX_DIR}/create.hpp
   ${MEWO_GFX_DIR}/error.hpp
   ${MEWO_GFX_DIR}/frame_context.hpp
   ${MEWO_GFX_DIR}/renderer.cpp

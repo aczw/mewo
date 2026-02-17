@@ -6,26 +6,24 @@
 
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <imgui_stdlib.h>
 #include <webgpu/webgpu.h>
 
 #include <functional>
+#include <print>
+#include <string>
 #include <string_view>
 #include <utility>
 
 namespace mewo::gui {
 
-namespace {
-
-constexpr std::string_view MAIN_DOCKSPACE_STR_ID = "main-dockspace";
-constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
-constexpr std::string_view OUTPUT_WINDOW_NAME = "Output";
-
-}
+static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
+static constexpr std::string_view OUTPUT_WINDOW_NAME = "Output";
 
 void Layout::build(const Context& gui_ctx, Out& out) const
 {
   // Once the layout is created, the ID remains constant.
-  if (const ImGuiID dockspace_id = ImGui::GetID(MAIN_DOCKSPACE_STR_ID.data());
+  if (const ImGuiID dockspace_id = ImGui::GetID("main-dockspace");
       ImGui::DockBuilderGetNode(dockspace_id) == nullptr) {
     set_up_initial_layout(gui_ctx, dockspace_id);
   } else {
@@ -35,7 +33,12 @@ void Layout::build(const Context& gui_ctx, Out& out) const
 
   {
     ImGui::Begin(EDITOR_WINDOW_NAME.data());
-    ImGui::Text("I am the editor");
+
+    static std::string test = "I am the editor";
+
+    if (ImGui::InputTextMultiline("##editor", &test))
+      std::println("{}", test);
+
     ImGui::End();
   }
 

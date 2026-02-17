@@ -6,6 +6,8 @@
 
 #include <webgpu/webgpu_cpp.h>
 
+#include <string_view>
+
 namespace mewo {
 
 /// Visual output seen on the screen. Does not directly render to the surface
@@ -29,9 +31,13 @@ class Out {
   void set_aspect_ratio_preset(AspectRatio::Preset preset);
 
   void record(const gfx::FrameContext& frame_ctx) const;
+  void set_fragment_shader(const wgpu::Device& device, std::string_view code);
 
   private:
+  wgpu::ColorTargetState color_target_state_;
+  wgpu::RenderPipelineDescriptor render_pipeline_desc_;
   wgpu::RenderPipeline render_pipeline_;
+
   wgpu::Texture texture_;
   wgpu::TextureView view_;
 
