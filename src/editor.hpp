@@ -7,7 +7,7 @@ namespace mewo {
 
 class Editor {
   public:
-  Editor(std::string_view code);
+  Editor(std::string_view initial_code);
 
   std::string& code();
 

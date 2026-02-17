@@ -46,7 +46,8 @@ void Mewo::run()
     const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
     gui_ctx_.prepare_new_frame();
 
-    layout_.build(gui_ctx_, editor_, out_);
+    const wgpu::Device& device = renderer_.device();
+    layout_.build(gui_ctx_, device, editor_, out_);
 
     out_.record(frame_ctx);
     gui_ctx_.record(frame_ctx);
@@ -56,7 +57,7 @@ void Mewo::run()
 
     renderer_.queue().Submit(1, &cmd_buf);
     renderer_.surface().Present();
-    renderer_.device().Tick();
+    device.Tick();
   }
 }
 

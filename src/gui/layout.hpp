@@ -5,13 +5,14 @@
 #include "out.hpp"
 
 #include <imgui.h>
+#include <webgpu/webgpu_cpp.h>
 
 namespace mewo::gui {
 
 class Layout {
   public:
   /// Builds the layout. Called every frame.
-  void build(const Context& gui_ctx, Editor& editor, Out& out) const;
+  void build(const Context& gui_ctx, const wgpu::Device& device, Editor& editor, Out& out) const;
 
   private:
   /// Sets up the overall docking layout. Only needs to be called once. Can only

@@ -19,7 +19,8 @@ namespace mewo::gui {
 static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
 static constexpr std::string_view OUTPUT_WINDOW_NAME = "Output";
 
-void Layout::build(const Context& gui_ctx, Editor& editor, Out& out) const
+void Layout::build(
+    const Context& gui_ctx, const wgpu::Device& device, Editor& editor, Out& out) const
 {
   // Once the layout is created, the ID remains constant.
   if (const ImGuiID dockspace_id = ImGui::GetID("main-dockspace");
@@ -69,7 +70,7 @@ void Layout::build(const Context& gui_ctx, Editor& editor, Out& out) const
     }
 
     if (ImGui::Button("Run"))
-      throw Exception("TODO: implement run button");
+      out.set_fragment_shader(device, editor.code());
 
     {
       using Mode = Out::DisplayMode;

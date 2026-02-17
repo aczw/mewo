@@ -2,8 +2,8 @@
 
 namespace mewo {
 
-Editor::Editor(std::string_view code)
-    : code_(code)
+Editor::Editor(std::string_view initial_code)
+    : code_(initial_code)
 {
 }
 
