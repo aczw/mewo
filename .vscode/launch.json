@@ -9,7 +9,7 @@
         "cpp",
         "c"
       ],
-      "program": "{command:cmake.buildDirectory}/mewo",
+      "program": "${command:cmake.buildDirectory}/mewo",
       "cwd": "${command:cmake.buildDirectory}",
       "windows": {
         // Include .exe for Windows specifically
