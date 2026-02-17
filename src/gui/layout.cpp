@@ -2,6 +2,7 @@
 
 #include "aspect_ratio.hpp"
 #include "exception.hpp"
+#include "mewo.hpp"
 #include "utility.hpp"
 
 #include <imgui.h>
@@ -20,7 +21,7 @@ static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
 static constexpr std::string_view OUTPUT_WINDOW_NAME = "Output";
 
 void Layout::build(
-    const Context& gui_ctx, const wgpu::Device& device, Editor& editor, Out& out) const
+    Mewo& ctx, const Context& gui_ctx, const wgpu::Device& device, Editor& editor, Out& out) const
 {
   // Once the layout is created, the ID remains constant.
   if (const ImGuiID dockspace_id = ImGui::GetID("main-dockspace");
@@ -29,6 +30,17 @@ void Layout::build(
   } else {
     ImGui::DockSpaceOverViewport(
         dockspace_id, gui_ctx.viewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+  }
+
+  if (ImGui::BeginMainMenuBar()) {
+    if (ImGui::BeginMenu("File")) {
+      if (ImGui::MenuItem("Quit"))
+        ctx.request_quit();
+
+      ImGui::EndMenu();
+    }
+
+    ImGui::EndMainMenuBar();
   }
 
   {

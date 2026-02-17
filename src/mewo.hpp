@@ -15,6 +15,7 @@ class Mewo {
   Mewo();
 
   void run();
+  void request_quit();
 
   private:
   sdl::Context sdl_ctx_;
@@ -27,6 +28,8 @@ class Mewo {
 
   Editor editor_;
   Out out_;
+
+  bool should_quit_ = false;
 };
 
 }
