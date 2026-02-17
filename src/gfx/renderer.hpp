@@ -26,6 +26,7 @@ class Renderer {
   /// Checks if any errors have occurred in the graphics context, and throws accordingly.
   /// Otherwise, it returns a texture view of the current surface and a new command encoder.
   FrameContext prepare_new_frame() const;
+  void resize(uint32_t new_width, uint32_t new_height);
 
   private:
   wgpu::Instance instance_;

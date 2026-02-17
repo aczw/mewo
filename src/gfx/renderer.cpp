@@ -166,6 +166,7 @@ Renderer::Renderer(const sdl::Window& window)
     throw Exception("Failed to create WebGPU surface");
   } else {
     surface_ = wgpu::Surface(raw_surface);
+    surface_.SetLabel("surface");
   }
 
   surface_config_ = std::invoke([this, &window, &adapter] -> wgpu::SurfaceConfiguration {
@@ -174,18 +175,14 @@ Renderer::Renderer(const sdl::Window& window)
     if (!surface_.GetCapabilities(adapter, &surface_capabilities))
       throw Exception("Failed to get WebGPU surface capabilities");
 
-    int width_in_pixels = 0;
-    int height_in_pixels = 0;
-
-    if (!SDL_GetWindowSizeInPixels(window.get(), &width_in_pixels, &height_in_pixels))
-      throw Exception("Failed to get SDL window pixel size: {}", SDL_GetError());
+    auto [width, height] = window.size_in_pixels();
 
     return {
       .device = device_,
       // There is always at least 1 format if `wgpu::Surface::GetCapabilities` was successful
       .format = surface_capabilities.formats[0],
-      .width = static_cast<uint32_t>(width_in_pixels),
-      .height = static_cast<uint32_t>(height_in_pixels),
+      .width = width,
+      .height = height,
       // Essentially enables VSync and is supported on all platforms
       .presentMode = wgpu::PresentMode::Fifo,
     };
@@ -243,6 +240,14 @@ FrameContext Renderer::prepare_new_frame() const
     .surface_view = surface_texture.texture.CreateView(&SURFACE_VIEW_DESC),
     .encoder = device_.CreateCommandEncoder(&COMMAND_ENCODER_DESC),
   };
+}
+
+void Renderer::resize(uint32_t new_width, uint32_t new_height)
+{
+  surface_config_.width = new_width;
+  surface_config_.height = new_height;
+
+  surface_.Configure(&surface_config_);
 }
 
 }

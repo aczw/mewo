@@ -38,18 +38,13 @@ Out::Out(const gfx::Renderer& renderer, std::string initial_code)
   set_fragment_state(device, initial_code);
   update(device);
 
-  wgpu::TextureDescriptor texture_desc = {
+  texture_desc_ = {
     .label = "out-texture",
     .usage = wgpu::TextureUsage::RenderAttachment | wgpu::TextureUsage::TextureBinding,
-    .size = { .width = surface_config.width, .height = surface_config.height },
     .format = surface_config.format,
   };
 
-  texture_ = device.CreateTexture(&texture_desc);
-
-  wgpu::TextureViewDescriptor view_desc = { .label = "out-view" };
-
-  view_ = texture_.CreateView(&view_desc);
+  resize(device, surface_config.width, surface_config.height);
 }
 
 const wgpu::TextureView& Out::view() const { return view_; }
@@ -96,6 +91,17 @@ void Out::update(const wgpu::Device& device)
 {
   render_pipeline_desc_.fragment = &fragment_state_;
   render_pipeline_ = device.CreateRenderPipeline(&render_pipeline_desc_);
+}
+
+void Out::resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height)
+{
+  texture_desc_.size.width = new_width;
+  texture_desc_.size.height = new_height;
+  texture_ = device.CreateTexture(&texture_desc_);
+
+  static const wgpu::TextureViewDescriptor VIEW_DESC = { .label = "out-view" };
+
+  view_ = texture_.CreateView(&VIEW_DESC);
 }
 
 }

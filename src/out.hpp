@@ -36,6 +36,7 @@ class Out {
   void record(const gfx::FrameContext& frame_ctx) const;
   /// Sets the current fragment shader and creates the render pipeline.
   void update(const wgpu::Device& device);
+  void resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height);
 
   private:
   wgpu::ColorTargetState color_target_state_; ///< Only one output, the texture being rendered to.
@@ -43,6 +44,7 @@ class Out {
   wgpu::RenderPipelineDescriptor render_pipeline_desc_;
   wgpu::RenderPipeline render_pipeline_;
 
+  wgpu::TextureDescriptor texture_desc_;
   wgpu::Texture texture_;
   wgpu::TextureView view_;
 

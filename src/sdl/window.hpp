@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 
 #include <memory>
+#include <utility>
 
 namespace mewo::sdl {
 
@@ -13,6 +14,8 @@ class Window {
   Window();
 
   SDL_Window* get() const;
+
+  std::pair<uint32_t, uint32_t> size_in_pixels() const;
 
   private:
   struct SDLWindowDeleter {
