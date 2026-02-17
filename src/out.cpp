@@ -1,27 +1,17 @@
 #include "out.hpp"
 
+#include "exception.hpp"
 #include "gfx/create.hpp"
 #include "gfx/renderer.hpp"
+#include "query.hpp"
 
 #include <webgpu/webgpu_cpp.h>
 
 #include <filesystem>
+#include <functional>
 #include <string_view>
 
 namespace mewo {
-
-namespace {
-
-constexpr std::string_view WGPU_ENTRY_POINT = "main";
-
-#if defined(MEWO_IS_DEBUG)
-constexpr std::string_view OUT_VERT_SHADER_FILE_PATH = "../../assets/shaders/out.vert.wgsl";
-#else
-#error "TODO: handle "out.vert.wgsl" file path on release mode"
-constexpr std::string_view OUT_VERT_SHADER_FILE_PATH = "out.vert.wgsl";
-#endif
-
-}
 
 Out::Out(const gfx::Renderer& renderer, std::string initial_code)
 {
@@ -30,14 +20,22 @@ Out::Out(const gfx::Renderer& renderer, std::string initial_code)
 
   color_target_state_ = { .format = surface_config.format };
 
+  auto vert_shader_file_path = std::invoke([] -> std::filesystem::path {
+    if constexpr (query::is_debug()) {
+      return "../../assets/shaders/out.vert.wgsl";
+    } else {
+      throw Exception("TODO: handle \"out.vert.wgsl\" file path on release mode");
+    }
+  });
+
   render_pipeline_desc_ = {
     .label = "out-render-pipeline",
-    .vertex = { .module = gfx::create::shader_module_from_wgsl(device,
-                    std::filesystem::path(OUT_VERT_SHADER_FILE_PATH), "out-vert-shader-module"),
-        .entryPoint = WGPU_ENTRY_POINT },
+    .vertex = { .module = gfx::create::shader_module_from_wgsl(
+                    device, vert_shader_file_path, "out-vert-shader-module") },
   };
 
-  set_fragment_shader(device, initial_code);
+  set_fragment_state(device, initial_code);
+  update(device);
 
   wgpu::TextureDescriptor texture_desc = {
     .label = "out-texture",
@@ -58,6 +56,15 @@ const wgpu::TextureView& Out::view() const { return view_; }
 Out::DisplayMode Out::display_mode() const { return display_mode_; }
 
 AspectRatio::Preset Out::aspect_ratio_preset() const { return aspect_ratio_preset_; }
+
+void Out::set_fragment_state(const wgpu::Device& device, std::string_view code)
+{
+  fragment_state_ = {
+    .module = gfx::create::shader_module_from_wgsl(device, code, "out-frag-shader-module"),
+    .targetCount = 1,
+    .targets = &color_target_state_,
+  };
+}
 
 void Out::set_display_mode(DisplayMode display_mode) { display_mode_ = display_mode; }
 
@@ -83,16 +90,9 @@ void Out::record(const gfx::FrameContext& frame_ctx) const
   render_pass.End();
 }
 
-void Out::set_fragment_shader(const wgpu::Device& device, std::string_view code)
+void Out::update(const wgpu::Device& device)
 {
-  wgpu::FragmentState fragment_state = {
-    .module = gfx::create::shader_module_from_wgsl(device, code, "out-frag-shader-module"),
-    .entryPoint = WGPU_ENTRY_POINT,
-    .targetCount = 1,
-    .targets = &color_target_state_,
-  };
-
-  render_pipeline_desc_.fragment = &fragment_state;
+  render_pipeline_desc_.fragment = &fragment_state_;
   render_pipeline_ = device.CreateRenderPipeline(&render_pipeline_desc_);
 }
 

@@ -69,8 +69,10 @@ void Layout::build(
       ImGui::Image(texture_id, image_size);
     }
 
-    if (ImGui::Button("Run"))
-      out.set_fragment_shader(device, editor.code());
+    if (ImGui::Button("Run")) {
+      out.set_fragment_state(device, editor.code());
+      out.update(device);
+    }
 
     {
       using Mode = Out::DisplayMode;

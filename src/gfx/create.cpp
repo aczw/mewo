@@ -24,7 +24,7 @@ wgpu::ShaderModule shader_module_from_wgsl(
 {
   std::string code = fs::read_wgsl_shader(file_path);
 
-  // Explicitly convert to `std::string_view`to resolve function overload
+  // Explicitly conversion to resolve function overload
   return shader_module_from_wgsl(device, std::string_view(code), label);
 }
 

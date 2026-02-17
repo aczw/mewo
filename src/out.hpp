@@ -28,14 +28,18 @@ class Out {
   DisplayMode display_mode() const;
   AspectRatio::Preset aspect_ratio_preset() const;
 
+  /// `Out` never owns the fragment shader code, hence it only accepts a view of it.
+  void set_fragment_state(const wgpu::Device& device, std::string_view code);
   void set_display_mode(DisplayMode display_mode);
   void set_aspect_ratio_preset(AspectRatio::Preset preset);
 
   void record(const gfx::FrameContext& frame_ctx) const;
-  void set_fragment_shader(const wgpu::Device& device, std::string_view code);
+  /// Sets the current fragment shader and creates the render pipeline.
+  void update(const wgpu::Device& device);
 
   private:
-  wgpu::ColorTargetState color_target_state_;
+  wgpu::ColorTargetState color_target_state_; ///< Only one output, the texture being rendered to.
+  wgpu::FragmentState fragment_state_;
   wgpu::RenderPipelineDescriptor render_pipeline_desc_;
   wgpu::RenderPipeline render_pipeline_;
 

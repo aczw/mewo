@@ -10,9 +10,8 @@ static constexpr auto SDL_SUBSYSTEMS = SDL_INIT_VIDEO;
 
 Context::Context()
 {
-  if (!SDL_Init(SDL_SUBSYSTEMS)) {
+  if (!SDL_Init(SDL_SUBSYSTEMS))
     throw Exception("Failed to initialize SDL: {}", SDL_GetError());
-  }
 }
 
 Context::~Context()

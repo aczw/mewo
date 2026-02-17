@@ -23,7 +23,7 @@ namespace mewo::gfx {
 
 namespace {
 
-constexpr uint64_t WGPU_WAIT_TIMEOUT_MAX = std::numeric_limits<uint64_t>::max();
+constexpr auto WGPU_WAIT_TIMEOUT_MAX = std::numeric_limits<uint64_t>::max();
 
 std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextureStatus status)
 {

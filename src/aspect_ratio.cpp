@@ -4,6 +4,7 @@
 
 namespace mewo {
 
+/// Guarantee these values are computed at compile-time.
 namespace inverse_ratio {
 
 constexpr float VALUE_1_1 = 1.f / 1.f;
