@@ -3,6 +3,7 @@
 #include "aspect_ratio.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/renderer.hpp"
+#include "state.hpp"
 
 #include <webgpu/webgpu_cpp.h>
 
@@ -40,6 +41,7 @@ class Viewport {
   /// Updates the fragment shader and creates the render pipeline.
   void update(const wgpu::Device& device);
   void resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height);
+  void prepare_new_frame(const State& state) const;
 
   private:
   wgpu::ColorTargetState color_target_state_; ///< Only one output, the texture being rendered to.

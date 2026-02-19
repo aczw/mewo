@@ -111,4 +111,10 @@ void Viewport::resize(const wgpu::Device& device, uint32_t new_width, uint32_t n
   pass_color_attachment_.view = view_;
 }
 
+void Viewport::prepare_new_frame(const State& state) const
+{
+  std::println(
+      "same width: {}", state.curr_viewport_window_width == state.prev_viewport_window_width);
+}
+
 }

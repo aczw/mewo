@@ -108,6 +108,7 @@ add_executable(mewo
   ${MEWO_SRC_DIR}/mewo.cpp
   ${MEWO_SRC_DIR}/mewo.hpp
   ${MEWO_SRC_DIR}/query.hpp
+  ${MEWO_SRC_DIR}/state.hpp
   ${MEWO_SRC_DIR}/utility.hpp
   ${MEWO_SRC_DIR}/viewport.cpp
   ${MEWO_SRC_DIR}/viewport.hpp

@@ -2,22 +2,18 @@
 
 #include "editor.hpp"
 #include "gui/context.hpp"
+#include "state.hpp"
 #include "viewport.hpp"
 
 #include <imgui.h>
 #include <webgpu/webgpu_cpp.h>
 
-namespace mewo {
-
-/// Breaks circular dependency.
-class Mewo;
-
-namespace gui {
+namespace mewo::gui {
 
 class Layout {
   public:
   /// Builds the layout. Called every frame.
-  void build(Mewo& ctx, const Context& gui_ctx, const wgpu::Device& device, Editor& editor,
+  void build(State& state, const Context& gui_ctx, const wgpu::Device& device, Editor& editor,
       Viewport& viewport) const;
 
   private:
@@ -25,7 +21,5 @@ class Layout {
   /// be called after a new frame is initiated, so it's not possible in the constructor.
   void set_up_initial_layout(const Context& gui_ctx, ImGuiID dockspace_id) const;
 };
-
-}
 
 }

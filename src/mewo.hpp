@@ -15,9 +15,10 @@ class Mewo {
   Mewo();
 
   void run();
-  void request_quit();
 
   private:
+  State state_;
+
   sdl::Context sdl_ctx_;
   sdl::Window window_;
 
@@ -28,8 +29,6 @@ class Mewo {
 
   Editor editor_;
   Viewport viewport_;
-
-  bool should_quit_ = false;
 };
 
 }

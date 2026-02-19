@@ -27,22 +27,20 @@ Mewo::Mewo()
 {
 }
 
-void Mewo::request_quit() { should_quit_ = true; }
-
 void Mewo::run()
 {
   SDL_Event event = {};
 
   const wgpu::Device& device = renderer_.device();
 
-  while (!should_quit_) {
+  while (!state_.should_quit) {
     while (SDL_PollEvent(&event)) {
       ImGui_ImplSDL3_ProcessEvent(&event);
 
       switch (event.type) {
       case SDL_EVENT_QUIT:
       case SDL_EVENT_WINDOW_CLOSE_REQUESTED: {
-        request_quit();
+        state_.should_quit = true;
         break;
       }
 
@@ -57,8 +55,9 @@ void Mewo::run()
 
     const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
     gui_ctx_.prepare_new_frame();
+    viewport_.prepare_new_frame(state_);
 
-    layout_.build(*this, gui_ctx_, device, editor_, viewport_);
+    layout_.build(state_, gui_ctx_, device, editor_, viewport_);
 
     viewport_.record(frame_ctx);
     gui_ctx_.record(frame_ctx);

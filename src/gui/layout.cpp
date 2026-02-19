@@ -2,7 +2,6 @@
 
 #include "aspect_ratio.hpp"
 #include "exception.hpp"
-#include "mewo.hpp"
 #include "utility.hpp"
 
 #include <imgui.h>
@@ -20,7 +19,7 @@ namespace mewo::gui {
 static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
 static constexpr std::string_view VIEWPORT_WINDOW_NAME = "Viewport";
 
-void Layout::build(Mewo& ctx, const Context& gui_ctx, const wgpu::Device& device, Editor& editor,
+void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& device, Editor& editor,
     Viewport& viewport) const
 {
   // Once the layout is created, the ID remains constant.
@@ -35,7 +34,7 @@ void Layout::build(Mewo& ctx, const Context& gui_ctx, const wgpu::Device& device
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
       if (ImGui::MenuItem("Quit"))
-        ctx.request_quit();
+        state.should_quit = true;
 
       ImGui::EndMenu();
     }
@@ -55,21 +54,22 @@ void Layout::build(Mewo& ctx, const Context& gui_ctx, const wgpu::Device& device
   {
     ImGui::Begin(VIEWPORT_WINDOW_NAME.data());
 
-    auto curr_mode = viewport.mode();
-    auto curr_preset = viewport.ratio_preset();
+    Viewport::Mode curr_mode = viewport.mode();
+    AspectRatio::Preset curr_preset = viewport.ratio_preset();
+
+    ImVec2 window_size = ImGui::GetContentRegionAvail();
+    state.prev_viewport_window_width = state.curr_viewport_window_width;
+    state.curr_viewport_window_width = static_cast<uint32_t>(window_size.x);
 
     {
       WGPUTextureView view_raw = viewport.view().Get();
       auto texture_id = static_cast<ImTextureID>(reinterpret_cast<intptr_t>(view_raw));
 
-      auto image_size = std::invoke([&curr_mode, &curr_preset] -> ImVec2 {
+      auto image_size = std::invoke([&curr_mode, &curr_preset, &window_size] -> ImVec2 {
         switch (curr_mode) {
         case Viewport::Mode::AspectRatio: {
-          float inverse_aspect_ratio = AspectRatio::get_inverse_value(curr_preset);
-          ImVec2 content_region = ImGui::GetContentRegionAvail();
-          content_region.y = content_region.x * inverse_aspect_ratio;
-
-          return content_region;
+          window_size.y = window_size.x * AspectRatio::get_inverse_value(curr_preset);
+          return window_size;
         }
 
         case Viewport::Mode::Resolution:
