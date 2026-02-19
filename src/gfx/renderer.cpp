@@ -32,7 +32,7 @@ std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextureStatus
   case wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal: return "SuccessOptimal";
   case wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal: return "SuccessSuboptimal";
   case wgpu::SurfaceGetCurrentTextureStatus::Timeout: return "Timeout";
-  case wgpu::SurfaceGetCurrentTextureStatus::Outdated: return "Outdated";
+  case wgpu::SurfaceGetCurrentTextureStatus::Outdated: return "Viewportdated";
   case wgpu::SurfaceGetCurrentTextureStatus::Lost: return "Lost";
   case wgpu::SurfaceGetCurrentTextureStatus::Error: return "Error";
     // clang-format on

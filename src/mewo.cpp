@@ -23,7 +23,7 @@ Mewo::Mewo()
     , renderer_(window_)
     , gui_ctx_(window_, renderer_)
     , editor_(fs::read_wgsl_shader(OUT_FRAG_SHADER_FILE_PATH))
-    , out_(renderer_, editor_.code())
+    , viewport_(renderer_, editor_.code())
 {
 }
 
@@ -49,7 +49,7 @@ void Mewo::run()
       case SDL_EVENT_WINDOW_RESIZED: {
         auto [new_width, new_height] = window_.size_in_pixels();
         renderer_.resize(new_width, new_height);
-        out_.resize(device, new_width, new_height);
+        viewport_.resize(device, new_width, new_height);
         break;
       }
       }
@@ -58,9 +58,9 @@ void Mewo::run()
     const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
     gui_ctx_.prepare_new_frame();
 
-    layout_.build(*this, gui_ctx_, device, editor_, out_);
+    layout_.build(*this, gui_ctx_, device, editor_, viewport_);
 
-    out_.record(frame_ctx);
+    viewport_.record(frame_ctx);
     gui_ctx_.record(frame_ctx);
 
     static const wgpu::CommandBufferDescriptor CMD_BUF_DESC = { .label = "command-buffer" };

@@ -1,4 +1,4 @@
-#include "out.hpp"
+#include "viewport.hpp"
 
 #include "exception.hpp"
 #include "gfx/create.hpp"
@@ -9,11 +9,12 @@
 
 #include <filesystem>
 #include <functional>
+#include <print>
 #include <string_view>
 
 namespace mewo {
 
-Out::Out(const gfx::Renderer& renderer, std::string initial_code)
+Viewport::Viewport(const gfx::Renderer& renderer, std::string_view initial_code)
 {
   const wgpu::Device& device = renderer.device();
   const wgpu::SurfaceConfiguration& surface_config = renderer.surface_config();
@@ -45,15 +46,27 @@ Out::Out(const gfx::Renderer& renderer, std::string initial_code)
   };
 
   resize(device, surface_config.width, surface_config.height);
+
+  pass_color_attachment_ = {
+    .view = view_,
+    .loadOp = wgpu::LoadOp::Clear,
+    .storeOp = wgpu::StoreOp::Store,
+  };
+
+  pass_desc_ = {
+    .label = "out-render-pass",
+    .colorAttachmentCount = 1,
+    .colorAttachments = &pass_color_attachment_,
+  };
 }
 
-const wgpu::TextureView& Out::view() const { return view_; }
+const wgpu::TextureView& Viewport::view() const { return view_; }
 
-Out::DisplayMode Out::display_mode() const { return display_mode_; }
+Viewport::Mode Viewport::mode() const { return mode_; }
 
-AspectRatio::Preset Out::aspect_ratio_preset() const { return aspect_ratio_preset_; }
+AspectRatio::Preset Viewport::ratio_preset() const { return ratio_preset_; }
 
-void Out::set_fragment_state(const wgpu::Device& device, std::string_view code)
+void Viewport::set_fragment_state(const wgpu::Device& device, std::string_view code)
 {
   fragment_state_ = {
     .module = gfx::create::shader_module_from_wgsl(device, code, "out-frag-shader-module"),
@@ -63,38 +76,31 @@ void Out::set_fragment_state(const wgpu::Device& device, std::string_view code)
   };
 }
 
-void Out::set_display_mode(DisplayMode display_mode) { display_mode_ = display_mode; }
+void Viewport::set_mode(Mode mode) { mode_ = mode; }
 
-void Out::set_aspect_ratio_preset(AspectRatio::Preset preset) { aspect_ratio_preset_ = preset; }
+void Viewport::set_ratio_preset(AspectRatio::Preset preset) { ratio_preset_ = preset; }
 
-void Out::record(const gfx::FrameContext& frame_ctx) const
+void Viewport::record(const gfx::FrameContext& frame_ctx) const
 {
-  wgpu::RenderPassColorAttachment color_attachment = {
-    .view = view_,
-    .loadOp = wgpu::LoadOp::Clear,
-    .storeOp = wgpu::StoreOp::Store,
-  };
+  wgpu::RenderPassEncoder render_pass = frame_ctx.encoder.BeginRenderPass(&pass_desc_);
 
-  wgpu::RenderPassDescriptor render_pass_desc = {
-    .label = "out-render-pass",
-    .colorAttachmentCount = 1,
-    .colorAttachments = &color_attachment,
-  };
-
-  wgpu::RenderPassEncoder render_pass = frame_ctx.encoder.BeginRenderPass(&render_pass_desc);
   render_pass.SetPipeline(render_pipeline_);
   render_pass.Draw(6);
+
   render_pass.End();
 }
 
-void Out::update(const wgpu::Device& device)
+void Viewport::update(const wgpu::Device& device)
 {
   render_pipeline_desc_.fragment = &fragment_state_;
   render_pipeline_ = device.CreateRenderPipeline(&render_pipeline_desc_);
 }
 
-void Out::resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height)
+void Viewport::resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height)
 {
+  if constexpr (query::is_debug())
+    std::println("Viewport texture resized to {}×{}", new_width, new_height);
+
   texture_desc_.size.width = new_width;
   texture_desc_.size.height = new_height;
   texture_ = device.CreateTexture(&texture_desc_);
@@ -102,6 +108,7 @@ void Out::resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_he
   static const wgpu::TextureViewDescriptor VIEW_DESC = { .label = "out-view" };
 
   view_ = texture_.CreateView(&VIEW_DESC);
+  pass_color_attachment_.view = view_;
 }
 
 }

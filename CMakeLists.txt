@@ -107,10 +107,10 @@ add_executable(mewo
   ${MEWO_SRC_DIR}/main.cpp
   ${MEWO_SRC_DIR}/mewo.cpp
   ${MEWO_SRC_DIR}/mewo.hpp
-  ${MEWO_SRC_DIR}/out.cpp
-  ${MEWO_SRC_DIR}/out.hpp
   ${MEWO_SRC_DIR}/query.hpp
   ${MEWO_SRC_DIR}/utility.hpp
+  ${MEWO_SRC_DIR}/viewport.cpp
+  ${MEWO_SRC_DIR}/viewport.hpp
 )
 
 # So I can always reference files starting from the source directory

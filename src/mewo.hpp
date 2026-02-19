@@ -4,9 +4,9 @@
 #include "gfx/renderer.hpp"
 #include "gui/context.hpp"
 #include "gui/layout.hpp"
-#include "out.hpp"
 #include "sdl/context.hpp"
 #include "sdl/window.hpp"
+#include "viewport.hpp"
 
 namespace mewo {
 
@@ -27,7 +27,7 @@ class Mewo {
   gui::Layout layout_;
 
   Editor editor_;
-  Out out_;
+  Viewport viewport_;
 
   bool should_quit_ = false;
 };
