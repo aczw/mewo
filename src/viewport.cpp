@@ -4,11 +4,14 @@
 #include "gfx/create.hpp"
 #include "gfx/renderer.hpp"
 #include "query.hpp"
+#include "utility.hpp"
 
 #include <webgpu/webgpu_cpp.h>
 
+#include <cmath>
 #include <filesystem>
 #include <functional>
+#include <optional>
 #include <print>
 #include <string_view>
 
@@ -45,6 +48,7 @@ Viewport::Viewport(const gfx::Renderer& renderer, std::string_view initial_code)
     .format = surface_config.format,
   };
 
+  // TODO: use a better heuristic for determining initial viewport texture size
   resize(device, surface_config.width, surface_config.height);
 
   pass_color_attachment_ = {
@@ -80,6 +84,8 @@ void Viewport::set_mode(Mode mode) { mode_ = mode; }
 
 void Viewport::set_ratio_preset(AspectRatio::Preset preset) { ratio_preset_ = preset; }
 
+void Viewport::set_pending_size(PendingSize pending_size) { pending_size_ = pending_size; }
+
 void Viewport::record(const gfx::FrameContext& frame_ctx) const
 {
   wgpu::RenderPassEncoder render_pass = frame_ctx.encoder.BeginRenderPass(&pass_desc_);
@@ -111,10 +117,34 @@ void Viewport::resize(const wgpu::Device& device, uint32_t new_width, uint32_t n
   pass_color_attachment_.view = view_;
 }
 
-void Viewport::prepare_new_frame(const State& state) const
+void Viewport::check_for_resize(const wgpu::Device& device)
 {
-  std::println(
-      "same width: {}", state.curr_viewport_window_width == state.prev_viewport_window_width);
+  if (!pending_size_.has_value())
+    return;
+
+  // TODO: after the initial viewport texture size, a pending texture size of "16×9" is
+  //       received. Should probably get rid of that
+  auto& pending_size = pending_size_.value();
+
+  auto new_size = std::invoke([this, &pending_size] -> std::pair<uint32_t, uint32_t> {
+    switch (mode_) {
+    case Mode::AspectRatio: {
+      auto width = pending_size.first;
+      auto height = static_cast<float>(width) * AspectRatio::get_inverse_value(ratio_preset_);
+
+      return { width, static_cast<uint32_t>(std::floor(height)) };
+    }
+
+    case Mode::Resolution:
+      throw Exception("TODO: implement resizing operation for resolution");
+
+    default:
+      utility::enum_unreachable("Viewport::Mode", mode_);
+    }
+  });
+
+  resize(device, new_size.first, new_size.second);
+  pending_size_ = std::nullopt;
 }
 
 }

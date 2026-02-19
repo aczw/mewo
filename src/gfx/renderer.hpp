@@ -35,6 +35,7 @@ class Renderer {
   wgpu::SurfaceConfiguration surface_config_;
   wgpu::Queue queue_;
 
+  // TODO: move these two fields to `State` struct?
   std::optional<Error> device_lost_error_;
   std::optional<Error> uncaptured_error_;
 };

@@ -1,13 +1,10 @@
 #pragma once
 
-#include <cstdint>
-
 namespace mewo {
 
+/// Stores general application state. Also lets me avoid passing the entire `Mewo` class
+/// into functions, reducing the risk of circular dependencies.
 struct State {
-  uint32_t curr_viewport_window_width = 0; ///< Cached every frame.
-  uint32_t prev_viewport_window_width = 0; ///< Cached every frame.
-
   bool should_quit = false;
 };
 

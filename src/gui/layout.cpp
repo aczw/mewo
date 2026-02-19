@@ -20,7 +20,7 @@ static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
 static constexpr std::string_view VIEWPORT_WINDOW_NAME = "Viewport";
 
 void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& device, Editor& editor,
-    Viewport& viewport) const
+    Viewport& viewport)
 {
   // Once the layout is created, the ID remains constant.
   if (const ImGuiID dockspace_id = ImGui::GetID("main-dockspace");
@@ -58,8 +58,17 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
     AspectRatio::Preset curr_preset = viewport.ratio_preset();
 
     ImVec2 window_size = ImGui::GetContentRegionAvail();
-    state.prev_viewport_window_width = state.curr_viewport_window_width;
-    state.curr_viewport_window_width = static_cast<uint32_t>(window_size.x);
+    auto curr_viewport_window_width = static_cast<uint32_t>(window_size.x);
+
+    // If the window containing the viewport has changed width, we resize the texture.
+    // This only applies if the viewport mode is based on the aspect ratio.
+    if (curr_mode == Viewport::Mode::AspectRatio
+        && curr_viewport_window_width != prev_viewport_window_width_) {
+
+      viewport.set_pending_size({ curr_viewport_window_width, std::nullopt });
+    }
+
+    prev_viewport_window_width_ = curr_viewport_window_width;
 
     {
       WGPUTextureView view_raw = viewport.view().Get();

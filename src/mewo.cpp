@@ -47,7 +47,6 @@ void Mewo::run()
       case SDL_EVENT_WINDOW_RESIZED: {
         auto [new_width, new_height] = window_.size_in_pixels();
         renderer_.resize(new_width, new_height);
-        viewport_.resize(device, new_width, new_height);
         break;
       }
       }
@@ -55,7 +54,7 @@ void Mewo::run()
 
     const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
     gui_ctx_.prepare_new_frame();
-    viewport_.prepare_new_frame(state_);
+    viewport_.check_for_resize(device);
 
     layout_.build(state_, gui_ctx_, device, editor_, viewport_);
 
