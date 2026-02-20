@@ -37,6 +37,8 @@ class Viewport {
   const wgpu::TextureView& view() const;
   Mode mode() const;
   AspectRatio::Preset ratio_preset() const;
+  uint32_t width() const;
+  uint32_t height() const;
 
   void set_fragment_state(const wgpu::Device& device, std::string_view code);
   void set_mode(Mode display_mode);
@@ -47,8 +49,6 @@ class Viewport {
   /// Updates the fragment shader and creates the render pipeline.
   void update(const wgpu::Device& device);
   void resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height);
-  /// Calculates the current aspect ratio of the viewport. Depends on current mode.
-  float current_inverse_ratio() const;
 
   private:
   wgpu::ColorTargetState color_target_state_;

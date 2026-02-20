@@ -6,7 +6,6 @@
 #include "gfx/renderer.hpp"
 #include "gui/layout.hpp"
 #include "query.hpp"
-#include "utility.hpp"
 
 #include <webgpu/webgpu_cpp.h>
 
@@ -80,6 +79,10 @@ Viewport::Mode Viewport::mode() const { return mode_; }
 
 AspectRatio::Preset Viewport::ratio_preset() const { return ratio_preset_; }
 
+uint32_t Viewport::width() const { return width_; }
+
+uint32_t Viewport::height() const { return height_; }
+
 void Viewport::set_fragment_state(const wgpu::Device& device, std::string_view code)
 {
   fragment_state_ = {
@@ -125,20 +128,6 @@ void Viewport::resize(const wgpu::Device& device, uint32_t new_width, uint32_t n
 
   view_ = texture_.CreateView(&VIEW_DESC);
   pass_color_attachment_.view = view_;
-}
-
-float Viewport::current_inverse_ratio() const
-{
-  switch (mode_) {
-  case Mode::AspectRatio:
-    return AspectRatio::get_inverse_value(ratio_preset_);
-  case Mode::Resolution:
-    // TODO: division by zero possible
-    return static_cast<float>(height_) / static_cast<float>(width_);
-
-  default:
-    utility::enum_unreachable("Viewport::Mode", mode_);
-  }
 }
 
 }
