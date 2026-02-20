@@ -49,16 +49,17 @@ Viewport::Viewport(const gfx::Renderer& renderer, std::string_view initial_code)
     .format = surface_config.format,
   };
 
-  auto width = std::floor(static_cast<float>(surface_config.width) * gui::Layout::SPLIT_LEFT_RATIO);
-  auto height = std::floor(width * AspectRatio::get_inverse_value(ratio_preset_));
-  auto width_int = static_cast<uint32_t>(width);
-  auto height_int = static_cast<uint32_t>(height);
+  float width
+      = std::floor(static_cast<float>(surface_config.width) * gui::Layout::SPLIT_LEFT_RATIO);
+  auto width_whole = static_cast<uint32_t>(width);
+  auto height_whole
+      = static_cast<uint32_t>(std::floor(width * AspectRatio::get_inverse_value(ratio_preset_)));
 
-  resize(device, width_int, height_int);
+  resize_with_resolution(width_whole, height_whole);
 
   // Use the width and height from the aspect ratio preset as initial values
-  width_ = width_int;
-  height_ = height_int;
+  width_ = width_whole;
+  height_ = height_whole;
 
   pass_color_attachment_ = {
     .view = view_,
@@ -97,8 +98,6 @@ void Viewport::set_mode(Mode mode) { mode_ = mode; }
 
 void Viewport::set_ratio_preset(AspectRatio::Preset preset) { ratio_preset_ = preset; }
 
-void Viewport::set_pending_size(PendingSize pending_size) { pending_size_ = pending_size; }
-
 void Viewport::record(const gfx::FrameContext& frame_ctx) const
 {
   wgpu::RenderPassEncoder render_pass = frame_ctx.encoder.BeginRenderPass(&pass_desc_);
@@ -115,24 +114,33 @@ void Viewport::update_render_pipeline(const wgpu::Device& device)
   render_pipeline_ = device.CreateRenderPipeline(&render_pipeline_desc_);
 }
 
-void Viewport::resize_with_ratio_preset(const wgpu::Device& device, uint32_t gui_window_width)
+void Viewport::resize_with_ratio_preset(uint32_t gui_window_width)
 {
   float height = std::floor(
       static_cast<float>(gui_window_width) * AspectRatio::get_inverse_value(ratio_preset_));
-  resize(device, gui_window_width, static_cast<uint32_t>(height));
+
+  pending_resize_ = { gui_window_width, static_cast<uint32_t>(height) };
 }
 
-void Viewport::resize_with_resolution(
-    const wgpu::Device& device, uint32_t new_width, uint32_t new_height)
+void Viewport::resize_with_resolution() { resize_with_resolution(width_, height_); }
+
+void Viewport::resize_with_resolution(uint32_t new_width, uint32_t new_height)
 {
-  resize(device, new_width, new_height);
+  pending_resize_ = { new_width, new_height };
 }
 
-void Viewport::resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height)
+void Viewport::resolve_potential_resize(const wgpu::Device& device)
 {
+  if (!pending_resize_.has_value())
+    return;
+
+  auto [new_width, new_height] = pending_resize_.value();
+
   if constexpr (query::is_debug())
     std::println("Viewport texture resized to {}×{}", new_width, new_height);
 
+  // TODO: on initialization a couple of intermediary resizes occur, including
+  //       a strange one to a resolution of 16×9 (yes, 16 pixels by 9 pixels)
   texture_desc_.size.width = new_width;
   texture_desc_.size.height = new_height;
   texture_ = device.CreateTexture(&texture_desc_);
@@ -141,6 +149,8 @@ void Viewport::resize(const wgpu::Device& device, uint32_t new_width, uint32_t n
 
   view_ = texture_.CreateView(&VIEW_DESC);
   pass_color_attachment_.view = view_;
+
+  pending_resize_ = std::nullopt;
 }
 
 }

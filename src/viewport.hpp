@@ -29,9 +29,6 @@ class Viewport {
     Resolution,
   };
 
-  /// A pending resize can specify a new width and optionally a new height.
-  using PendingSize = std::pair<uint32_t, std::optional<uint32_t>>;
-
   Viewport(const gfx::Renderer& renderer, std::string_view initial_code);
 
   const wgpu::TextureView& view() const;
@@ -43,18 +40,17 @@ class Viewport {
   void set_fragment_state(const wgpu::Device& device, std::string_view code);
   void set_mode(Mode display_mode);
   void set_ratio_preset(AspectRatio::Preset preset);
-  void set_pending_size(PendingSize pending_size);
 
   void record(const gfx::FrameContext& frame_ctx) const;
   /// Updates the fragment shader and creates the render pipeline.
   void update_render_pipeline(const wgpu::Device& device);
-  void resize_with_ratio_preset(const wgpu::Device& device, uint32_t gui_window_width);
-  void resize_with_resolution(const wgpu::Device& device, uint32_t new_width, uint32_t new_height);
+  void resize_with_ratio_preset(uint32_t gui_window_width);
+  /// Resizes with the preexisting width and height.
+  void resize_with_resolution();
+  void resize_with_resolution(uint32_t new_width, uint32_t new_height);
+  void resolve_potential_resize(const wgpu::Device& device);
 
   private:
-  /// Internal helper that receives the new width/height and creates the new texture/view.
-  void resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height);
-
   wgpu::ColorTargetState color_target_state_;
   wgpu::FragmentState fragment_state_;
   wgpu::RenderPipelineDescriptor render_pipeline_desc_;
@@ -73,8 +69,9 @@ class Viewport {
   uint32_t height_ = 0;
 
   /// Stores the pending texture resize that will be applied next frame. Populated while
-  /// building the UI, and consumed in `Viewport::check_for_resize`.
-  std::optional<PendingSize> pending_size_;
+  /// building the UI, and consumed in `Viewport::check_for_resize`. We can't resize in the
+  /// same frame because the texture may already have been submitted for display in the GUI.
+  std::optional<std::pair<uint32_t, uint32_t>> pending_resize_;
 };
 
 }
