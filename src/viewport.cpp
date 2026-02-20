@@ -7,6 +7,7 @@
 #include "gui/layout.hpp"
 #include "query.hpp"
 
+#include <SDL3/SDL_timer.h>
 #include <webgpu/webgpu_cpp.h>
 
 #include <cmath>
@@ -18,10 +19,51 @@
 
 namespace mewo {
 
-Viewport::Viewport(const gfx::Renderer& renderer, std::string_view initial_code)
+Viewport::Viewport(const State& state, const gfx::Renderer& renderer, std::string_view initial_code)
 {
   const wgpu::Device& device = renderer.device();
   const wgpu::SurfaceConfiguration& surface_config = renderer.surface_config();
+
+  wgpu::BufferDescriptor unif_buf_desc = {
+    .label = "viewport-uniform-buffer",
+    .usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform,
+    // Aligned to 16 bytes (4 floats)
+    .size = 4 * sizeof(float),
+  };
+
+  unif_buf_ = device.CreateBuffer(&unif_buf_desc);
+
+  renderer.queue().WriteBuffer(unif_buf_, 0, &state.time, sizeof(float));
+
+  wgpu::BindGroupLayoutEntry render_pipeline_unif_bgl_entry = {
+    .binding = 0,
+    .visibility = wgpu::ShaderStage::Fragment,
+    .buffer = {
+      .type = wgpu::BufferBindingType::Uniform,
+      .minBindingSize = 4 * sizeof(float),
+    },
+  };
+
+  wgpu::BindGroupLayoutDescriptor render_pipeline_bgl_desc = {
+    .label = "viewport-render-pipeline-bind-group-layout",
+    .entryCount = 1,
+    .entries = &render_pipeline_unif_bgl_entry,
+  };
+  render_pipeline_bgl_ = device.CreateBindGroupLayout(&render_pipeline_bgl_desc);
+
+  wgpu::BindGroupEntry render_pipeline_unif_bg_entry = {
+    .binding = 0,
+    .buffer = unif_buf_,
+    .size = 4 * sizeof(float),
+  };
+  wgpu::BindGroupDescriptor render_pipeline_bg_desc = {
+    .label = "viewport-render-pipeline-bind-group",
+    .layout = render_pipeline_bgl_,
+    .entryCount = 1,
+    .entries = &render_pipeline_unif_bg_entry,
+  };
+
+  render_pipeline_bg_ = device.CreateBindGroup(&render_pipeline_bg_desc);
 
   color_target_state_ = { .format = surface_config.format };
 
@@ -33,10 +75,17 @@ Viewport::Viewport(const gfx::Renderer& renderer, std::string_view initial_code)
     }
   });
 
+  wgpu::PipelineLayoutDescriptor render_pipeline_layout_desc = {
+    .label = "viewport-render-pipeline-layout",
+    .bindGroupLayoutCount = 1,
+    .bindGroupLayouts = &render_pipeline_bgl_,
+  };
+
   render_pipeline_desc_ = {
-    .label = "out-render-pipeline",
+    .label = "viewport-render-pipeline",
+    .layout = device.CreatePipelineLayout(&render_pipeline_layout_desc),
     .vertex = { .module = gfx::create::shader_module_from_wgsl(
-                    device, vert_shader_file_path, "out-vert-shader-module"),
+                    device, vert_shader_file_path, "viewport-vert-shader-module"),
         .entryPoint = "main", },
   };
 
@@ -44,7 +93,7 @@ Viewport::Viewport(const gfx::Renderer& renderer, std::string_view initial_code)
   update_render_pipeline(device);
 
   texture_desc_ = {
-    .label = "out-texture",
+    .label = "viewport-texture",
     .usage = wgpu::TextureUsage::RenderAttachment | wgpu::TextureUsage::TextureBinding,
     .format = surface_config.format,
   };
@@ -68,7 +117,7 @@ Viewport::Viewport(const gfx::Renderer& renderer, std::string_view initial_code)
   };
 
   pass_desc_ = {
-    .label = "out-render-pass",
+    .label = "viewport-render-pass",
     .colorAttachmentCount = 1,
     .colorAttachments = &pass_color_attachment_,
   };
@@ -87,7 +136,7 @@ uint32_t Viewport::height() const { return height_; }
 void Viewport::set_fragment_state(const wgpu::Device& device, std::string_view code)
 {
   fragment_state_ = {
-    .module = gfx::create::shader_module_from_wgsl(device, code, "out-frag-shader-module"),
+    .module = gfx::create::shader_module_from_wgsl(device, code, "viewport-frag-shader-module"),
     .entryPoint = "main",
     .targetCount = 1,
     .targets = &color_target_state_,
@@ -121,6 +170,7 @@ void Viewport::record(const gfx::FrameContext& frame_ctx) const
   wgpu::RenderPassEncoder render_pass = frame_ctx.encoder.BeginRenderPass(&pass_desc_);
 
   render_pass.SetPipeline(render_pipeline_);
+  render_pass.SetBindGroup(0, render_pipeline_bg_);
   render_pass.Draw(6);
 
   render_pass.End();
@@ -132,8 +182,13 @@ void Viewport::update_render_pipeline(const wgpu::Device& device)
   render_pipeline_ = device.CreateRenderPipeline(&render_pipeline_desc_);
 }
 
-void Viewport::apply_pending_resize(const wgpu::Device& device)
+void Viewport::prepare_new_frame(State& state, const wgpu::Device& device, const wgpu::Queue& queue)
 {
+  // TODO: update time in the main render loop, not within this class
+  float new_time = static_cast<float>(SDL_GetTicksNS()) / 1'000'000'000.f;
+  queue.WriteBuffer(unif_buf_, 0, &new_time, sizeof(float));
+  state.time = new_time;
+
   if (!pending_resize_.has_value())
     return;
 
@@ -148,7 +203,7 @@ void Viewport::apply_pending_resize(const wgpu::Device& device)
   texture_desc_.size.height = new_height;
   texture_ = device.CreateTexture(&texture_desc_);
 
-  static const wgpu::TextureViewDescriptor VIEW_DESC = { .label = "out-view" };
+  static const wgpu::TextureViewDescriptor VIEW_DESC = { .label = "viewport-view" };
 
   view_ = texture_.CreateView(&VIEW_DESC);
   pass_color_attachment_.view = view_;

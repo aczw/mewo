@@ -6,6 +6,7 @@ namespace mewo {
 /// into functions, reducing the risk of circular dependencies.
 struct State {
   bool should_quit = false;
+  float time = 0.f;
 };
 
 }

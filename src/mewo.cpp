@@ -23,7 +23,7 @@ Mewo::Mewo()
     , renderer_(window_)
     , gui_ctx_(window_, renderer_)
     , editor_(fs::read_wgsl_shader(VIEWPORT_FRAG_FILE_PATH))
-    , viewport_(renderer_, editor_.code())
+    , viewport_(state_, renderer_, editor_.code())
 {
 }
 
@@ -54,7 +54,7 @@ void Mewo::run()
 
     const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
     gui_ctx_.prepare_new_frame();
-    viewport_.apply_pending_resize(device);
+    viewport_.prepare_new_frame(state_, device, renderer_.queue());
 
     layout_.build(state_, gui_ctx_, device, editor_, viewport_);
 

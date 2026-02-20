@@ -3,6 +3,7 @@
 #include "aspect_ratio.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/renderer.hpp"
+#include "state.hpp"
 
 #include <webgpu/webgpu_cpp.h>
 
@@ -29,7 +30,7 @@ class Viewport {
     Resolution,
   };
 
-  Viewport(const gfx::Renderer& renderer, std::string_view initial_code);
+  Viewport(const State& state, const gfx::Renderer& renderer, std::string_view initial_code);
 
   const wgpu::TextureView& view() const;
   Mode mode() const;
@@ -52,9 +53,14 @@ class Viewport {
   void record(const gfx::FrameContext& frame_ctx) const;
   /// Updates the fragment shader and creates the render pipeline.
   void update_render_pipeline(const wgpu::Device& device);
-  void apply_pending_resize(const wgpu::Device& device);
+  /// Updates uniform buffer and check for a pending resize, applying it if it exists.
+  void prepare_new_frame(State& state, const wgpu::Device& device, const wgpu::Queue& queue);
 
   private:
+  wgpu::Buffer unif_buf_;
+
+  wgpu::BindGroupLayout render_pipeline_bgl_;
+  wgpu::BindGroup render_pipeline_bg_;
   wgpu::ColorTargetState color_target_state_;
   wgpu::FragmentState fragment_state_;
   wgpu::RenderPipelineDescriptor render_pipeline_desc_;
