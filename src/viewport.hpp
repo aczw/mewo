@@ -40,15 +40,17 @@ class Viewport {
   void set_fragment_state(const wgpu::Device& device, std::string_view code);
   void set_mode(Mode display_mode);
   void set_ratio_preset(AspectRatio::Preset preset);
+  /// Will use preexisting width and height.
+  void set_pending_resize();
+  /// Will use given width, deriving the height from the current aspect ratio preset.
+  void set_pending_resize(uint32_t new_width);
+  /// Will use given width and height.
+  void set_pending_resize(uint32_t new_width, uint32_t new_height);
 
   void record(const gfx::FrameContext& frame_ctx) const;
   /// Updates the fragment shader and creates the render pipeline.
   void update_render_pipeline(const wgpu::Device& device);
-  void resize_with_ratio_preset(uint32_t gui_window_width);
-  /// Resizes with the preexisting width and height.
-  void resize_with_resolution();
-  void resize_with_resolution(uint32_t new_width, uint32_t new_height);
-  void resolve_potential_resize(const wgpu::Device& device);
+  void apply_pending_resize(const wgpu::Device& device);
 
   private:
   wgpu::ColorTargetState color_target_state_;

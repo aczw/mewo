@@ -62,7 +62,7 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
     // This only applies if the viewport mode is based on the aspect ratio.
     if (prev_mode == Viewport::Mode::AspectRatio
         && curr_viewport_window_width != prev_viewport_window_width_) {
-      viewport.resize_with_ratio_preset(curr_viewport_window_width);
+      viewport.set_pending_resize(curr_viewport_window_width);
     }
 
     {
@@ -105,11 +105,11 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
       if (auto curr_mode = static_cast<Mode>(prev_mode_value); curr_mode != prev_mode) {
         switch (curr_mode) {
         case Viewport::Mode::AspectRatio:
-          viewport.resize_with_ratio_preset(curr_viewport_window_width);
+          viewport.set_pending_resize(curr_viewport_window_width);
           break;
 
         case Viewport::Mode::Resolution:
-          viewport.resize_with_resolution();
+          viewport.set_pending_resize();
           break;
 
         default:

@@ -55,7 +55,7 @@ Viewport::Viewport(const gfx::Renderer& renderer, std::string_view initial_code)
   auto height_whole
       = static_cast<uint32_t>(std::floor(width * AspectRatio::get_inverse_value(ratio_preset_)));
 
-  resize_with_resolution(width_whole, height_whole);
+  set_pending_resize(width_whole, height_whole);
 
   // Use the width and height from the aspect ratio preset as initial values
   width_ = width_whole;
@@ -98,6 +98,20 @@ void Viewport::set_mode(Mode mode) { mode_ = mode; }
 
 void Viewport::set_ratio_preset(AspectRatio::Preset preset) { ratio_preset_ = preset; }
 
+void Viewport::set_pending_resize() { set_pending_resize(width_, height_); }
+
+void Viewport::set_pending_resize(uint32_t new_width)
+{
+  float inverse_ratio = AspectRatio::get_inverse_value(ratio_preset_);
+  float height = std::floor(static_cast<float>(new_width) * inverse_ratio);
+  pending_resize_ = { new_width, static_cast<uint32_t>(height) };
+}
+
+void Viewport::set_pending_resize(uint32_t new_width, uint32_t new_height)
+{
+  pending_resize_ = { new_width, new_height };
+}
+
 void Viewport::record(const gfx::FrameContext& frame_ctx) const
 {
   wgpu::RenderPassEncoder render_pass = frame_ctx.encoder.BeginRenderPass(&pass_desc_);
@@ -114,22 +128,7 @@ void Viewport::update_render_pipeline(const wgpu::Device& device)
   render_pipeline_ = device.CreateRenderPipeline(&render_pipeline_desc_);
 }
 
-void Viewport::resize_with_ratio_preset(uint32_t gui_window_width)
-{
-  float height = std::floor(
-      static_cast<float>(gui_window_width) * AspectRatio::get_inverse_value(ratio_preset_));
-
-  pending_resize_ = { gui_window_width, static_cast<uint32_t>(height) };
-}
-
-void Viewport::resize_with_resolution() { resize_with_resolution(width_, height_); }
-
-void Viewport::resize_with_resolution(uint32_t new_width, uint32_t new_height)
-{
-  pending_resize_ = { new_width, new_height };
-}
-
-void Viewport::resolve_potential_resize(const wgpu::Device& device)
+void Viewport::apply_pending_resize(const wgpu::Device& device)
 {
   if (!pending_resize_.has_value())
     return;
