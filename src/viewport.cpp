@@ -27,9 +27,9 @@ Viewport::Viewport(const gfx::Renderer& renderer, std::string_view initial_code)
 
   auto vert_shader_file_path = std::invoke([] -> std::filesystem::path {
     if constexpr (query::is_debug()) {
-      return "../../assets/shaders/out.vert.wgsl";
+      return "../../assets/shaders/viewport.vert.wgsl";
     } else {
-      throw Exception("TODO: handle \"out.vert.wgsl\" file path on release mode");
+      throw Exception("TODO: handle \"viewport.vert.wgsl\" file path on release mode");
     }
   });
 

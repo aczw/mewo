@@ -11,10 +11,10 @@
 namespace mewo {
 
 #if defined(MEWO_IS_DEBUG)
-constexpr std::string_view OUT_FRAG_SHADER_FILE_PATH = "../../assets/shaders/out.frag.wgsl";
+constexpr std::string_view VIEWPORT_FRAG_FILE_PATH = "../../assets/shaders/viewport.frag.wgsl";
 #else
-#error "TODO: handle "out.frag.wgsl" file path on release mode"
-constexpr std::string_view OUT_FRAG_SHADER_FILE_PATH = "out.frag.wgsl";
+#error "TODO: handle "viewport.frag.wgsl" file path on release mode"
+constexpr std::string_view VIEWPORT_FRAG_FILE_PATH = "viewport.frag.wgsl";
 #endif
 
 Mewo::Mewo()
@@ -22,7 +22,7 @@ Mewo::Mewo()
     , window_()
     , renderer_(window_)
     , gui_ctx_(window_, renderer_)
-    , editor_(fs::read_wgsl_shader(OUT_FRAG_SHADER_FILE_PATH))
+    , editor_(fs::read_wgsl_shader(VIEWPORT_FRAG_FILE_PATH))
     , viewport_(renderer_, editor_.code())
 {
 }
