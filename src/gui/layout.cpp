@@ -52,17 +52,17 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
   {
     ImGui::Begin(VIEWPORT_WINDOW_NAME.data());
 
-    const Viewport::Mode curr_mode = viewport.mode();
-    const AspectRatio::Preset curr_preset = viewport.ratio_preset();
+    const Viewport::Mode prev_mode = viewport.mode();
+    const AspectRatio::Preset prev_preset = viewport.ratio_preset();
 
     const ImVec2 window_size = ImGui::GetContentRegionAvail();
     const auto curr_viewport_window_width = static_cast<uint32_t>(window_size.x);
 
     // If the window containing the viewport has changed width, we resize the texture.
     // This only applies if the viewport mode is based on the aspect ratio.
-    if (curr_mode == Viewport::Mode::AspectRatio
+    if (prev_mode == Viewport::Mode::AspectRatio
         && curr_viewport_window_width != prev_viewport_window_width_) {
-      float height = std::floor(window_size.x * AspectRatio::get_inverse_value(curr_preset));
+      float height = std::floor(window_size.x * AspectRatio::get_inverse_value(prev_preset));
       viewport.resize(device, curr_viewport_window_width, static_cast<uint32_t>(height));
     }
 
@@ -70,17 +70,17 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
       WGPUTextureView view_raw = viewport.view().Get();
       auto texture_id = static_cast<ImTextureID>(reinterpret_cast<intptr_t>(view_raw));
 
-      auto inverse_ratio = std::invoke([&viewport, &curr_mode, &curr_preset] -> float {
-        switch (curr_mode) {
+      auto inverse_ratio = std::invoke([&viewport, &prev_mode, &prev_preset] -> float {
+        switch (prev_mode) {
         case Viewport::Mode::AspectRatio:
-          return AspectRatio::get_inverse_value(curr_preset);
+          return AspectRatio::get_inverse_value(prev_preset);
 
         case Viewport::Mode::Resolution:
           // TODO: division by zero possible
           return static_cast<float>(viewport.height()) / static_cast<float>(viewport.width());
 
         default:
-          utility::enum_unreachable("Viewport::Mode", curr_mode);
+          utility::enum_unreachable("Viewport::Mode", prev_mode);
         }
       });
 
@@ -90,37 +90,39 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
 
     if (ImGui::Button("Run")) {
       viewport.set_fragment_state(device, editor.code());
+      // TODO: only update render pipeline if shader compilation was successful
       viewport.update(device);
     }
 
     {
       using Mode = Viewport::Mode;
 
-      int mode_value = std::to_underlying(curr_mode);
+      int prev_mode_value = std::to_underlying(prev_mode);
 
-      ImGui::RadioButton("Aspect ratio", &mode_value, std::to_underlying(Mode::AspectRatio));
+      ImGui::RadioButton("Aspect ratio", &prev_mode_value, std::to_underlying(Mode::AspectRatio));
       ImGui::SameLine();
-      ImGui::RadioButton("Resolution", &mode_value, std::to_underlying(Mode::Resolution));
+      ImGui::RadioButton("Resolution", &prev_mode_value, std::to_underlying(Mode::Resolution));
 
-      if (auto mode = static_cast<Mode>(mode_value); mode != curr_mode)
-        viewport.set_mode(mode);
+      if (auto curr_mode = static_cast<Mode>(prev_mode_value); curr_mode != prev_mode) {
+        viewport.set_mode(curr_mode);
+      }
     }
 
     {
       using Preset = AspectRatio::Preset;
 
-      int preset_value = std::to_underlying(curr_preset);
+      int prev_preset_value = std::to_underlying(prev_preset);
 
-      ImGui::RadioButton("1:1", &preset_value, std::to_underlying(Preset::e1_1));
+      ImGui::RadioButton("1:1", &prev_preset_value, std::to_underlying(Preset::e1_1));
       ImGui::SameLine();
-      ImGui::RadioButton("2:1", &preset_value, std::to_underlying(Preset::e2_1));
+      ImGui::RadioButton("2:1", &prev_preset_value, std::to_underlying(Preset::e2_1));
       ImGui::SameLine();
-      ImGui::RadioButton("3:2", &preset_value, std::to_underlying(Preset::e3_2));
+      ImGui::RadioButton("3:2", &prev_preset_value, std::to_underlying(Preset::e3_2));
       ImGui::SameLine();
-      ImGui::RadioButton("16:9", &preset_value, std::to_underlying(Preset::e16_9));
+      ImGui::RadioButton("16:9", &prev_preset_value, std::to_underlying(Preset::e16_9));
 
-      if (auto preset = static_cast<Preset>(preset_value); preset != curr_preset)
-        viewport.set_ratio_preset(preset);
+      if (auto curr_preset = static_cast<Preset>(prev_preset_value); curr_preset != prev_preset)
+        viewport.set_ratio_preset(curr_preset);
     }
 
     prev_viewport_window_width_ = curr_viewport_window_width;
