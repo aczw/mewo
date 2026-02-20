@@ -47,10 +47,14 @@ class Viewport {
 
   void record(const gfx::FrameContext& frame_ctx) const;
   /// Updates the fragment shader and creates the render pipeline.
-  void update(const wgpu::Device& device);
-  void resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height);
+  void update_render_pipeline(const wgpu::Device& device);
+  void resize_with_ratio_preset(const wgpu::Device& device, uint32_t gui_window_width);
+  void resize_with_resolution(const wgpu::Device& device, uint32_t new_width, uint32_t new_height);
 
   private:
+  /// Internal helper that receives the new width/height and creates the new texture/view.
+  void resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height);
+
   wgpu::ColorTargetState color_target_state_;
   wgpu::FragmentState fragment_state_;
   wgpu::RenderPipelineDescriptor render_pipeline_desc_;

@@ -41,7 +41,7 @@ Viewport::Viewport(const gfx::Renderer& renderer, std::string_view initial_code)
   };
 
   set_fragment_state(device, initial_code);
-  update(device);
+  update_render_pipeline(device);
 
   texture_desc_ = {
     .label = "out-texture",
@@ -109,10 +109,23 @@ void Viewport::record(const gfx::FrameContext& frame_ctx) const
   render_pass.End();
 }
 
-void Viewport::update(const wgpu::Device& device)
+void Viewport::update_render_pipeline(const wgpu::Device& device)
 {
   render_pipeline_desc_.fragment = &fragment_state_;
   render_pipeline_ = device.CreateRenderPipeline(&render_pipeline_desc_);
+}
+
+void Viewport::resize_with_ratio_preset(const wgpu::Device& device, uint32_t gui_window_width)
+{
+  float height = std::floor(
+      static_cast<float>(gui_window_width) * AspectRatio::get_inverse_value(ratio_preset_));
+  resize(device, gui_window_width, static_cast<uint32_t>(height));
+}
+
+void Viewport::resize_with_resolution(
+    const wgpu::Device& device, uint32_t new_width, uint32_t new_height)
+{
+  resize(device, new_width, new_height);
 }
 
 void Viewport::resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height)

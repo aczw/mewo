@@ -56,14 +56,13 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
     const AspectRatio::Preset prev_preset = viewport.ratio_preset();
 
     const ImVec2 window_size = ImGui::GetContentRegionAvail();
-    const auto curr_viewport_window_width = static_cast<uint32_t>(window_size.x);
+    const auto curr_viewport_window_width = static_cast<uint32_t>(std::floor(window_size.x));
 
     // If the window containing the viewport has changed width, we resize the texture.
     // This only applies if the viewport mode is based on the aspect ratio.
     if (prev_mode == Viewport::Mode::AspectRatio
         && curr_viewport_window_width != prev_viewport_window_width_) {
-      float height = std::floor(window_size.x * AspectRatio::get_inverse_value(prev_preset));
-      viewport.resize(device, curr_viewport_window_width, static_cast<uint32_t>(height));
+      viewport.resize_with_ratio_preset(device, curr_viewport_window_width);
     }
 
     {
@@ -91,7 +90,7 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
     if (ImGui::Button("Run")) {
       viewport.set_fragment_state(device, editor.code());
       // TODO: only update render pipeline if shader compilation was successful
-      viewport.update(device);
+      viewport.update_render_pipeline(device);
     }
 
     {
@@ -104,6 +103,17 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
       ImGui::RadioButton("Resolution", &prev_mode_value, std::to_underlying(Mode::Resolution));
 
       if (auto curr_mode = static_cast<Mode>(prev_mode_value); curr_mode != prev_mode) {
+        switch (curr_mode) {
+        case Viewport::Mode::AspectRatio: {
+        }
+
+        case Viewport::Mode::Resolution: {
+        }
+
+        default:
+          utility::enum_unreachable("Viewport::Mode", curr_mode);
+        }
+
         viewport.set_mode(curr_mode);
       }
     }
