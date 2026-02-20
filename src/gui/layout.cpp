@@ -60,7 +60,8 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
     // This only applies if the viewport mode is based on the aspect ratio.
     if (curr_mode == Viewport::Mode::AspectRatio
         && curr_viewport_window_width != prev_viewport_window_width_) {
-      viewport.set_pending_size({ curr_viewport_window_width, std::nullopt });
+      auto height = std::floor(window_size.x * AspectRatio::get_inverse_value(curr_preset));
+      viewport.resize(device, curr_viewport_window_width, static_cast<uint32_t>(height));
     }
 
     prev_viewport_window_width_ = curr_viewport_window_width;

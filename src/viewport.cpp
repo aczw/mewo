@@ -127,33 +127,6 @@ void Viewport::resize(const wgpu::Device& device, uint32_t new_width, uint32_t n
   pass_color_attachment_.view = view_;
 }
 
-void Viewport::check_for_resize(const wgpu::Device& device)
-{
-  if (!pending_size_.has_value())
-    return;
-
-  // TODO: after the initial viewport texture size, a pending texture size of "16×9" is
-  //       received. Should probably get rid of that
-  auto new_size = std::invoke([this] -> std::pair<uint32_t, uint32_t> {
-    switch (mode_) {
-    case Mode::AspectRatio: {
-      auto width = pending_size_->first;
-      auto height = static_cast<float>(width) * AspectRatio::get_inverse_value(ratio_preset_);
-      return { width, static_cast<uint32_t>(std::floor(height)) };
-    }
-
-    case Mode::Resolution:
-      throw Exception("TODO: implement resizing operation for resolution");
-
-    default:
-      utility::enum_unreachable("Viewport::Mode", mode_);
-    }
-  });
-
-  resize(device, new_size.first, new_size.second);
-  pending_size_ = std::nullopt;
-}
-
 float Viewport::current_inverse_ratio() const
 {
   switch (mode_) {

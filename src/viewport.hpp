@@ -47,8 +47,6 @@ class Viewport {
   /// Updates the fragment shader and creates the render pipeline.
   void update(const wgpu::Device& device);
   void resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height);
-  /// Checks if there's a new resize operation to process, and resizes the viewport if so.
-  void check_for_resize(const wgpu::Device& device);
   /// Calculates the current aspect ratio of the viewport. Depends on current mode.
   float current_inverse_ratio() const;
 
