@@ -103,6 +103,8 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
       ImGui::RadioButton("Resolution", &prev_mode_value, std::to_underlying(Mode::Resolution));
 
       if (auto curr_mode = static_cast<Mode>(prev_mode_value); curr_mode != prev_mode) {
+        viewport.set_mode(curr_mode);
+
         switch (curr_mode) {
         case Viewport::Mode::AspectRatio:
           viewport.set_pending_resize(curr_viewport_window_width);
@@ -115,12 +117,11 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
         default:
           utility::enum_unreachable("Viewport::Mode", curr_mode);
         }
-
-        viewport.set_mode(curr_mode);
       }
     }
 
-    {
+    switch (prev_mode) {
+    case Viewport::Mode::AspectRatio: {
       using Preset = AspectRatio::Preset;
 
       int prev_preset_value = std::to_underlying(prev_preset);
@@ -133,8 +134,20 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
       ImGui::SameLine();
       ImGui::RadioButton("16:9", &prev_preset_value, std::to_underlying(Preset::e16_9));
 
-      if (auto curr_preset = static_cast<Preset>(prev_preset_value); curr_preset != prev_preset)
+      if (auto curr_preset = static_cast<Preset>(prev_preset_value); curr_preset != prev_preset) {
         viewport.set_ratio_preset(curr_preset);
+        viewport.set_pending_resize(curr_viewport_window_width);
+      }
+
+      break;
+    }
+
+    case Viewport::Mode::Resolution: {
+      break;
+    }
+
+    default:
+      utility::enum_unreachable("Viewport::Mode", prev_mode);
     }
 
     prev_viewport_window_width_ = curr_viewport_window_width;
