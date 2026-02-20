@@ -1,8 +1,10 @@
 #include "viewport.hpp"
 
+#include "aspect_ratio.hpp"
 #include "exception.hpp"
 #include "gfx/create.hpp"
 #include "gfx/renderer.hpp"
+#include "gui/layout.hpp"
 #include "query.hpp"
 #include "utility.hpp"
 
@@ -48,8 +50,16 @@ Viewport::Viewport(const gfx::Renderer& renderer, std::string_view initial_code)
     .format = surface_config.format,
   };
 
-  // TODO: use a better heuristic for determining initial viewport texture size
-  resize(device, surface_config.width, surface_config.height);
+  auto width = std::floor(static_cast<float>(surface_config.width) * gui::Layout::SPLIT_LEFT_RATIO);
+  auto height = std::floor(width * AspectRatio::get_inverse_value(ratio_preset_));
+  auto width_int = static_cast<uint32_t>(width);
+  auto height_int = static_cast<uint32_t>(height);
+
+  resize(device, width_int, height_int);
+
+  // Use the width and height from the aspect ratio preset as initial values
+  width_ = width_int;
+  height_ = height_int;
 
   pass_color_attachment_ = {
     .view = view_,
@@ -145,6 +155,20 @@ void Viewport::check_for_resize(const wgpu::Device& device)
 
   resize(device, new_size.first, new_size.second);
   pending_size_ = std::nullopt;
+}
+
+float Viewport::current_inverse_ratio() const
+{
+  switch (mode_) {
+  case Mode::AspectRatio:
+    return AspectRatio::get_inverse_value(ratio_preset_);
+  case Mode::Resolution:
+    // TODO: division by zero possible
+    return static_cast<float>(height_) / static_cast<float>(width_);
+
+  default:
+    utility::enum_unreachable("Viewport::Mode", mode_);
+  }
 }
 
 }

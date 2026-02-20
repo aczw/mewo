@@ -12,6 +12,8 @@ namespace mewo::gui {
 
 class Layout {
   public:
+  static constexpr float SPLIT_LEFT_RATIO = 0.5f;
+
   /// Builds the GUI and records additional data into respective classes. Called every frame.
   void build(State& state, const Context& gui_ctx, const wgpu::Device& device, Editor& editor,
       Viewport& viewport);

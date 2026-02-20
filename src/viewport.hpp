@@ -49,6 +49,8 @@ class Viewport {
   void resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height);
   /// Checks if there's a new resize operation to process, and resizes the viewport if so.
   void check_for_resize(const wgpu::Device& device);
+  /// Calculates the current aspect ratio of the viewport. Depends on current mode.
+  float current_inverse_ratio() const;
 
   private:
   wgpu::ColorTargetState color_target_state_;
@@ -65,6 +67,8 @@ class Viewport {
 
   Mode mode_ = Mode::AspectRatio;
   AspectRatio::Preset ratio_preset_ = AspectRatio::Preset::e16_9;
+  uint32_t width_ = 0;
+  uint32_t height_ = 0;
 
   /// Stores the pending texture resize that will be applied next frame. Populated while
   /// building the UI, and consumed in `Viewport::check_for_resize`.

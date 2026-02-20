@@ -1,16 +1,12 @@
 #include "layout.hpp"
 
 #include "aspect_ratio.hpp"
-#include "exception.hpp"
-#include "utility.hpp"
 
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <imgui_stdlib.h>
 #include <webgpu/webgpu.h>
 
-#include <functional>
-#include <string>
 #include <string_view>
 #include <utility>
 
@@ -64,7 +60,6 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
     // This only applies if the viewport mode is based on the aspect ratio.
     if (curr_mode == Viewport::Mode::AspectRatio
         && curr_viewport_window_width != prev_viewport_window_width_) {
-
       viewport.set_pending_size({ curr_viewport_window_width, std::nullopt });
     }
 
@@ -74,22 +69,10 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
       WGPUTextureView view_raw = viewport.view().Get();
       auto texture_id = static_cast<ImTextureID>(reinterpret_cast<intptr_t>(view_raw));
 
-      auto image_size = std::invoke([&curr_mode, &curr_preset, &window_size] -> ImVec2 {
-        switch (curr_mode) {
-        case Viewport::Mode::AspectRatio: {
-          window_size.y = window_size.x * AspectRatio::get_inverse_value(curr_preset);
-          return window_size;
-        }
+      float inverse_ratio = viewport.current_inverse_ratio();
+      window_size.y = window_size.x * inverse_ratio;
 
-        case Viewport::Mode::Resolution:
-          throw Exception("TODO: implement resolution display mode for output");
-
-        default:
-          utility::enum_unreachable("Viewport::Mode", curr_mode);
-        }
-      });
-
-      ImGui::Image(texture_id, image_size);
+      ImGui::Image(texture_id, window_size);
     }
 
     if (ImGui::Button("Run")) {
@@ -138,7 +121,8 @@ void Layout::set_up_initial_layout(const Context& gui_ctx, ImGuiID dockspace_id)
 
   ImGuiID dock_left_id = {};
   ImGuiID dock_right_id = {};
-  ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.5f, &dock_left_id, &dock_right_id);
+  ImGui::DockBuilderSplitNode(
+      dockspace_id, ImGuiDir_Left, SPLIT_LEFT_RATIO, &dock_left_id, &dock_right_id);
 
   ImGui::DockBuilderDockWindow(EDITOR_WINDOW_NAME.data(), dock_left_id);
   ImGui::DockBuilderDockWindow(VIEWPORT_WINDOW_NAME.data(), dock_right_id);
