@@ -1,12 +1,15 @@
 #include "layout.hpp"
 
 #include "aspect_ratio.hpp"
+#include "utility.hpp"
 
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <imgui_stdlib.h>
 #include <webgpu/webgpu.h>
 
+#include <array>
+#include <functional>
 #include <string_view>
 #include <utility>
 
@@ -50,65 +53,130 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
   {
     ImGui::Begin(VIEWPORT_WINDOW_NAME.data());
 
-    Viewport::Mode curr_mode = viewport.mode();
-    AspectRatio::Preset curr_preset = viewport.ratio_preset();
+    const Viewport::Mode prev_mode = viewport.mode();
+    const AspectRatio::Preset prev_preset = viewport.ratio_preset();
+    const uint32_t prev_width = viewport.width();
+    const uint32_t prev_height = viewport.height();
 
-    ImVec2 window_size = ImGui::GetContentRegionAvail();
-    auto curr_viewport_window_width = static_cast<uint32_t>(window_size.x);
+    const ImVec2 window_size = ImGui::GetContentRegionAvail();
+    const auto curr_viewport_window_width = static_cast<uint32_t>(std::floor(window_size.x));
 
     // If the window containing the viewport has changed width, we resize the texture.
     // This only applies if the viewport mode is based on the aspect ratio.
-    if (curr_mode == Viewport::Mode::AspectRatio
+    //
+    // TODO: don't submit if user is actively dragging the window to be bigger/smaller
+    if (prev_mode == Viewport::Mode::AspectRatio
         && curr_viewport_window_width != prev_viewport_window_width_) {
-      viewport.set_pending_size({ curr_viewport_window_width, std::nullopt });
+      viewport.set_pending_resize(curr_viewport_window_width);
     }
-
-    prev_viewport_window_width_ = curr_viewport_window_width;
 
     {
       WGPUTextureView view_raw = viewport.view().Get();
       auto texture_id = static_cast<ImTextureID>(reinterpret_cast<intptr_t>(view_raw));
 
-      float inverse_ratio = viewport.current_inverse_ratio();
-      window_size.y = window_size.x * inverse_ratio;
+      auto inverse_ratio = std::invoke([&] -> float {
+        switch (prev_mode) {
+        case Viewport::Mode::AspectRatio:
+          return AspectRatio::get_inverse_value(prev_preset);
 
-      ImGui::Image(texture_id, window_size);
+        case Viewport::Mode::Resolution:
+          // TODO: division by zero possible
+          return static_cast<float>(prev_height) / static_cast<float>(prev_width);
+
+        default:
+          utility::enum_unreachable("Viewport::Mode", prev_mode);
+        }
+      });
+
+      // Height of image is always derived from the width, because we horizontally fill the GUI
+      ImGui::Image(texture_id, ImVec2(window_size.x, window_size.x * inverse_ratio));
     }
 
     if (ImGui::Button("Run")) {
       viewport.set_fragment_state(device, editor.code());
-      viewport.update(device);
+      // TODO: only update render pipeline if shader compilation was successful
+      viewport.update_render_pipeline(device);
     }
 
     {
       using Mode = Viewport::Mode;
 
-      int mode_value = std::to_underlying(curr_mode);
+      int prev_mode_value = std::to_underlying(prev_mode);
 
-      ImGui::RadioButton("Aspect ratio", &mode_value, std::to_underlying(Mode::AspectRatio));
+      ImGui::RadioButton("Aspect ratio", &prev_mode_value, std::to_underlying(Mode::AspectRatio));
       ImGui::SameLine();
-      ImGui::RadioButton("Resolution", &mode_value, std::to_underlying(Mode::Resolution));
+      ImGui::RadioButton("Resolution", &prev_mode_value, std::to_underlying(Mode::Resolution));
 
-      if (auto mode = static_cast<Mode>(mode_value); mode != curr_mode)
-        viewport.set_mode(mode);
+      if (auto curr_mode = static_cast<Mode>(prev_mode_value); curr_mode != prev_mode) {
+        viewport.set_mode(curr_mode);
+
+        switch (curr_mode) {
+        case Viewport::Mode::AspectRatio:
+          viewport.set_pending_resize(curr_viewport_window_width);
+          break;
+
+        case Viewport::Mode::Resolution:
+          viewport.set_pending_resize();
+          break;
+
+        default:
+          utility::enum_unreachable("Viewport::Mode", curr_mode);
+        }
+      }
     }
 
-    {
+    switch (prev_mode) {
+    case Viewport::Mode::AspectRatio: {
       using Preset = AspectRatio::Preset;
 
-      int preset_value = std::to_underlying(curr_preset);
+      int prev_preset_value = std::to_underlying(prev_preset);
 
-      ImGui::RadioButton("1:1", &preset_value, std::to_underlying(Preset::e1_1));
+      ImGui::RadioButton("1:1", &prev_preset_value, std::to_underlying(Preset::e1_1));
       ImGui::SameLine();
-      ImGui::RadioButton("2:1", &preset_value, std::to_underlying(Preset::e2_1));
+      ImGui::RadioButton("2:1", &prev_preset_value, std::to_underlying(Preset::e2_1));
       ImGui::SameLine();
-      ImGui::RadioButton("3:2", &preset_value, std::to_underlying(Preset::e3_2));
+      ImGui::RadioButton("3:2", &prev_preset_value, std::to_underlying(Preset::e3_2));
       ImGui::SameLine();
-      ImGui::RadioButton("16:9", &preset_value, std::to_underlying(Preset::e16_9));
+      ImGui::RadioButton("16:9", &prev_preset_value, std::to_underlying(Preset::e16_9));
 
-      if (auto preset = static_cast<Preset>(preset_value); preset != curr_preset)
-        viewport.set_ratio_preset(preset);
+      if (auto curr_preset = static_cast<Preset>(prev_preset_value); curr_preset != prev_preset) {
+        // Set ratio preset before submitting resize, because it has to use the new ratio
+        viewport.set_ratio_preset(curr_preset);
+        viewport.set_pending_resize(curr_viewport_window_width);
+      }
+
+      break;
     }
+
+    case Viewport::Mode::Resolution: {
+      static constexpr auto SLIDER_FLAGS = ImGuiSliderFlags_AlwaysClamp;
+      static constexpr int VIEWPORT_SIZE_MIN = 2;
+      static constexpr int VIEWPORT_SIZE_MAX = 2048;
+
+      std::array prev_size = { static_cast<int>(prev_width), static_cast<int>(prev_height) };
+
+      ImGui::DragInt2("Width/Height", prev_size.data(), 1.f, VIEWPORT_SIZE_MIN, VIEWPORT_SIZE_MAX,
+          "%d px", SLIDER_FLAGS);
+
+      uint32_t curr_width = static_cast<uint32_t>(prev_size[0]);
+      uint32_t curr_height = static_cast<uint32_t>(prev_size[1]);
+
+      // TODO: don't submit if user is currently selecting/dragging the slider, or has the
+      //       box active and is still entering values
+      if (curr_width != prev_width || curr_height != prev_height) {
+        viewport.set_pending_resize(curr_width, curr_height);
+        viewport.set_width(curr_width);
+        viewport.set_height(curr_height);
+      }
+
+      break;
+    }
+
+    default:
+      utility::enum_unreachable("Viewport::Mode", prev_mode);
+    }
+
+    prev_viewport_window_width_ = curr_viewport_window_width;
 
     ImGui::End();
   }

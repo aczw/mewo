@@ -6,7 +6,6 @@
 #include "gfx/renderer.hpp"
 #include "gui/layout.hpp"
 #include "query.hpp"
-#include "utility.hpp"
 
 #include <webgpu/webgpu_cpp.h>
 
@@ -42,7 +41,7 @@ Viewport::Viewport(const gfx::Renderer& renderer, std::string_view initial_code)
   };
 
   set_fragment_state(device, initial_code);
-  update(device);
+  update_render_pipeline(device);
 
   texture_desc_ = {
     .label = "out-texture",
@@ -50,16 +49,17 @@ Viewport::Viewport(const gfx::Renderer& renderer, std::string_view initial_code)
     .format = surface_config.format,
   };
 
-  auto width = std::floor(static_cast<float>(surface_config.width) * gui::Layout::SPLIT_LEFT_RATIO);
-  auto height = std::floor(width * AspectRatio::get_inverse_value(ratio_preset_));
-  auto width_int = static_cast<uint32_t>(width);
-  auto height_int = static_cast<uint32_t>(height);
+  float width
+      = std::floor(static_cast<float>(surface_config.width) * gui::Layout::SPLIT_LEFT_RATIO);
+  auto width_whole = static_cast<uint32_t>(width);
+  auto height_whole
+      = static_cast<uint32_t>(std::floor(width * AspectRatio::get_inverse_value(ratio_preset_)));
 
-  resize(device, width_int, height_int);
+  set_pending_resize(width_whole, height_whole);
 
   // Use the width and height from the aspect ratio preset as initial values
-  width_ = width_int;
-  height_ = height_int;
+  width_ = width_whole;
+  height_ = height_whole;
 
   pass_color_attachment_ = {
     .view = view_,
@@ -80,6 +80,10 @@ Viewport::Mode Viewport::mode() const { return mode_; }
 
 AspectRatio::Preset Viewport::ratio_preset() const { return ratio_preset_; }
 
+uint32_t Viewport::width() const { return width_; }
+
+uint32_t Viewport::height() const { return height_; }
+
 void Viewport::set_fragment_state(const wgpu::Device& device, std::string_view code)
 {
   fragment_state_ = {
@@ -94,7 +98,23 @@ void Viewport::set_mode(Mode mode) { mode_ = mode; }
 
 void Viewport::set_ratio_preset(AspectRatio::Preset preset) { ratio_preset_ = preset; }
 
-void Viewport::set_pending_size(PendingSize pending_size) { pending_size_ = pending_size; }
+void Viewport::set_width(uint32_t width) { width_ = width; };
+
+void Viewport::set_height(uint32_t height) { height_ = height; };
+
+void Viewport::set_pending_resize() { set_pending_resize(width_, height_); }
+
+void Viewport::set_pending_resize(uint32_t new_width)
+{
+  float inverse_ratio = AspectRatio::get_inverse_value(ratio_preset_);
+  float height = std::floor(static_cast<float>(new_width) * inverse_ratio);
+  pending_resize_ = { new_width, static_cast<uint32_t>(height) };
+}
+
+void Viewport::set_pending_resize(uint32_t new_width, uint32_t new_height)
+{
+  pending_resize_ = { new_width, new_height };
+}
 
 void Viewport::record(const gfx::FrameContext& frame_ctx) const
 {
@@ -106,17 +126,24 @@ void Viewport::record(const gfx::FrameContext& frame_ctx) const
   render_pass.End();
 }
 
-void Viewport::update(const wgpu::Device& device)
+void Viewport::update_render_pipeline(const wgpu::Device& device)
 {
   render_pipeline_desc_.fragment = &fragment_state_;
   render_pipeline_ = device.CreateRenderPipeline(&render_pipeline_desc_);
 }
 
-void Viewport::resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height)
+void Viewport::apply_pending_resize(const wgpu::Device& device)
 {
+  if (!pending_resize_.has_value())
+    return;
+
+  auto [new_width, new_height] = pending_resize_.value();
+
   if constexpr (query::is_debug())
     std::println("Viewport texture resized to {}×{}", new_width, new_height);
 
+  // TODO: on initialization a couple of intermediary resizes occur, including
+  //       a strange one to a resolution of 16×9 (yes, 16 pixels by 9 pixels)
   texture_desc_.size.width = new_width;
   texture_desc_.size.height = new_height;
   texture_ = device.CreateTexture(&texture_desc_);
@@ -125,47 +152,8 @@ void Viewport::resize(const wgpu::Device& device, uint32_t new_width, uint32_t n
 
   view_ = texture_.CreateView(&VIEW_DESC);
   pass_color_attachment_.view = view_;
-}
 
-void Viewport::check_for_resize(const wgpu::Device& device)
-{
-  if (!pending_size_.has_value())
-    return;
-
-  // TODO: after the initial viewport texture size, a pending texture size of "16×9" is
-  //       received. Should probably get rid of that
-  auto new_size = std::invoke([this] -> std::pair<uint32_t, uint32_t> {
-    switch (mode_) {
-    case Mode::AspectRatio: {
-      auto width = pending_size_->first;
-      auto height = static_cast<float>(width) * AspectRatio::get_inverse_value(ratio_preset_);
-      return { width, static_cast<uint32_t>(std::floor(height)) };
-    }
-
-    case Mode::Resolution:
-      throw Exception("TODO: implement resizing operation for resolution");
-
-    default:
-      utility::enum_unreachable("Viewport::Mode", mode_);
-    }
-  });
-
-  resize(device, new_size.first, new_size.second);
-  pending_size_ = std::nullopt;
-}
-
-float Viewport::current_inverse_ratio() const
-{
-  switch (mode_) {
-  case Mode::AspectRatio:
-    return AspectRatio::get_inverse_value(ratio_preset_);
-  case Mode::Resolution:
-    // TODO: division by zero possible
-    return static_cast<float>(height_) / static_cast<float>(width_);
-
-  default:
-    utility::enum_unreachable("Viewport::Mode", mode_);
-  }
+  pending_resize_ = std::nullopt;
 }
 
 }

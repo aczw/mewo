@@ -54,7 +54,7 @@ void Mewo::run()
 
     const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
     gui_ctx_.prepare_new_frame();
-    viewport_.check_for_resize(device);
+    viewport_.apply_pending_resize(device);
 
     layout_.build(state_, gui_ctx_, device, editor_, viewport_);
 
