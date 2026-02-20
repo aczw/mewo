@@ -40,6 +40,8 @@ class Viewport {
   void set_fragment_state(const wgpu::Device& device, std::string_view code);
   void set_mode(Mode display_mode);
   void set_ratio_preset(AspectRatio::Preset preset);
+  void set_width(uint32_t width);
+  void set_height(uint32_t height);
   /// Will use preexisting width and height.
   void set_pending_resize();
   /// Will use given width, deriving the height from the current aspect ratio preset.

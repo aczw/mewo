@@ -98,6 +98,10 @@ void Viewport::set_mode(Mode mode) { mode_ = mode; }
 
 void Viewport::set_ratio_preset(AspectRatio::Preset preset) { ratio_preset_ = preset; }
 
+void Viewport::set_width(uint32_t width) { width_ = width; };
+
+void Viewport::set_height(uint32_t height) { height_ = height; };
+
 void Viewport::set_pending_resize() { set_pending_resize(width_, height_); }
 
 void Viewport::set_pending_resize(uint32_t new_width)
