@@ -27,20 +27,26 @@ Viewport::Viewport(const State& state, const gfx::Renderer& renderer, std::strin
   wgpu::BufferDescriptor unif_buf_desc = {
     .label = "viewport-uniform-buffer",
     .usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform,
-    // Aligned to 16 bytes (4 floats)
-    .size = 4 * sizeof(float),
+    .size = sizeof(Unif),
   };
 
   unif_buf_ = device.CreateBuffer(&unif_buf_desc);
 
-  renderer.queue().WriteBuffer(unif_buf_, 0, &state.time, sizeof(float));
+  float width
+      = std::floor(static_cast<float>(surface_config.width) * gui::Layout::SPLIT_LEFT_RATIO);
+  float height = std::floor(width * AspectRatio::get_inverse_value(ratio_preset_));
+  auto width_whole = static_cast<uint32_t>(width);
+  auto height_whole = static_cast<uint32_t>(height);
+
+  Unif unif = { .time = state.time, .resolution = { width, height } };
+  renderer.queue().WriteBuffer(unif_buf_, 0, &unif, sizeof(Unif));
 
   wgpu::BindGroupLayoutEntry render_pipeline_unif_bgl_entry = {
     .binding = 0,
     .visibility = wgpu::ShaderStage::Fragment,
     .buffer = {
       .type = wgpu::BufferBindingType::Uniform,
-      .minBindingSize = 4 * sizeof(float),
+      .minBindingSize = sizeof(Unif),
     },
   };
 
@@ -54,7 +60,7 @@ Viewport::Viewport(const State& state, const gfx::Renderer& renderer, std::strin
   wgpu::BindGroupEntry render_pipeline_unif_bg_entry = {
     .binding = 0,
     .buffer = unif_buf_,
-    .size = 4 * sizeof(float),
+    .size = sizeof(Unif),
   };
   wgpu::BindGroupDescriptor render_pipeline_bg_desc = {
     .label = "viewport-render-pipeline-bind-group",
@@ -97,12 +103,6 @@ Viewport::Viewport(const State& state, const gfx::Renderer& renderer, std::strin
     .usage = wgpu::TextureUsage::RenderAttachment | wgpu::TextureUsage::TextureBinding,
     .format = surface_config.format,
   };
-
-  float width
-      = std::floor(static_cast<float>(surface_config.width) * gui::Layout::SPLIT_LEFT_RATIO);
-  auto width_whole = static_cast<uint32_t>(width);
-  auto height_whole
-      = static_cast<uint32_t>(std::floor(width * AspectRatio::get_inverse_value(ratio_preset_)));
 
   set_pending_resize(width_whole, height_whole);
 
@@ -184,31 +184,36 @@ void Viewport::update_render_pipeline(const wgpu::Device& device)
 
 void Viewport::prepare_new_frame(State& state, const wgpu::Device& device, const wgpu::Queue& queue)
 {
+  if (pending_resize_.has_value()) {
+    auto [new_width, new_height] = pending_resize_.value();
+
+    if constexpr (query::is_debug())
+      std::println("Viewport texture resized to {}×{}", new_width, new_height);
+
+    // TODO: on initialization a couple of intermediary resizes occur, including
+    //       a strange one to a resolution of 16×9 (yes, 16 pixels by 9 pixels)
+    texture_desc_.size.width = new_width;
+    texture_desc_.size.height = new_height;
+    texture_ = device.CreateTexture(&texture_desc_);
+
+    static const wgpu::TextureViewDescriptor VIEW_DESC = { .label = "viewport-view" };
+
+    view_ = texture_.CreateView(&VIEW_DESC);
+    pass_color_attachment_.view = view_;
+
+    pending_resize_ = std::nullopt;
+  }
+
+  Unif unif = {
+    .time = static_cast<float>(SDL_GetTicksNS()) / 1'000'000'000.f,
+    .resolution
+    = { static_cast<float>(texture_.GetWidth()), static_cast<float>(texture_.GetHeight()) },
+  };
+
+  queue.WriteBuffer(unif_buf_, 0, &unif, sizeof(Unif));
+
   // TODO: update time in the main render loop, not within this class
-  float new_time = static_cast<float>(SDL_GetTicksNS()) / 1'000'000'000.f;
-  queue.WriteBuffer(unif_buf_, 0, &new_time, sizeof(float));
-  state.time = new_time;
-
-  if (!pending_resize_.has_value())
-    return;
-
-  auto [new_width, new_height] = pending_resize_.value();
-
-  if constexpr (query::is_debug())
-    std::println("Viewport texture resized to {}×{}", new_width, new_height);
-
-  // TODO: on initialization a couple of intermediary resizes occur, including
-  //       a strange one to a resolution of 16×9 (yes, 16 pixels by 9 pixels)
-  texture_desc_.size.width = new_width;
-  texture_desc_.size.height = new_height;
-  texture_ = device.CreateTexture(&texture_desc_);
-
-  static const wgpu::TextureViewDescriptor VIEW_DESC = { .label = "viewport-view" };
-
-  view_ = texture_.CreateView(&VIEW_DESC);
-  pass_color_attachment_.view = view_;
-
-  pending_resize_ = std::nullopt;
+  state.time = unif.time;
 }
 
 }

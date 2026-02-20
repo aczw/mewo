@@ -7,6 +7,7 @@
 
 #include <webgpu/webgpu_cpp.h>
 
+#include <array>
 #include <cstdint>
 #include <optional>
 #include <string_view>
@@ -57,6 +58,11 @@ class Viewport {
   void prepare_new_frame(State& state, const wgpu::Device& device, const wgpu::Queue& queue);
 
   private:
+  struct Unif {
+    float time = 0;
+    alignas(8) std::array<float, 2> resolution = {};
+  };
+
   wgpu::Buffer unif_buf_;
 
   wgpu::BindGroupLayout render_pipeline_bgl_;
