@@ -1,18 +1,20 @@
 #pragma once
 
 #include <string>
-#include <string_view>
 
 namespace mewo {
 
 class Editor {
   public:
-  Editor(std::string_view initial_code);
+  Editor();
 
-  std::string& code();
+  std::string& visible_code();
+
+  std::string combined_code() const;
 
   private:
-  std::string code_;
+  std::string prefix_;
+  std::string visible_code_;
 };
 
 }

@@ -58,7 +58,7 @@ class Viewport {
   void prepare_new_frame(State& state, const wgpu::Device& device, const wgpu::Queue& queue);
 
   private:
-  struct Unif {
+  struct Uniforms {
     float time = 0;
     alignas(8) std::array<float, 2> resolution = {};
   };

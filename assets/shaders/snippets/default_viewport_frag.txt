@@ -1,0 +1,5 @@
+@fragment
+fn main(@builtin(position) position: vec4f) -> @location(0) vec4f {
+  let uv = position.xy / mw.resolution;
+  return vec4f(uv, 0.0, 1.0);
+}

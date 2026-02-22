@@ -1,7 +1,6 @@
 #include "mewo.hpp"
 
 #include "editor.hpp"
-#include "fs.hpp"
 #include "gfx/frame_context.hpp"
 
 #include <SDL3/SDL.h>
@@ -10,20 +9,10 @@
 
 namespace mewo {
 
-#if defined(MEWO_IS_DEBUG)
-constexpr std::string_view VIEWPORT_FRAG_FILE_PATH = "../../assets/shaders/viewport.frag.wgsl";
-#else
-#error "TODO: handle "viewport.frag.wgsl" file path on release mode"
-constexpr std::string_view VIEWPORT_FRAG_FILE_PATH = "viewport.frag.wgsl";
-#endif
-
 Mewo::Mewo()
-    : sdl_ctx_()
-    , window_()
-    , renderer_(window_)
+    : renderer_(window_)
     , gui_ctx_(window_, renderer_)
-    , editor_(fs::read_wgsl_shader(VIEWPORT_FRAG_FILE_PATH))
-    , viewport_(state_, renderer_, editor_.code())
+    , viewport_(state_, renderer_, editor_.combined_code())
 {
 }
 

@@ -11,4 +11,6 @@ consteval bool is_debug()
 #endif
 }
 
+consteval bool is_release() { return !is_debug(); }
+
 }

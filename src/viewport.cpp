@@ -2,6 +2,7 @@
 
 #include "aspect_ratio.hpp"
 #include "exception.hpp"
+#include "fs.hpp"
 #include "gfx/create.hpp"
 #include "gfx/renderer.hpp"
 #include "gui/layout.hpp"
@@ -27,7 +28,7 @@ Viewport::Viewport(const State& state, const gfx::Renderer& renderer, std::strin
   wgpu::BufferDescriptor unif_buf_desc = {
     .label = "viewport-uniform-buffer",
     .usage = wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform,
-    .size = sizeof(Unif),
+    .size = sizeof(Uniforms),
   };
 
   unif_buf_ = device.CreateBuffer(&unif_buf_desc);
@@ -38,15 +39,15 @@ Viewport::Viewport(const State& state, const gfx::Renderer& renderer, std::strin
   auto width_whole = static_cast<uint32_t>(width);
   auto height_whole = static_cast<uint32_t>(height);
 
-  Unif unif = { .time = state.time, .resolution = { width, height } };
-  renderer.queue().WriteBuffer(unif_buf_, 0, &unif, sizeof(Unif));
+  Uniforms unif = { .time = state.time, .resolution = { width, height } };
+  renderer.queue().WriteBuffer(unif_buf_, 0, &unif, sizeof(Uniforms));
 
   wgpu::BindGroupLayoutEntry render_pipeline_unif_bgl_entry = {
     .binding = 0,
     .visibility = wgpu::ShaderStage::Fragment,
     .buffer = {
       .type = wgpu::BufferBindingType::Uniform,
-      .minBindingSize = sizeof(Unif),
+      .minBindingSize = sizeof(Uniforms),
     },
   };
 
@@ -60,8 +61,9 @@ Viewport::Viewport(const State& state, const gfx::Renderer& renderer, std::strin
   wgpu::BindGroupEntry render_pipeline_unif_bg_entry = {
     .binding = 0,
     .buffer = unif_buf_,
-    .size = sizeof(Unif),
+    .size = sizeof(Uniforms),
   };
+
   wgpu::BindGroupDescriptor render_pipeline_bg_desc = {
     .label = "viewport-render-pipeline-bind-group",
     .layout = render_pipeline_bgl_,
@@ -73,26 +75,26 @@ Viewport::Viewport(const State& state, const gfx::Renderer& renderer, std::strin
 
   color_target_state_ = { .format = surface_config.format };
 
-  auto vert_shader_file_path = std::invoke([] -> std::filesystem::path {
-    if constexpr (query::is_debug()) {
-      return "../../assets/shaders/viewport.vert.wgsl";
-    } else {
-      throw Exception("TODO: handle \"viewport.vert.wgsl\" file path on release mode");
-    }
-  });
-
   wgpu::PipelineLayoutDescriptor render_pipeline_layout_desc = {
     .label = "viewport-render-pipeline-layout",
     .bindGroupLayoutCount = 1,
     .bindGroupLayouts = &render_pipeline_bgl_,
   };
 
+  auto vert_shader_module = std::invoke([&device] -> wgpu::ShaderModule {
+    if (query::is_release())
+      throw Exception("TODO: handle \"viewport.vert.wgsl\" file path on release");
+
+    std::filesystem::path file_path = "../../assets/shaders/viewport.vert.wgsl";
+    std::string code = fs::read_wgsl_shader(file_path);
+
+    return gfx::create::shader_module_from_wgsl(device, code, "viewport-vert-shader");
+  });
+
   render_pipeline_desc_ = {
     .label = "viewport-render-pipeline",
     .layout = device.CreatePipelineLayout(&render_pipeline_layout_desc),
-    .vertex = { .module = gfx::create::shader_module_from_wgsl(
-                    device, vert_shader_file_path, "viewport-vert-shader-module"),
-        .entryPoint = "main", },
+    .vertex = { .module = vert_shader_module, .entryPoint = "main" },
   };
 
   set_fragment_state(device, initial_code);
@@ -204,13 +206,13 @@ void Viewport::prepare_new_frame(State& state, const wgpu::Device& device, const
     pending_resize_ = std::nullopt;
   }
 
-  Unif unif = {
+  Uniforms unif = {
     .time = static_cast<float>(SDL_GetTicksNS()) / 1'000'000'000.f,
     .resolution
     = { static_cast<float>(texture_.GetWidth()), static_cast<float>(texture_.GetHeight()) },
   };
 
-  queue.WriteBuffer(unif_buf_, 0, &unif, sizeof(Unif));
+  queue.WriteBuffer(unif_buf_, 0, &unif, sizeof(Uniforms));
 
   // TODO: update time in the main render loop, not within this class
   state.time = unif.time;

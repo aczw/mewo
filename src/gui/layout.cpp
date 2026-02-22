@@ -45,7 +45,7 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
     ImGui::Begin(EDITOR_WINDOW_NAME.data());
 
     ImVec2 window_size = ImGui::GetContentRegionAvail();
-    ImGui::InputTextMultiline("##editor", &editor.code(), window_size);
+    ImGui::InputTextMultiline("##editor", &editor.visible_code(), window_size);
 
     ImGui::End();
   }
@@ -93,7 +93,7 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
     }
 
     if (ImGui::Button("Run")) {
-      viewport.set_fragment_state(device, editor.code());
+      viewport.set_fragment_state(device, editor.combined_code());
       // TODO: only update render pipeline if shader compilation was successful
       viewport.update_render_pipeline(device);
     }
