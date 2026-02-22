@@ -132,7 +132,9 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "App
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(mewo PRIVATE -O2 -g)
   elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    message(FATAL_ERROR "TODO: add compile flags for release Clang builds")
+    target_compile_options(mewo PRIVATE -O3)
+    # Enables link-time optimization
+    set_target_properties(mewo PROPERTIES INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
   else()
     message(FATAL_ERROR "Unsupported CMAKE_BUILD_TYPE. Supported values are Debug and Release")
   endif()
