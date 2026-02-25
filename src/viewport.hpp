@@ -56,7 +56,7 @@ class Viewport {
   void record(const gfx::FrameContext& frame_ctx) const;
   /// Updates the fragment shader and creates the render pipeline.
   void update_render_pipeline(const wgpu::Device& device);
-  /// Updates uniform buffer and check for a pending resize, applying it if it exists.
+  /// Updates uniform buffer and checks for a pending resize, applying it if it exists.
   void prepare_new_frame(State& state, const wgpu::Device& device, const wgpu::Queue& queue);
 
   private:
@@ -87,8 +87,8 @@ class Viewport {
   uint32_t height_ = 0;
 
   /// Stores the pending texture resize that will be applied next frame. Populated while
-  /// building the UI, and consumed in `Viewport::check_for_resize`. We can't resize in the
-  /// same frame because the texture may already have been submitted for display in the GUI.
+  /// building the UI for the current frame. We can't resize in the same frame because
+  /// the texture may already have been submitted for display in the GUI.
   std::optional<std::pair<uint32_t, uint32_t>> pending_resize_;
 };
 
