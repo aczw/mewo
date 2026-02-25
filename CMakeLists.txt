@@ -12,6 +12,24 @@ project(mewo
   LANGUAGES C CXX
 )
 
+# Handle unsupported platforms up front
+if(APPLE AND CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  set(MEWO_PLATFORM_MACOS ON)
+elseif(WIN32)
+  set(MEWO_PLATFORM_WINDOWS ON)
+else()
+  message(FATAL_ERROR "Unsupported OS. Supported platforms are macOS and Windows")
+endif()
+
+# Handle unsupported CMake build types up front
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set(MEWO_BUILD_DEBUG ON)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+  set(MEWO_BUILD_RELEASE ON)
+else()
+  message(FATAL_ERROR "Unsupported CMAKE_BUILD_TYPE. Supported values are Debug and Release")
+endif()
+
 set(MEWO_THIRD_PARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
 
 # Set up Dawn
@@ -58,7 +76,7 @@ add_library(imgui OBJECT
 
 # imgui_impl_wgpu.cpp conditionally includes macOS-specific headers, so we need to
 # treat it as a Obj-C file on macOS. On other OSes it's a regular C++ file.
-if(APPLE AND CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+if(MEWO_PLATFORM_MACOS)
   set_source_files_properties(${MEWO_IMGUI_DIR}/backends/imgui_impl_wgpu.cpp PROPERTIES
     # I do not enjoy hard coding compile flags like this, but this would only ever be
     # compiled on macOS, and both Clang and GCC (uhhhhhh on Apple???) support this flag
@@ -126,8 +144,7 @@ add_executable(mewo
   ${MEWO_SRC_DIR}/viewport.hpp
 )
 
-# So I can always reference files starting from the source directory
-# instead of ugly relative paths
+# So I can always include files starting from `src` instead of ugly relative paths
 target_include_directories(mewo PRIVATE ${MEWO_SRC_DIR})
 
 # Common C++ compiler options
@@ -150,28 +167,26 @@ target_compile_definitions(mewo PRIVATE
 
 # Set compiler flags based on compiler and build type
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  if(MEWO_BUILD_DEBUG)
     target_compile_options(mewo PRIVATE -O2 -g)
-  elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+  elseif(MEWO_BUILD_RELEASE)
     target_compile_options(mewo PRIVATE -O3)
     # Enables link-time optimization
     set_target_properties(mewo PROPERTIES INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
-  else()
-    message(FATAL_ERROR "Unsupported CMAKE_BUILD_TYPE. Supported values are Debug and Release")
   endif()
 else()
   message(FATAL_ERROR "Unsupported compiler used. Supported compilers are Clang (LLVM/Apple)")
 endif()
 
 # Affects <windows.h>
-if(WIN32)
+if(MEWO_PLATFORM_WINDOWS)
   target_compile_definitions(mewo PRIVATE
     WIN32_LEAN_AND_MEAN
     NOMINMAX
   )
 endif()
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+if (MEWO_BUILD_DEBUG)
   # It's very difficult to detect if the program is in debug mode from the environment
   # so I use my own check for detection
   target_compile_definitions(mewo PRIVATE MEWO_IS_DEBUG)
@@ -196,11 +211,18 @@ install(TARGETS mewo DESTINATION .)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/assets DESTINATION .)
 install(FILES ${MEWO_DIST_README_FILE_PATH} DESTINATION .)
 
+# Default system names are ugly (e.g. on macOS it's set to "Darwin")
+if(MEWO_PLATFORM_MACOS)
+  set(CPACK_SYSTEM_NAME "macOS")
+elseif(MEWO_PLATFORM_WINDOWS)
+  set(CPACK_SYSTEM_NAME "Win")
+endif()
+
 set(CPACK_GENERATOR "ZIP")
 set(CPACK_PACKAGE_NAME "Mewo")
 set(CPACK_PACKAGE_VENDOR "Charles Wang")
 set(CPACK_PACKAGE_VERSION ${MEWO_VERSION_FULL})
-set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-v${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}")
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-v${CPACK_PACKAGE_VERSION}-${CPACK_SYSTEM_NAME}")
 set(CPACK_PACKAGE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/dist/${CMAKE_BUILD_TYPE}")
 
 include(CPack)
