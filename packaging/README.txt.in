@@ -1,0 +1,21 @@
+
+|\                      /|
+|  \                  /  |
+|    \              /    |
+|      \          /      |
+|        \      /        |
+|          \  /          |
+|                        |
+|                        |
+|   _______    _______   |
+|  /       \  /       \  |
+|  \_______/  \_______/  |
+|________________________|
+
+Mewo: desktop shader editor
+v@MEWO_VERSION_FULL@ (build @MEWO_VERSION_BUILD@, @CMAKE_BUILD_TYPE@)
+
+GitHub: https://github.com/aczw/mewo
+Website: @PROJECT_HOMEPAGE_URL@
+
+Thanks for downloading!

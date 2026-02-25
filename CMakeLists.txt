@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 4.0.0)
 
 set(MEWO_VERSION_SEMVER 0.1.0)
-set(MEWO_VERSION_BUILD .0)
+set(MEWO_VERSION_BUILD 0)
 set(MEWO_VERSION_SUFFIX -alpha)
 # Notably, the "full" version string does not include the build number
 set(MEWO_VERSION_FULL "${MEWO_VERSION_SEMVER}${MEWO_VERSION_SUFFIX}")
 
 project(mewo
-  VERSION "${MEWO_VERSION_SEMVER}${MEWO_VERSION_BUILD}"
+  VERSION "${MEWO_VERSION_SEMVER}.${MEWO_VERSION_BUILD}"
   HOMEPAGE_URL https://mewo.czw.sh
   LANGUAGES C CXX
 )
@@ -184,9 +184,17 @@ target_link_libraries(mewo PRIVATE
   imgui
 )
 
+set(MEWO_DIST_README_FILE_PATH ${CMAKE_CURRENT_BINARY_DIR}/packaging/README.txt)
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/packaging/README.txt.in
+  ${MEWO_DIST_README_FILE_PATH}
+  @ONLY
+)
+
 # Copy binary and assets folder for distribution
 install(TARGETS mewo DESTINATION .)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/assets DESTINATION .)
+install(FILES ${MEWO_DIST_README_FILE_PATH} DESTINATION .)
 
 set(CPACK_GENERATOR "ZIP")
 set(CPACK_PACKAGE_NAME "Mewo")
