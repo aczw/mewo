@@ -1,12 +1,20 @@
 #include "window.hpp"
 
 #include "exception.hpp"
+#include "query.hpp"
+
+#include <string>
 
 namespace mewo::sdl {
 
+static std::string get_window_title()
+{
+  return std::string(query::is_debug() ? "[DEBUG] " : "") + "Mewo v" + query::version_full().data();
+}
+
 Window::Window()
-    : handle_(SDL_CreateWindow(
-          "Mewo 0.0.1-alpha", 1280, 720, SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE))
+    : handle_(SDL_CreateWindow(get_window_title().c_str(), 1280, 720,
+          SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE))
 {
   if (!handle_)
     throw Exception("Failed to create SDL window: {}", SDL_GetError());

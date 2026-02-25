@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 4.0.0)
 
 set(MEWO_VERSION_SEMVER 0.1.0)
+set(MEWO_VERSION_BUILD .0)
 set(MEWO_VERSION_SUFFIX -alpha)
+# Notably, the "full" version string does not include the build number
 set(MEWO_VERSION_FULL "${MEWO_VERSION_SEMVER}${MEWO_VERSION_SUFFIX}")
 
 project(mewo
-  VERSION ${MEWO_VERSION_SEMVER}
+  VERSION "${MEWO_VERSION_SEMVER}${MEWO_VERSION_BUILD}"
   HOMEPAGE_URL https://mewo.czw.sh
   LANGUAGES C CXX
 )
@@ -135,6 +137,15 @@ target_compile_options(mewo PRIVATE
   -Wall -Wextra -Werror -Wpedantic -Wconversion
   # Skipped fields are zero-initialized or default constructed, which I want
   -Wno-missing-designated-field-initializers
+)
+target_compile_definitions(mewo PRIVATE
+  MEWO_VERSION_MAJOR="${PROJECT_VERSION_MAJOR}"
+  MEWO_VERSION_MINOR="${PROJECT_VERSION_MINOR}"
+  MEWO_VERSION_PATCH="${PROJECT_VERSION_PATCH}"
+  MEWO_VERSION_BUILD="${PROJECT_VERSION_TWEAK}"
+  MEWO_VERSION_SEMVER="${MEWO_VERSION_SEMVER}"
+  MEWO_VERSION_SUFFIX="${MEWO_VERSION_SUFFIX}"
+  MEWO_VERSION_FULL="${MEWO_VERSION_FULL}"
 )
 
 # Set compiler flags based on compiler and build type
