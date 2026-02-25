@@ -7,8 +7,11 @@
 #include <array>
 #include <filesystem>
 #include <print>
+#include <vector>
 
-#if defined(SDL_PLATFORM_WIN32)
+#if defined(SDL_PLATFORM_MACOS)
+#include <mach-o/dyld.h>
+#elif defined(SDL_PLATFORM_WIN32)
 #include <windows.h>
 #endif
 
@@ -19,8 +22,19 @@ static std::filesystem::path get_executable_path()
   static constexpr size_t MAX_FILE_PATH_LENGTH = 1024;
 
 #if defined(SDL_PLATFORM_MACOS)
-#error "TODO: find executable path on macOS"
-  throw Exception("TODO: find executable path on macOS");
+  uint32_t buf_size = MAX_FILE_PATH_LENGTH;
+  std::vector<char> path_vec(buf_size);
+
+  if (_NSGetExecutablePath(path_vec.data(), &buf_size) == -1) {
+    path_vec.resize(buf_size);
+
+    // Resize and try again. If it fails again, then we're in big trouble
+    if (_NSGetExecutablePath(path_vec.data(), &buf_size) == -1)
+      throw Exception("Call to _NSGetExecutablePath failed: buffer size not large enough");
+  }
+
+  // `_NSGetExecutablePath` needs to be resolved
+  return std::filesystem::canonical(path_vec.data()).parent_path();
 #elif defined(SDL_PLATFORM_WIN32)
   std::array<wchar_t, MAX_FILE_PATH_LENGTH> path_arr = {};
 
