@@ -1,5 +1,8 @@
-# Builds
+# Dev builds
 build/
+
+# Final packaged outputs
+dist/
 
 # Apple
 .DS_Store
