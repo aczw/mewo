@@ -7,14 +7,11 @@
 
 namespace mewo::sdl {
 
-static std::string get_window_title()
-{
-  return std::string(query::is_debug() ? "[DEBUG] " : "") + "Mewo v" + query::version_full().data();
-}
-
 Window::Window()
-    : handle_(SDL_CreateWindow(get_window_title().c_str(), 1280, 720,
-          SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE))
+    : title_(std::string(query::is_debug() ? "[DEBUG] " : "") + "Mewo v"
+          + query::version_full().data())
+    , handle_(SDL_CreateWindow(
+          title_.c_str(), 1280, 720, SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE))
 {
   if (!handle_)
     throw Exception("Failed to create SDL window: {}", SDL_GetError());

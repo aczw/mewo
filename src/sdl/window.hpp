@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 
 #include <memory>
+#include <string>
 #include <utility>
 
 namespace mewo::sdl {
@@ -22,6 +23,7 @@ class Window {
     void operator()(SDL_Window* window);
   };
 
+  std::string title_;
   std::unique_ptr<SDL_Window, SDLWindowDeleter> handle_;
 };
 
