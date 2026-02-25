@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aspect_ratio.hpp"
+#include "assets.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/renderer.hpp"
 #include "state.hpp"
@@ -31,7 +32,8 @@ class Viewport {
     Resolution,
   };
 
-  Viewport(const State& state, const gfx::Renderer& renderer, std::string_view initial_code);
+  Viewport(const Assets& assets, const State& state, const gfx::Renderer& renderer,
+      std::string_view initial_code);
 
   const wgpu::TextureView& view() const;
   Mode mode() const;

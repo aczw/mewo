@@ -1,5 +1,6 @@
 #pragma once
 
+#include "assets.hpp"
 #include "editor.hpp"
 #include "gfx/renderer.hpp"
 #include "gui/context.hpp"
@@ -17,6 +18,7 @@ class Mewo {
   void run();
 
   private:
+  Assets assets_;
   State state_;
 
   sdl::Context sdl_ctx_;

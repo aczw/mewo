@@ -1,7 +1,6 @@
 #include "viewport.hpp"
 
 #include "aspect_ratio.hpp"
-#include "exception.hpp"
 #include "fs.hpp"
 #include "gfx/create.hpp"
 #include "gfx/renderer.hpp"
@@ -12,15 +11,14 @@
 #include <webgpu/webgpu_cpp.h>
 
 #include <cmath>
-#include <filesystem>
-#include <functional>
 #include <optional>
 #include <print>
 #include <string_view>
 
 namespace mewo {
 
-Viewport::Viewport(const State& state, const gfx::Renderer& renderer, std::string_view initial_code)
+Viewport::Viewport(const Assets& assets, const State& state, const gfx::Renderer& renderer,
+    std::string_view initial_code)
 {
   const wgpu::Device& device = renderer.device();
   const wgpu::SurfaceConfiguration& surface_config = renderer.surface_config();
@@ -81,15 +79,8 @@ Viewport::Viewport(const State& state, const gfx::Renderer& renderer, std::strin
     .bindGroupLayouts = &render_pipeline_bgl_,
   };
 
-  auto vert_shader_module = std::invoke([&device] -> wgpu::ShaderModule {
-    if (query::is_release())
-      throw Exception("TODO: handle \"viewport.vert.wgsl\" file path on release");
-
-    std::filesystem::path file_path = "../../assets/shaders/viewport.vert.wgsl";
-    std::string code = fs::read_wgsl_shader(file_path);
-
-    return gfx::create::shader_module_from_wgsl(device, code, "viewport-vert-shader");
-  });
+  auto vert_shader_module = gfx::create::shader_module_from_wgsl(device,
+      fs::read_wgsl_shader(assets.get("shaders/viewport.vert.wgsl")), "viewport-vert-shader");
 
   render_pipeline_desc_ = {
     .label = "viewport-render-pipeline",

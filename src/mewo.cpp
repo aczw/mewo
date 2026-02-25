@@ -12,7 +12,8 @@ namespace mewo {
 Mewo::Mewo()
     : renderer_(window_)
     , gui_ctx_(window_, renderer_)
-    , viewport_(state_, renderer_, editor_.combined_code())
+    , editor_(assets_)
+    , viewport_(assets_, state_, renderer_, editor_.combined_code())
 {
 }
 

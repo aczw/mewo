@@ -1,12 +1,14 @@
 #pragma once
 
+#include "assets.hpp"
+
 #include <string>
 
 namespace mewo {
 
 class Editor {
   public:
-  Editor();
+  Editor(const Assets& assets);
 
   std::string& visible_code();
 
