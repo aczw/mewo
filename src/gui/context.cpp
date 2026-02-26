@@ -16,6 +16,8 @@ Context::Context(const sdl::Window& window, const gfx::Renderer& renderer)
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   io.IniFilename = nullptr;
   io.Fonts->AddFontDefaultVector();
+  io.ConfigDpiScaleFonts = true;
+  io.ConfigDpiScaleViewports = true;
 
   ImGui::StyleColorsDark();
 

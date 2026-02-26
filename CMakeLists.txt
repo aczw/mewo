@@ -48,10 +48,15 @@ set(SDL_SHARED OFF CACHE BOOL "")
 set(SDL_STATIC ON CACHE BOOL "")
 add_subdirectory(${MEWO_THIRD_PARTY_DIR}/SDL EXCLUDE_FROM_ALL)
 
-set(MEWO_IMGUI_DIR ${MEWO_THIRD_PARTY_DIR}/imgui)
+# Set up FreeType, needed for Dear ImGui's FreeType backend
+set(SKIP_INSTALL_ALL ON CACHE BOOL "")
+set(FT_ENABLE_ERROR_STRINGS ON CACHE BOOL "")
+set(FT_DYNAMIC_HARFBUZZ OFF CACHE BOOL "")
+add_subdirectory(${MEWO_THIRD_PARTY_DIR}/freetype EXCLUDE_FROM_ALL)
 
 # Set up Dear ImGui as a set of compiled objects that are then linked against. Allows me
-# to treat it as a separate library without actually being one 
+# to treat it as a separate library without actually being one
+set(MEWO_IMGUI_DIR ${MEWO_THIRD_PARTY_DIR}/imgui)
 add_library(imgui OBJECT
   ${MEWO_IMGUI_DIR}/imconfig.h
   ${MEWO_IMGUI_DIR}/imgui_demo.cpp
@@ -65,15 +70,17 @@ add_library(imgui OBJECT
   ${MEWO_IMGUI_DIR}/imstb_textedit.h
   ${MEWO_IMGUI_DIR}/imstb_truetype.h
 
-  ${MEWO_IMGUI_DIR}/backends/imgui_impl_sdl3.h
   ${MEWO_IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
-  ${MEWO_IMGUI_DIR}/backends/imgui_impl_wgpu.h
+  ${MEWO_IMGUI_DIR}/backends/imgui_impl_sdl3.h
   ${MEWO_IMGUI_DIR}/backends/imgui_impl_wgpu.cpp
+  ${MEWO_IMGUI_DIR}/backends/imgui_impl_wgpu.h
 
-  ${MEWO_IMGUI_DIR}/misc/cpp/imgui_stdlib.h
   ${MEWO_IMGUI_DIR}/misc/cpp/imgui_stdlib.cpp
-)
+  ${MEWO_IMGUI_DIR}/misc/cpp/imgui_stdlib.h
 
+  ${MEWO_IMGUI_DIR}/misc/freetype/imgui_freetype.cpp
+  ${MEWO_IMGUI_DIR}/misc/freetype/imgui_freetype.h
+)
 # imgui_impl_wgpu.cpp conditionally includes macOS-specific headers, so we need to
 # treat it as a Obj-C file on macOS. On other OSes it's a regular C++ file.
 if(MEWO_PLATFORM_MACOS)
@@ -83,14 +90,12 @@ if(MEWO_PLATFORM_MACOS)
     COMPILE_FLAGS "--language objective-c++" 
   )
 endif()
-
 # Setting this definition to PUBLIC lets it propagate to Mewo when it links against it
 target_compile_definitions(imgui PUBLIC
   IMGUI_IMPL_WEBGPU_BACKEND_DAWN
   # Use our own imconfig.h file because I don't want to modify Git submodule
   IMGUI_USER_CONFIG="../../src/gui/imconfig.h"
 )
-
 # Let Dear ImGui find its own files, and set it to PUBLIC so that it also propagates to Mewo
 # when it links against the target. Also include some subdirectories so I don't have to prefix
 # files in the folder with it when I #include them.
@@ -99,7 +104,7 @@ target_include_directories(imgui PUBLIC
   ${MEWO_IMGUI_DIR}/backends
   ${MEWO_IMGUI_DIR}/misc/cpp
 )
-target_link_libraries(imgui PRIVATE dawn::webgpu_dawn SDL3::SDL3)
+target_link_libraries(imgui PRIVATE dawn::webgpu_dawn SDL3::SDL3 freetype)
 
 set(MEWO_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(MEWO_GFX_DIR ${MEWO_SRC_DIR}/gfx)
