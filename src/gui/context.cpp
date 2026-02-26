@@ -16,7 +16,12 @@ Context::Context(const Assets& assets, const sdl::Window& window, const gfx::Ren
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   io.IniFilename = nullptr;
 
-  io.Fonts->AddFontFromFileTTF(assets.get("fonts/inter_4.1/Inter-Regular.ttf").c_str());
+  fonts_ = {
+    .inter = io.Fonts->AddFontFromFileTTF(assets.get("fonts/inter_4.1/Inter-Regular.ttf").c_str()),
+    .geist_mono = io.Fonts->AddFontFromFileTTF(
+        assets.get("fonts/geist_mono_1.7/GeistMono-Regular.ttf").c_str()),
+  };
+
   io.ConfigDpiScaleFonts = true;
   io.ConfigDpiScaleViewports = true;
 
@@ -44,6 +49,8 @@ Context::~Context()
 }
 
 const ImGuiViewport* Context::viewport() const { return viewport_; }
+
+const Context::Fonts& Context::fonts() const { return fonts_; }
 
 void Context::prepare_new_frame() const
 {

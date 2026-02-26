@@ -13,6 +13,11 @@ namespace mewo::gui {
 /// Immediate mode GUI rendering using Dear ImGui.
 class Context {
   public:
+  struct Fonts {
+    ImFont* inter = nullptr;
+    ImFont* geist_mono = nullptr;
+  };
+
   Context(const Assets& assets, const sdl::Window& window, const gfx::Renderer& renderer);
   ~Context();
 
@@ -20,12 +25,14 @@ class Context {
   Context& operator=(const Context&) = delete;
 
   const ImGuiViewport* viewport() const;
+  const Fonts& fonts() const;
 
   void prepare_new_frame() const;
   void record(const gfx::FrameContext& frame_ctx) const;
 
   private:
   ImGuiViewport* viewport_ = nullptr;
+  Fonts fonts_;
 };
 
 }

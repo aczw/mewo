@@ -44,8 +44,10 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
   {
     ImGui::Begin(EDITOR_WINDOW_NAME.data());
 
+    ImGui::PushFont(gui_ctx.fonts().geist_mono, 0.f);
     ImVec2 window_size = ImGui::GetContentRegionAvail();
     ImGui::InputTextMultiline("##editor", &editor.visible_code(), window_size);
+    ImGui::PopFont();
 
     ImGui::End();
   }
