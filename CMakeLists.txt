@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 4.0.0)
 
 set(MEWO_VERSION_SEMVER 0.1.0)
 set(MEWO_VERSION_BUILD 0)
-set(MEWO_VERSION_SUFFIX -alpha)
+set(MEWO_VERSION_SUFFIX -beta)
 # Notably, the "full" version string does not include the build number
 set(MEWO_VERSION_FULL "${MEWO_VERSION_SEMVER}${MEWO_VERSION_SUFFIX}")
 
