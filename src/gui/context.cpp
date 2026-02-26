@@ -15,7 +15,7 @@ Context::Context(const sdl::Window& window, const gfx::Renderer& renderer)
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   io.IniFilename = nullptr;
-  io.Fonts->AddFontDefault();
+  io.Fonts->AddFontDefaultVector();
 
   ImGui::StyleColorsDark();
 
