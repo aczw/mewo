@@ -4,6 +4,8 @@
 #include <imgui_impl_wgpu.h>
 #include <webgpu/webgpu_cpp.h>
 
+#include <string>
+
 namespace mewo::gui {
 
 Context::Context(const Assets& assets, const sdl::Window& window, const gfx::Renderer& renderer)
@@ -16,10 +18,12 @@ Context::Context(const Assets& assets, const sdl::Window& window, const gfx::Ren
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   io.IniFilename = nullptr;
 
+  auto inter_path = assets.get("fonts/inter_4.1/Inter-Regular.ttf").string();
+  auto geist_mono_path = assets.get("fonts/geist_mono_1.7/GeistMono-Regular.ttf").string();
+
   fonts_ = {
-    .inter = io.Fonts->AddFontFromFileTTF(assets.get("fonts/inter_4.1/Inter-Regular.ttf").c_str()),
-    .geist_mono = io.Fonts->AddFontFromFileTTF(
-        assets.get("fonts/geist_mono_1.7/GeistMono-Regular.ttf").c_str()),
+    .inter = io.Fonts->AddFontFromFileTTF(inter_path.c_str()),
+    .geist_mono = io.Fonts->AddFontFromFileTTF(geist_mono_path.c_str()),
   };
 
   io.ConfigDpiScaleFonts = true;
