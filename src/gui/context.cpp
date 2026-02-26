@@ -6,7 +6,7 @@
 
 namespace mewo::gui {
 
-Context::Context(const sdl::Window& window, const gfx::Renderer& renderer)
+Context::Context(const Assets& assets, const sdl::Window& window, const gfx::Renderer& renderer)
 {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -15,11 +15,14 @@ Context::Context(const sdl::Window& window, const gfx::Renderer& renderer)
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   io.IniFilename = nullptr;
-  io.Fonts->AddFontDefaultVector();
+
+  io.Fonts->AddFontFromFileTTF(assets.get("fonts/inter_4.1/Inter-Regular.ttf").c_str());
   io.ConfigDpiScaleFonts = true;
   io.ConfigDpiScaleViewports = true;
 
   ImGui::StyleColorsDark();
+  ImGuiStyle& style = ImGui::GetStyle();
+  style.FontSizeBase = 15.f;
 
   ImGui_ImplWGPU_InitInfo wgpu_init_info;
   wgpu_init_info.Device = renderer.device().Get();

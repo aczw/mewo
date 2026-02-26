@@ -1,5 +1,6 @@
 #pragma once
 
+#include "assets.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/renderer.hpp"
 #include "sdl/window.hpp"
@@ -12,7 +13,7 @@ namespace mewo::gui {
 /// Immediate mode GUI rendering using Dear ImGui.
 class Context {
   public:
-  Context(const sdl::Window& window, const gfx::Renderer& renderer);
+  Context(const Assets& assets, const sdl::Window& window, const gfx::Renderer& renderer);
   ~Context();
 
   Context(const Context&) = delete;
