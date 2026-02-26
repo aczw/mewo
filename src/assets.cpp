@@ -7,6 +7,7 @@
 #include <array>
 #include <filesystem>
 #include <print>
+#include <vector>
 
 #if defined(SDL_PLATFORM_MACOS)
 #include <mach-o/dyld.h>
