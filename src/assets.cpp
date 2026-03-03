@@ -7,10 +7,10 @@
 #include <array>
 #include <filesystem>
 #include <print>
-#include <vector>
 
 #if defined(SDL_PLATFORM_MACOS)
 #include <mach-o/dyld.h>
+#include <vector>
 #elif defined(SDL_PLATFORM_WIN32)
 #include <windows.h>
 #endif
