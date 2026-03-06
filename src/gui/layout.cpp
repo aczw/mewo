@@ -16,6 +16,7 @@
 namespace mewo::gui {
 
 static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
+static constexpr std::string_view DIAGNOSTICS_WINDOW_NAME = "Diagnostics";
 static constexpr std::string_view VIEWPORT_WINDOW_NAME = "Viewport";
 
 void Layout::build(State& state, const Context& gui_ctx, Editor& editor, Viewport& viewport)
@@ -46,6 +47,33 @@ void Layout::build(State& state, const Context& gui_ctx, Editor& editor, Viewpor
     ImGui::PushFont(gui_ctx.fonts().geist_mono, 0.f);
     ImVec2 window_size = ImGui::GetContentRegionAvail();
     ImGui::InputTextMultiline("##editor", &editor.visible_code(), window_size);
+    ImGui::PopFont();
+
+    ImGui::End();
+  }
+
+  {
+    ImGui::Begin(DIAGNOSTICS_WINDOW_NAME.data());
+
+    ImGui::PushFont(gui_ctx.fonts().geist_mono, 0.f);
+    if (const auto& diagnostics = viewport.diagnostics(); diagnostics.size() > 0) {
+      for (const auto& diag : diagnostics) {
+        ImGui::Text("(%llu:%llu) %s: %s", diag.line_num, diag.line_pos, diag.type_name.data(),
+            diag.message.c_str());
+        ImGui::Text("%s", diag.highlight.c_str());
+
+        std::string indicators;
+        for (size_t i = 0; i < diag.highlight.size(); ++i)
+          indicators += '^';
+        ImGui::Text("%s", indicators.c_str());
+
+        // TODO: don't include spacing if it's the last diagnostic
+        ImGui::Spacing();
+        ImGui::Spacing();
+      }
+    } else {
+      ImGui::Text("Compilation succeeded with no issues.");
+    }
     ImGui::PopFont();
 
     ImGui::End();
@@ -185,13 +213,17 @@ void Layout::set_up_initial_layout(const Context& gui_ctx, ImGuiID dockspace_id)
   ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
   ImGui::DockBuilderSetNodeSize(dockspace_id, gui_ctx.viewport()->Size);
 
-  ImGuiID dock_left_id = {};
-  ImGuiID dock_right_id = {};
-  ImGui::DockBuilderSplitNode(
-      dockspace_id, ImGuiDir_Left, SPLIT_LEFT_RATIO, &dock_left_id, &dock_right_id);
+  ImGuiID left_id = {};
+  ImGuiID right_id = {};
+  ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, SPLIT_LEFT_RATIO, &left_id, &right_id);
 
-  ImGui::DockBuilderDockWindow(EDITOR_WINDOW_NAME.data(), dock_left_id);
-  ImGui::DockBuilderDockWindow(VIEWPORT_WINDOW_NAME.data(), dock_right_id);
+  ImGuiID left_up_id = {};
+  ImGuiID left_down_id = {};
+  ImGui::DockBuilderSplitNode(left_id, ImGuiDir_Up, 0.75f, &left_up_id, &left_down_id);
+
+  ImGui::DockBuilderDockWindow(EDITOR_WINDOW_NAME.data(), left_up_id);
+  ImGui::DockBuilderDockWindow(DIAGNOSTICS_WINDOW_NAME.data(), left_down_id);
+  ImGui::DockBuilderDockWindow(VIEWPORT_WINDOW_NAME.data(), right_id);
 
   ImGui::DockBuilderFinish(dockspace_id);
 }

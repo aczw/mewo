@@ -154,6 +154,11 @@ uint32_t Viewport::width() const { return width_; }
 
 uint32_t Viewport::height() const { return height_; }
 
+const std::vector<gfx::CompilationDiagnostic>& Viewport::diagnostics() const
+{
+  return diagnostics_;
+}
+
 void Viewport::set_mode(Mode mode) { mode_ = mode; }
 
 void Viewport::set_ratio_preset(AspectRatio::Preset preset) { ratio_preset_ = preset; }
@@ -201,28 +206,15 @@ void Viewport::update_render_pipeline(const wgpu::Device& device)
 void Viewport::prepare_new_frame(State& state, const gfx::Renderer& renderer)
 {
   if (pending_run_request_.has_value()) {
-    const auto& new_code = pending_run_request_.value();
     // TODO: check if the code is the same before creating new fragment shader module
     //       (how expensive is this anyway?)
-    const auto& [frag_module_opt, diagnostics] = gfx::create::shader_module_from_wgsl(
-        renderer, new_code, DEFAULT_FRAG_SHADER_LABEL.data());
+    auto frag_result = gfx::create::shader_module_from_wgsl(
+        renderer, pending_run_request_.value(), DEFAULT_FRAG_SHADER_LABEL.data());
+    diagnostics_ = std::move(frag_result.second);
 
-    if (auto diag_count = diagnostics.size(); diag_count > 0) {
-      std::println("Shader compilation generated {} diagnostic(s):", diag_count);
+    std::println("Shader compilation generated {} diagnostic(s)", diagnostics_.size());
 
-      for (const auto& diag : diagnostics) {
-        std::println(
-            "- ({}:{}) {}: {}", diag.line_num, diag.line_pos, diag.type_name, diag.message);
-        std::println("  {}", diag.highlight);
-
-        std::print("  ");
-        for (size_t i = 0; i < diag.highlight.size(); ++i)
-          std::print("^");
-        std::println();
-      }
-    }
-
-    if (frag_module_opt.has_value()) {
+    if (const auto& frag_module_opt = frag_result.first; frag_module_opt.has_value()) {
       fragment_state_.module = frag_module_opt.value();
       update_render_pipeline(renderer.device());
 

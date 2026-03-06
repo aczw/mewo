@@ -60,6 +60,7 @@ ShaderCompilationResult shader_module_from_wgsl(
               diagnostics.push_back({
                   .message = std::string(msg.message),
                   .type_name = get_compilation_mesage_type(msg.type),
+                  // TODO: subtract line number by the number of lines in the frag prefix
                   .line_num = msg.lineNum,
                   .line_pos = msg.linePos,
                   .highlight = std::string(code.substr(msg.offset, msg.length)),

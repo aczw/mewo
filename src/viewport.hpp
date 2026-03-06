@@ -2,6 +2,7 @@
 
 #include "aspect_ratio.hpp"
 #include "assets.hpp"
+#include "gfx/compilation_diagnostic.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/renderer.hpp"
 #include "state.hpp"
@@ -13,6 +14,7 @@
 #include <optional>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 namespace mewo {
 
@@ -40,6 +42,7 @@ class Viewport {
   AspectRatio::Preset ratio_preset() const;
   uint32_t width() const;
   uint32_t height() const;
+  const std::vector<gfx::CompilationDiagnostic>& diagnostics() const;
 
   void set_mode(Mode display_mode);
   void set_ratio_preset(AspectRatio::Preset preset);
@@ -93,6 +96,8 @@ class Viewport {
   /// Stores pending (combined) fragment shader that will be applied next frame. Populated
   /// while building UI for current frame.
   std::optional<std::string> pending_run_request_;
+
+  std::vector<gfx::CompilationDiagnostic> diagnostics_;
 };
 
 }
