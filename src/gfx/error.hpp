@@ -11,7 +11,7 @@ namespace mewo::gfx {
 ///
 /// Instead, we store that information inside this struct which we check later.
 struct Error {
-  std::string_view error_type;
+  std::string_view type_name;
   std::string message;
 };
 

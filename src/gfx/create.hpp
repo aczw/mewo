@@ -1,12 +1,21 @@
 #pragma once
 
+#include "gfx/compilation_diagnostic.hpp"
+#include "gfx/renderer.hpp"
+
 #include <webgpu/webgpu_cpp.h>
 
+#include <optional>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 namespace mewo::gfx::create {
 
-wgpu::ShaderModule shader_module_from_wgsl(
-    const wgpu::Device& device, std::string_view code, std::string_view label);
+using ShaderCompilationResult
+    = std::pair<std::optional<wgpu::ShaderModule>, std::vector<CompilationDiagnostic>>;
+
+ShaderCompilationResult shader_module_from_wgsl(
+    const Renderer& renderer, std::string_view code, std::string_view label);
 
 }

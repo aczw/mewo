@@ -1,6 +1,7 @@
 #include "viewport.hpp"
 
 #include "aspect_ratio.hpp"
+#include "exception.hpp"
 #include "fs.hpp"
 #include "gfx/create.hpp"
 #include "gfx/renderer.hpp"
@@ -14,8 +15,11 @@
 #include <optional>
 #include <print>
 #include <string_view>
+#include <utility>
 
 namespace mewo {
+
+static constexpr std::string_view DEFAULT_FRAG_SHADER_LABEL = "viewport-frag-shader";
 
 Viewport::Viewport(const Assets& assets, const State& state, const gfx::Renderer& renderer,
     std::string_view initial_code)
@@ -79,17 +83,41 @@ Viewport::Viewport(const Assets& assets, const State& state, const gfx::Renderer
     .bindGroupLayouts = &render_pipeline_bgl_,
   };
 
-  auto vert_shader_module = gfx::create::shader_module_from_wgsl(device,
+  const auto& [vert_module_opt, vert_diagnostics] = gfx::create::shader_module_from_wgsl(renderer,
       fs::read_wgsl_shader(assets.get("shaders/viewport.vert.wgsl")), "viewport-vert-shader");
+
+  if (!vert_module_opt.has_value()) {
+    throw Exception("Compiling viewport vertex shader failed! {} diagnostics reported",
+        vert_diagnostics.size());
+  }
 
   render_pipeline_desc_ = {
     .label = "viewport-render-pipeline",
     .layout = device.CreatePipelineLayout(&render_pipeline_layout_desc),
-    .vertex = { .module = vert_shader_module, .entryPoint = "main" },
+    .vertex = { .module = vert_module_opt.value(), .entryPoint = "main" },
   };
 
-  set_fragment_state(device, initial_code);
+  // Compile a default fragment shader to enable render pipeline creation in constructor
+  const auto& [frag_module_opt, frag_diagnostics] = gfx::create::shader_module_from_wgsl(renderer,
+      fs::read_wgsl_shader(assets.get("shaders/viewport.frag.wgsl")),
+      DEFAULT_FRAG_SHADER_LABEL.data());
+
+  if (!frag_module_opt.has_value()) {
+    throw Exception("Compiling default viewport fragment shader failed! {} diagnostics reported",
+        frag_diagnostics.size());
+  }
+
+  fragment_state_ = {
+    .module = frag_module_opt.value(),
+    .entryPoint = "main",
+    .targetCount = 1,
+    .targets = &color_target_state_,
+  };
+
   update_render_pipeline(device);
+
+  // Also send off a compilation request for the actual fragment shader
+  set_pending_run_request(std::string(initial_code));
 
   texture_desc_ = {
     .label = "viewport-texture",
@@ -126,16 +154,6 @@ uint32_t Viewport::width() const { return width_; }
 
 uint32_t Viewport::height() const { return height_; }
 
-void Viewport::set_fragment_state(const wgpu::Device& device, std::string_view code)
-{
-  fragment_state_ = {
-    .module = gfx::create::shader_module_from_wgsl(device, code, "viewport-frag-shader-module"),
-    .entryPoint = "main",
-    .targetCount = 1,
-    .targets = &color_target_state_,
-  };
-}
-
 void Viewport::set_mode(Mode mode) { mode_ = mode; }
 
 void Viewport::set_ratio_preset(AspectRatio::Preset preset) { ratio_preset_ = preset; }
@@ -158,6 +176,11 @@ void Viewport::set_pending_resize(uint32_t new_width, uint32_t new_height)
   pending_resize_ = { new_width, new_height };
 }
 
+void Viewport::set_pending_run_request(std::string&& new_code)
+{
+  pending_run_request_ = std::move(new_code);
+}
+
 void Viewport::record(const gfx::FrameContext& frame_ctx) const
 {
   wgpu::RenderPassEncoder render_pass = frame_ctx.encoder.BeginRenderPass(&pass_desc_);
@@ -175,8 +198,44 @@ void Viewport::update_render_pipeline(const wgpu::Device& device)
   render_pipeline_ = device.CreateRenderPipeline(&render_pipeline_desc_);
 }
 
-void Viewport::prepare_new_frame(State& state, const wgpu::Device& device, const wgpu::Queue& queue)
+void Viewport::prepare_new_frame(State& state, const gfx::Renderer& renderer)
 {
+  if (pending_run_request_.has_value()) {
+    const auto& new_code = pending_run_request_.value();
+    // TODO: check if the code is the same before creating new fragment shader module
+    //       (how expensive is this anyway?)
+    const auto& [frag_module_opt, diagnostics] = gfx::create::shader_module_from_wgsl(
+        renderer, new_code, DEFAULT_FRAG_SHADER_LABEL.data());
+
+    if (auto diag_count = diagnostics.size(); diag_count > 0) {
+      std::println("Shader compilation generated {} diagnostic(s):", diag_count);
+
+      for (const auto& diag : diagnostics) {
+        std::println(
+            "- ({}:{}) {}: {}", diag.line_num, diag.line_pos, diag.type_name, diag.message);
+        std::println("  {}", diag.highlight);
+
+        std::print("  ");
+        for (size_t i = 0; i < diag.highlight.size(); ++i)
+          std::print("^");
+        std::println();
+      }
+    }
+
+    if (frag_module_opt.has_value()) {
+      fragment_state_.module = frag_module_opt.value();
+      update_render_pipeline(renderer.device());
+
+      if constexpr (query::is_debug())
+        std::println("Updated viewport render pipeline");
+    } else {
+      if constexpr (query::is_debug())
+        std::println("Shader compilation errors occurred, viewport render pipeline not updated");
+    }
+
+    pending_run_request_ = std::nullopt;
+  }
+
   if (pending_resize_.has_value()) {
     auto [new_width, new_height] = pending_resize_.value();
 
@@ -187,7 +246,7 @@ void Viewport::prepare_new_frame(State& state, const wgpu::Device& device, const
     //       a strange one to a resolution of 16×9 (yes, 16 pixels by 9 pixels)
     texture_desc_.size.width = new_width;
     texture_desc_.size.height = new_height;
-    texture_ = device.CreateTexture(&texture_desc_);
+    texture_ = renderer.device().CreateTexture(&texture_desc_);
 
     static const wgpu::TextureViewDescriptor VIEW_DESC = { .label = "viewport-view" };
 
@@ -203,7 +262,7 @@ void Viewport::prepare_new_frame(State& state, const wgpu::Device& device, const
     = { static_cast<float>(texture_.GetWidth()), static_cast<float>(texture_.GetHeight()) },
   };
 
-  queue.WriteBuffer(unif_buf_, 0, &unif, sizeof(Uniforms));
+  renderer.queue().WriteBuffer(unif_buf_, 0, &unif, sizeof(Uniforms));
 
   // TODO: update time in the main render loop, not within this class
   state.time = unif.time;

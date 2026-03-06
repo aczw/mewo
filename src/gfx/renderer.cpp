@@ -11,8 +11,8 @@
 
 #include <array>
 #include <functional>
-#include <limits>
 #include <optional>
+#include <print>
 #include <string_view>
 
 #if defined(SDL_PLATFORM_WIN32)
@@ -21,11 +21,7 @@
 
 namespace mewo::gfx {
 
-namespace {
-
-constexpr auto WGPU_WAIT_TIMEOUT_MAX = std::numeric_limits<uint64_t>::max();
-
-std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextureStatus status)
+static std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextureStatus status)
 {
   switch (status) {
     // clang-format off
@@ -40,8 +36,6 @@ std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextureStatus
   default:
     utility::enum_unreachable("wgpu::SurfaceGetCurrentTextureStatus", status);
   }
-}
-
 }
 
 Renderer::Renderer(const sdl::Window& window)
@@ -63,8 +57,8 @@ Renderer::Renderer(const sdl::Window& window)
     .powerPreference = wgpu::PowerPreference::HighPerformance,
   };
 
-  wgpu::Future request_adapter_future
-      = instance_.RequestAdapter(&adapter_opts, wgpu::CallbackMode::WaitAnyOnly,
+  wgpu::WaitStatus adapter_status = instance_.WaitAny(
+      instance_.RequestAdapter(&adapter_opts, wgpu::CallbackMode::WaitAnyOnly,
           [&adapter](wgpu::RequestAdapterStatus status, wgpu::Adapter acquired_adapter,
               wgpu::StringView message) {
             // Throwing here is safe because we wait on callback execution in the current thread
@@ -72,11 +66,10 @@ Renderer::Renderer(const sdl::Window& window)
               throw Exception("Failed to request WebGPU adapter: {}", message.data);
 
             adapter = std::move(acquired_adapter);
-          });
-  wgpu::WaitStatus adapter_wait_status
-      = instance_.WaitAny(request_adapter_future, WGPU_WAIT_TIMEOUT_MAX);
+          }),
+      WAIT_TIMEOUT_MAX);
 
-  if (!adapter || adapter_wait_status != wgpu::WaitStatus::Success)
+  if (!adapter || adapter_status != wgpu::WaitStatus::Success)
     throw Exception("Waiting on wgpu::Instance::RequestAdapter failed");
 
   if constexpr (query::is_debug())
@@ -106,7 +99,7 @@ Renderer::Renderer(const sdl::Window& window)
         auto reason = static_cast<WGPUDeviceLostReason>(type);
 
         *device_lost_error = {
-          .error_type = ImGui_ImplWGPU_GetDeviceLostReasonName(reason),
+          .type_name = ImGui_ImplWGPU_GetDeviceLostReasonName(reason),
           .message = std::string(message),
         };
       },
@@ -118,14 +111,14 @@ Renderer::Renderer(const sdl::Window& window)
         auto error_type = static_cast<WGPUErrorType>(type);
 
         *uncaptured_error = {
-          .error_type = ImGui_ImplWGPU_GetErrorTypeName(error_type),
+          .type_name = ImGui_ImplWGPU_GetErrorTypeName(error_type),
           .message = std::string(message),
         };
       },
       &uncaptured_error_);
 
-  wgpu::Future request_device_future
-      = adapter.RequestDevice(&device_desc, wgpu::CallbackMode::WaitAnyOnly,
+  wgpu::WaitStatus device_status = instance_.WaitAny(
+      adapter.RequestDevice(&device_desc, wgpu::CallbackMode::WaitAnyOnly,
           [this](wgpu::RequestDeviceStatus status, wgpu::Device acquired_device,
               wgpu::StringView message) {
             // Throwing here is safe because we wait on callback execution in the current thread
@@ -133,11 +126,10 @@ Renderer::Renderer(const sdl::Window& window)
               throw Exception("Failed to request WebGPU device: {}", message.data);
 
             device_ = std::move(acquired_device);
-          });
-  wgpu::WaitStatus device_wait_status
-      = instance_.WaitAny(request_device_future, WGPU_WAIT_TIMEOUT_MAX);
+          }),
+      WAIT_TIMEOUT_MAX);
 
-  if (!device_ || device_wait_status != wgpu::WaitStatus::Success)
+  if (!device_ || device_status != wgpu::WaitStatus::Success)
     throw Exception("Waiting on wgpu::Adapter::RequestDevice failed");
 
   SDL_PropertiesID properties_id = SDL_GetWindowProperties(window.get());
@@ -196,6 +188,8 @@ Renderer::Renderer(const sdl::Window& window)
 
 Renderer::~Renderer() { surface_.Unconfigure(); }
 
+const wgpu::Instance& Renderer::instance() const { return instance_; }
+
 const wgpu::Device& Renderer::device() const { return device_; }
 
 const wgpu::Surface& Renderer::surface() const { return surface_; }
@@ -204,18 +198,19 @@ const wgpu::SurfaceConfiguration& Renderer::surface_config() const { return surf
 
 const wgpu::Queue& Renderer::queue() const { return queue_; }
 
-FrameContext Renderer::prepare_new_frame() const
+FrameContext Renderer::prepare_new_frame()
 {
   if (device_lost_error_.has_value()) {
     const Error& error = device_lost_error_.value();
     throw Exception(
-        "WebGPU device lost. Reason: {}. Message (below):\n{}", error.error_type, error.message);
+        "WebGPU device lost. Reason: {}. Message (below):\n{}", error.type_name, error.message);
   }
 
   if (uncaptured_error_.has_value()) {
     const Error& error = uncaptured_error_.value();
-    throw Exception(
-        "Uncaptured WebGPU error. Type: {}. Message (below):\n{}", error.error_type, error.message);
+    std::println(
+        "Uncaptured WebGPU error. Type: {}. Message (below):\n{}", error.type_name, error.message);
+    uncaptured_error_ = std::nullopt;
   }
 
   wgpu::SurfaceTexture surface_texture;

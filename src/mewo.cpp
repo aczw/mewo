@@ -22,6 +22,7 @@ void Mewo::run()
   SDL_Event event = {};
 
   const wgpu::Device& device = renderer_.device();
+  const wgpu::Queue& queue = renderer_.queue();
 
   while (!state_.should_quit) {
     while (SDL_PollEvent(&event)) {
@@ -42,11 +43,13 @@ void Mewo::run()
       }
     }
 
+    device.Tick();
+
     const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
     gui_ctx_.prepare_new_frame();
-    viewport_.prepare_new_frame(state_, device, renderer_.queue());
+    viewport_.prepare_new_frame(state_, renderer_);
 
-    layout_.build(state_, gui_ctx_, device, editor_, viewport_);
+    layout_.build(state_, gui_ctx_, editor_, viewport_);
 
     viewport_.record(frame_ctx);
     gui_ctx_.record(frame_ctx);
@@ -54,9 +57,8 @@ void Mewo::run()
     static const wgpu::CommandBufferDescriptor CMD_BUF_DESC = { .label = "command-buffer" };
     wgpu::CommandBuffer cmd_buf = frame_ctx.encoder.Finish(&CMD_BUF_DESC);
 
-    renderer_.queue().Submit(1, &cmd_buf);
+    queue.Submit(1, &cmd_buf);
     renderer_.surface().Present();
-    device.Tick();
   }
 }
 

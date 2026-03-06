@@ -18,8 +18,7 @@ namespace mewo::gui {
 static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
 static constexpr std::string_view VIEWPORT_WINDOW_NAME = "Viewport";
 
-void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& device, Editor& editor,
-    Viewport& viewport)
+void Layout::build(State& state, const Context& gui_ctx, Editor& editor, Viewport& viewport)
 {
   // Once the layout is created, the ID remains constant.
   if (const ImGuiID dockspace_id = ImGui::GetID("main-dockspace");
@@ -94,11 +93,8 @@ void Layout::build(State& state, const Context& gui_ctx, const wgpu::Device& dev
       ImGui::Image(texture_id, ImVec2(window_size.x, window_size.x * inverse_ratio));
     }
 
-    if (ImGui::Button("Run")) {
-      viewport.set_fragment_state(device, editor.combined_code());
-      // TODO: only update render pipeline if shader compilation was successful
-      viewport.update_render_pipeline(device);
-    }
+    if (ImGui::Button("Run"))
+      viewport.set_pending_run_request(editor.combined_code());
 
     {
       using Mode = Viewport::Mode;

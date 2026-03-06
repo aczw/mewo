@@ -117,6 +117,7 @@ add_executable(mewo
   ${MEWO_SDL_DIR}/window.cpp
   ${MEWO_SDL_DIR}/window.hpp
 
+  ${MEWO_GFX_DIR}/compilation_diagnostic.hpp
   ${MEWO_GFX_DIR}/create.cpp
   ${MEWO_GFX_DIR}/create.hpp
   ${MEWO_GFX_DIR}/error.hpp

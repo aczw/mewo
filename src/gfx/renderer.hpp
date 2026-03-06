@@ -6,18 +6,22 @@
 
 #include <webgpu/webgpu_cpp.h>
 
+#include <limits>
 #include <optional>
 
 namespace mewo::gfx {
 
 class Renderer {
   public:
+  static constexpr auto WAIT_TIMEOUT_MAX = std::numeric_limits<uint64_t>::max();
+
   Renderer(const sdl::Window& window);
   ~Renderer();
 
   Renderer(const Renderer&) = delete;
   Renderer& operator=(const Renderer&) = delete;
 
+  const wgpu::Instance& instance() const;
   const wgpu::Device& device() const;
   const wgpu::Surface& surface() const;
   const wgpu::SurfaceConfiguration& surface_config() const;
@@ -25,7 +29,7 @@ class Renderer {
 
   /// Checks if any errors have occurred in the graphics context, and throws accordingly.
   /// Otherwise, it returns a texture view of the current surface and a new command encoder.
-  FrameContext prepare_new_frame() const;
+  FrameContext prepare_new_frame();
   void resize(uint32_t new_width, uint32_t new_height);
 
   private:

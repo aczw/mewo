@@ -41,7 +41,6 @@ class Viewport {
   uint32_t width() const;
   uint32_t height() const;
 
-  void set_fragment_state(const wgpu::Device& device, std::string_view code);
   void set_mode(Mode display_mode);
   void set_ratio_preset(AspectRatio::Preset preset);
   void set_width(uint32_t width);
@@ -52,12 +51,13 @@ class Viewport {
   void set_pending_resize(uint32_t new_width);
   /// Will use given width and height.
   void set_pending_resize(uint32_t new_width, uint32_t new_height);
+  void set_pending_run_request(std::string&& new_code);
 
   void record(const gfx::FrameContext& frame_ctx) const;
   /// Updates the fragment shader and creates the render pipeline.
   void update_render_pipeline(const wgpu::Device& device);
   /// Updates uniform buffer and checks for a pending resize, applying it if it exists.
-  void prepare_new_frame(State& state, const wgpu::Device& device, const wgpu::Queue& queue);
+  void prepare_new_frame(State& state, const gfx::Renderer& renderer);
 
   private:
   struct Uniforms {
@@ -90,6 +90,9 @@ class Viewport {
   /// building the UI for the current frame. We can't resize in the same frame because
   /// the texture may already have been submitted for display in the GUI.
   std::optional<std::pair<uint32_t, uint32_t>> pending_resize_;
+  /// Stores pending (combined) fragment shader that will be applied next frame. Populated
+  /// while building UI for current frame.
+  std::optional<std::string> pending_run_request_;
 };
 
 }
