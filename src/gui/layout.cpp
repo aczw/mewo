@@ -3,6 +3,7 @@
 #include "aspect_ratio.hpp"
 #include "utility.hpp"
 
+#include <SDL3/SDL_dialog.h>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <imgui_stdlib.h>
@@ -10,6 +11,7 @@
 
 #include <array>
 #include <functional>
+#include <print>
 #include <string_view>
 #include <utility>
 
@@ -19,7 +21,8 @@ static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
 static constexpr std::string_view DIAGNOSTICS_WINDOW_NAME = "Diagnostics";
 static constexpr std::string_view VIEWPORT_WINDOW_NAME = "Viewport";
 
-void Layout::build(State& state, const Context& gui_ctx, Editor& editor, Viewport& viewport)
+void Layout::build(State& state, const sdl::Window& window, const Context& gui_ctx, Editor& editor,
+    Viewport& viewport)
 {
   // Once the layout is created, the ID remains constant.
   if (const ImGuiID dockspace_id = ImGui::GetID("main-dockspace");
@@ -32,6 +35,19 @@ void Layout::build(State& state, const Context& gui_ctx, Editor& editor, Viewpor
 
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
+      if (ImGui::MenuItem("Save As...")) {
+        SDL_ShowOpenFolderDialog(
+            [](void*, const char* const* filelist, int) -> void {
+              while (*filelist) {
+                std::println("Selected path: {}", *filelist);
+                filelist += 1;
+              }
+            },
+            nullptr, window.get(), nullptr, false);
+      }
+
+      ImGui::Separator();
+
       if (ImGui::MenuItem("Quit"))
         state.should_quit = true;
 

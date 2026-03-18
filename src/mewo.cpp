@@ -49,12 +49,12 @@ void Mewo::run()
     gui_ctx_.prepare_new_frame();
     viewport_.prepare_new_frame(state_, renderer_);
 
-    layout_.build(state_, gui_ctx_, editor_, viewport_);
+    layout_.build(state_, window_, gui_ctx_, editor_, viewport_);
 
     viewport_.record(frame_ctx);
     gui_ctx_.record(frame_ctx);
 
-    static const wgpu::CommandBufferDescriptor CMD_BUF_DESC = { .label = "command-buffer" };
+    static constexpr wgpu::CommandBufferDescriptor CMD_BUF_DESC = { .label = "command-buffer" };
     wgpu::CommandBuffer cmd_buf = frame_ctx.encoder.Finish(&CMD_BUF_DESC);
 
     queue.Submit(1, &cmd_buf);
