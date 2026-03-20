@@ -50,4 +50,13 @@ std::string read_wgsl_shader(const std::filesystem::path& file_path)
   return source;
 }
 
+void save_as(const std::filesystem::path& folder_path)
+{
+  // check if path exists
+  // check if path is a folder
+  // check if folder is empty
+
+  // create .mewo folder
+}
+
 }

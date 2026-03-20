@@ -1,6 +1,7 @@
 #include "layout.hpp"
 
 #include "aspect_ratio.hpp"
+#include "fs.hpp"
 #include "utility.hpp"
 
 #include <SDL3/SDL_dialog.h>
@@ -38,10 +39,22 @@ void Layout::build(State& state, const sdl::Window& window, const Context& gui_c
       if (ImGui::MenuItem("Save As...")) {
         SDL_ShowOpenFolderDialog(
             [](void*, const char* const* filelist, int) -> void {
+              if (filelist == nullptr)
+                return;
+
+              const char* folder_path = nullptr;
+              int count = 0;
+
               while (*filelist) {
-                std::println("Selected path: {}", *filelist);
+                folder_path = *filelist;
                 filelist += 1;
+                count += 1;
               }
+
+              if (count > 1)
+                std::println("warning: more than one folder selected, using last one");
+
+              fs::save_as(folder_path);
             },
             nullptr, window.get(), nullptr, false);
       }
