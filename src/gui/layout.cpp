@@ -1,6 +1,7 @@
 #include "layout.hpp"
 
 #include "aspect_ratio.hpp"
+#include "editor.hpp"
 #include "fs.hpp"
 #include "utility.hpp"
 
@@ -37,8 +38,10 @@ void Layout::build(State& state, const sdl::Window& window, const Context& gui_c
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
       if (ImGui::MenuItem("Save As...")) {
+        // TODO: probably can't use this for macOS because it doesn't let you create a
+        // folder from within the dialog by default
         SDL_ShowOpenFolderDialog(
-            [](void*, const char* const* filelist, int) -> void {
+            [](void* userdata, const char* const* filelist, int) -> void {
               if (filelist == nullptr)
                 return;
 
@@ -54,9 +57,9 @@ void Layout::build(State& state, const sdl::Window& window, const Context& gui_c
               if (count > 1)
                 std::println("warning: more than one folder selected, using last one");
 
-              fs::save_as(folder_path);
+              fs::save_as(folder_path, static_cast<const Editor*>(userdata)->visible_code());
             },
-            nullptr, window.get(), nullptr, false);
+            static_cast<void*>(&editor), window.get(), nullptr, false);
       }
 
       ImGui::Separator();
@@ -217,7 +220,7 @@ void Layout::build(State& state, const sdl::Window& window, const Context& gui_c
       uint32_t curr_height = static_cast<uint32_t>(prev_size[1]);
 
       // TODO: don't submit if user is currently selecting/dragging the slider, or has the
-      //       box active and is still entering values
+      // box active and is still entering values
       if (curr_width != prev_width || curr_height != prev_height) {
         viewport.set_pending_resize(curr_width, curr_height);
         viewport.set_width(curr_width);

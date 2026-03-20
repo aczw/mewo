@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <fstream>
 #include <ios>
+#include <print>
 #include <string>
 #include <string_view>
 
@@ -50,13 +51,43 @@ std::string read_wgsl_shader(const std::filesystem::path& file_path)
   return source;
 }
 
-void save_as(const std::filesystem::path& folder_path)
+void save_as(const std::filesystem::path& folder_path, std::string_view code)
 {
-  // check if path exists
-  // check if path is a folder
-  // check if folder is empty
+  auto path_str = folder_path.string();
 
-  // create .mewo folder
+  if (!std::filesystem::exists(folder_path)) {
+    std::println("error: \"{}\" does not exist", path_str);
+    return;
+  }
+
+  auto absolute_path = std::filesystem::absolute(folder_path);
+  path_str = absolute_path.string();
+
+  if (!std::filesystem::is_directory(absolute_path)) {
+    std::println("error: \"{}\" is not a folder", path_str);
+    return;
+  }
+
+  if (!std::filesystem::is_empty(absolute_path)) {
+    std::println("error: \"{}\" is not empty, abandoning", path_str);
+    return;
+  }
+
+  // Create .mewo folder
+  if (!std::filesystem::create_directory(absolute_path / ".mewo")) {
+    std::println("error: failed to create .mewo folder at \"{}/.mewo\"", path_str);
+    return;
+  }
+
+  if (std::ofstream shader_file(absolute_path / "shader.wgsl");
+      !shader_file || !shader_file.is_open()) {
+    std::println("error: failed to access \"{}/shader.wgsl\" for writing", path_str);
+    return;
+  } else {
+    shader_file << code;
+  }
+
+  std::println("Saved as project \"{}\"", path_str);
 }
 
 }

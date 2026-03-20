@@ -11,6 +11,7 @@ class Editor {
   Editor(const Assets& assets);
 
   std::string& visible_code();
+  const std::string& visible_code() const;
 
   std::string combined_code() const;
 
