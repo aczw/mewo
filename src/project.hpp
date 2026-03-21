@@ -13,6 +13,7 @@ class Project {
 
   Project(const std::filesystem::path& folder_to_open);
 
+  const std::string& name() const;
   const std::filesystem::path& root() const;
 
   private:

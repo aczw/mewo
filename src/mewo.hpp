@@ -5,9 +5,12 @@
 #include "gfx/renderer.hpp"
 #include "gui/context.hpp"
 #include "gui/layout.hpp"
+#include "project.hpp"
 #include "sdl/context.hpp"
 #include "sdl/window.hpp"
 #include "viewport.hpp"
+
+#include <optional>
 
 namespace mewo {
 
@@ -31,6 +34,8 @@ class Mewo {
 
   Editor editor_;
   Viewport viewport_;
+
+  std::optional<Project> project_;
 };
 
 }

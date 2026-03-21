@@ -30,6 +30,8 @@ Project::Project(const std::filesystem::path& folder_to_open)
   name_ = root_.filename().string();
 }
 
+const std::string& Project::name() const { return name_; }
+
 const std::filesystem::path& Project::root() const { return root_; }
 
 }
