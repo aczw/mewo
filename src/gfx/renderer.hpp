@@ -39,7 +39,8 @@ class Renderer {
   wgpu::SurfaceConfiguration surface_config_;
   wgpu::Queue queue_;
 
-  // TODO: move these two fields to `State` struct?
+  // TODO: move these two fields to `Pending` struct? Would then have to deal with
+  // potential concurrent writes to the object as these errors can happen at any time
   std::optional<Error> device_lost_error_;
   std::optional<Error> uncaptured_error_;
 };

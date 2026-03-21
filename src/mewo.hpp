@@ -5,6 +5,7 @@
 #include "gfx/renderer.hpp"
 #include "gui/context.hpp"
 #include "gui/layout.hpp"
+#include "pending.hpp"
 #include "project.hpp"
 #include "sdl/context.hpp"
 #include "sdl/window.hpp"
@@ -36,6 +37,7 @@ class Mewo {
   Viewport viewport_;
 
   std::optional<Project> project_;
+  Pending pending_;
 };
 
 }

@@ -30,26 +30,12 @@ void Mewo::run()
   const wgpu::Device& device = renderer_.device();
   const wgpu::Queue& queue = renderer_.queue();
 
-  while (!state_.should_quit) {
-    while (SDL_PollEvent(&event)) {
-      ImGui_ImplSDL3_ProcessEvent(&event);
-
-      switch (event.type) {
-      case SDL_EVENT_QUIT:
-      case SDL_EVENT_WINDOW_CLOSE_REQUESTED: {
-        state_.should_quit = true;
-        break;
-      }
-
-      case SDL_EVENT_WINDOW_RESIZED: {
-        auto [new_width, new_height] = window_.size_in_pixels();
-        renderer_.resize(new_width, new_height);
-        break;
-      }
-      }
-    }
-
+  while (!pending_.quit) {
     device.Tick();
+
+    const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
+    viewport_.prepare_new_frame(state_, renderer_);
+    gui_ctx_.prepare_new_frame();
 
     if (state_.pending_project_open.has_value()) {
       try {
@@ -66,11 +52,25 @@ void Mewo::run()
       state_.pending_project_open.reset();
     }
 
-    const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
-    gui_ctx_.prepare_new_frame();
-    viewport_.prepare_new_frame(state_, renderer_);
+    while (SDL_PollEvent(&event)) {
+      ImGui_ImplSDL3_ProcessEvent(&event);
 
-    layout_.build(state_, window_, gui_ctx_, editor_, viewport_);
+      switch (event.type) {
+      case SDL_EVENT_QUIT:
+      case SDL_EVENT_WINDOW_CLOSE_REQUESTED: {
+        pending_.quit = true;
+        break;
+      }
+
+      case SDL_EVENT_WINDOW_RESIZED: {
+        auto [new_width, new_height] = window_.size_in_pixels();
+        renderer_.resize(new_width, new_height);
+        break;
+      }
+      }
+    }
+
+    layout_.build(pending_, state_, window_, gui_ctx_, editor_, viewport_);
 
     viewport_.record(frame_ctx);
     gui_ctx_.record(frame_ctx);

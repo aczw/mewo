@@ -24,8 +24,8 @@ static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
 static constexpr std::string_view DIAGNOSTICS_WINDOW_NAME = "Diagnostics";
 static constexpr std::string_view VIEWPORT_WINDOW_NAME = "Viewport";
 
-void Layout::build(State& state, const sdl::Window& window, const Context& gui_ctx, Editor& editor,
-    Viewport& viewport)
+void Layout::build(Pending& pending, State& state, const sdl::Window& window,
+    const Context& gui_ctx, Editor& editor, Viewport& viewport)
 {
   // Once the layout is created, the ID remains constant.
   if (const ImGuiID dockspace_id = ImGui::GetID("main-dockspace");
@@ -103,7 +103,7 @@ void Layout::build(State& state, const sdl::Window& window, const Context& gui_c
       ImGui::Separator();
 
       if (ImGui::MenuItem("Quit"))
-        state.should_quit = true;
+        pending.quit = true;
 
       ImGui::EndMenu();
     }

@@ -220,6 +220,8 @@ FrameContext Renderer::prepare_new_frame()
       status != wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal
       && status != wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal) {
     throw Exception("WebGPU surface texture status: {}", get_surface_texture_status(status));
+  } else if (status == wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal) {
+    std::println("warning: surface texture is suboptimal");
   }
 
   static const wgpu::TextureViewDescriptor SURFACE_VIEW_DESC = {
@@ -229,11 +231,11 @@ FrameContext Renderer::prepare_new_frame()
     .aspect = wgpu::TextureAspect::All,
   };
 
-  static const wgpu::CommandEncoderDescriptor COMMAND_ENCODER_DESC = { .label = "command-encoder" };
+  static constexpr wgpu::CommandEncoderDescriptor CMD_ENCODER_DESC = { .label = "command-encoder" };
 
   return {
     .surface_view = surface_texture.texture.CreateView(&SURFACE_VIEW_DESC),
-    .encoder = device_.CreateCommandEncoder(&COMMAND_ENCODER_DESC),
+    .encoder = device_.CreateCommandEncoder(&CMD_ENCODER_DESC),
   };
 }
 
