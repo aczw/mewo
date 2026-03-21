@@ -2,6 +2,8 @@
 
 #include "fs.hpp"
 
+#include <string>
+
 namespace mewo {
 
 Editor::Editor(const Assets& assets)
@@ -14,6 +16,11 @@ Editor::Editor(const Assets& assets)
 std::string& Editor::visible_code() { return visible_code_; }
 
 const std::string& Editor::visible_code() const { return visible_code_; }
+
+void Editor::set_visible_code(std::string_view visible_code)
+{
+  visible_code_ = std::string(visible_code);
+}
 
 std::string Editor::combined_code() const
 {

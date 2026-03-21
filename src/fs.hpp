@@ -1,7 +1,6 @@
 #pragma once
 
 #include <filesystem>
-#include <optional>
 #include <string>
 #include <string_view>
 
@@ -14,7 +13,5 @@ std::string read_wgsl_shader(const std::filesystem::path& file_path);
 
 /// Saves the current state of Mewo as a new project.
 void save_as(const std::filesystem::path& folder_path, std::string_view code);
-
-std::optional<std::string> open_project(const std::filesystem::path& project_to_open);
 
 }

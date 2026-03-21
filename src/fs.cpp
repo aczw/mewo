@@ -1,6 +1,7 @@
 #include "fs.hpp"
 
 #include "exception.hpp"
+#include "project.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -12,8 +13,6 @@
 namespace mewo::fs {
 
 static constexpr std::string_view WGSL_FILE_EXTENSION = ".wgsl";
-static constexpr std::string_view WGSL_SHADER_FILE_NAME = "shader.wgsl";
-static constexpr std::string_view MEWO_FOLDER_NAME = ".mewo";
 
 std::string read_file(const std::filesystem::path& file_path)
 {
@@ -77,49 +76,22 @@ void save_as(const std::filesystem::path& folder_path, std::string_view code)
   }
 
   // Create Mewo folder
-  if (!std::filesystem::create_directory(absolute_path / MEWO_FOLDER_NAME)) {
-    std::println("error: failed to create {1} folder at \"{0}/{1}\"", path_str, MEWO_FOLDER_NAME);
+  if (!std::filesystem::create_directory(absolute_path / Project::MEWO_FOLDER_NAME)) {
+    std::println(
+        "error: failed to create {1} folder at \"{0}/{1}\"", path_str, Project::MEWO_FOLDER_NAME);
     return;
   }
 
-  if (std::ofstream shader_file(absolute_path / WGSL_SHADER_FILE_NAME);
+  if (std::ofstream shader_file(absolute_path / Project::WGSL_SHADER_FILE_NAME);
       !shader_file || !shader_file.is_open()) {
-    std::println("error: failed to access \"{}/{}\" for writing", path_str, WGSL_SHADER_FILE_NAME);
+    std::println(
+        "error: failed to access \"{}/{}\" for writing", path_str, Project::WGSL_SHADER_FILE_NAME);
     return;
   } else {
     shader_file << code;
   }
 
   std::println("Saved as project \"{}\"", path_str);
-}
-
-std::optional<std::string> open_project(const std::filesystem::path& project_to_open)
-{
-  // TODO: can probably take this repeated part and put it in a separate function
-  auto path_str = project_to_open.string();
-
-  if (!std::filesystem::exists(project_to_open)) {
-    std::println("error: \"{}\" does not exist", path_str);
-    return {};
-  }
-
-  auto absolute_path = std::filesystem::absolute(project_to_open);
-  path_str = absolute_path.string();
-
-  if (!std::filesystem::is_directory(absolute_path)) {
-    std::println("error: \"{}\" is not a folder", path_str);
-    return {};
-  }
-
-  auto mewo_folder = absolute_path / MEWO_FOLDER_NAME;
-
-  if (!std::filesystem::exists(mewo_folder) || !std::filesystem::is_directory(mewo_folder)) {
-    std::println("error: {} folder \"{}\" either does not exist or is not a folder",
-        MEWO_FOLDER_NAME, path_str);
-    return {};
-  }
-
-  return read_wgsl_shader(absolute_path / WGSL_SHADER_FILE_NAME);
 }
 
 }

@@ -117,7 +117,7 @@ Viewport::Viewport(const Assets& assets, const State& state, const gfx::Renderer
   update_render_pipeline(device);
 
   // Also send off a compilation request for the actual fragment shader
-  set_pending_run_request(std::string(initial_code));
+  set_pending_run_request(initial_code);
 
   texture_desc_ = {
     .label = "viewport-texture",
@@ -181,9 +181,9 @@ void Viewport::set_pending_resize(uint32_t new_width, uint32_t new_height)
   pending_resize_ = { new_width, new_height };
 }
 
-void Viewport::set_pending_run_request(std::string&& new_code)
+void Viewport::set_pending_run_request(std::string_view new_code)
 {
-  pending_run_request_ = std::move(new_code);
+  pending_run_request_ = std::string(new_code);
 }
 
 void Viewport::record(const gfx::FrameContext& frame_ctx) const

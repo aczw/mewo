@@ -54,7 +54,7 @@ class Viewport {
   void set_pending_resize(uint32_t new_width);
   /// Will use given width and height.
   void set_pending_resize(uint32_t new_width, uint32_t new_height);
-  void set_pending_run_request(std::string&& new_code);
+  void set_pending_run_request(std::string_view new_code);
 
   void record(const gfx::FrameContext& frame_ctx) const;
   /// Updates the fragment shader and creates the render pipeline.
