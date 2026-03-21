@@ -1,5 +1,8 @@
 #pragma once
 
+#include <filesystem>
+#include <optional>
+
 namespace mewo {
 
 /// Stores general application state. Also lets me avoid passing the entire `Mewo` class
@@ -7,6 +10,7 @@ namespace mewo {
 struct State {
   bool should_quit = false;
   float time = 0.f;
+  std::optional<std::filesystem::path> pending_project_open;
 };
 
 }

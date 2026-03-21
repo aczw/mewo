@@ -1,11 +1,14 @@
 #include "mewo.hpp"
 
 #include "editor.hpp"
+#include "fs.hpp"
 #include "gfx/frame_context.hpp"
 
 #include <SDL3/SDL.h>
 #include <imgui_impl_sdl3.h>
 #include <webgpu/webgpu_cpp.h>
+
+#include <optional>
 
 namespace mewo {
 
@@ -44,6 +47,15 @@ void Mewo::run()
     }
 
     device.Tick();
+
+    if (state_.pending_project_open.has_value()) {
+      if (auto code_opt = fs::open_project(state_.pending_project_open.value()); code_opt) {
+        editor_.visible_code() = code_opt.value();
+        viewport_.set_pending_run_request(editor_.combined_code());
+      }
+
+      state_.pending_project_open.reset();
+    }
 
     const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
     gui_ctx_.prepare_new_frame();

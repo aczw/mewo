@@ -207,7 +207,7 @@ void Viewport::prepare_new_frame(State& state, const gfx::Renderer& renderer)
 {
   if (pending_run_request_.has_value()) {
     // TODO: check if the code is the same before creating new fragment shader module
-    //       (how expensive is this anyway?)
+    // (how expensive is this anyway?)
     auto frag_result = gfx::create::shader_module_from_wgsl(
         renderer, pending_run_request_.value(), DEFAULT_FRAG_SHADER_LABEL.data());
     diagnostics_ = std::move(frag_result.second);
@@ -225,7 +225,7 @@ void Viewport::prepare_new_frame(State& state, const gfx::Renderer& renderer)
         std::println("Shader compilation errors occurred, viewport render pipeline not updated");
     }
 
-    pending_run_request_ = std::nullopt;
+    pending_run_request_.reset();
   }
 
   if (pending_resize_.has_value()) {
@@ -235,7 +235,7 @@ void Viewport::prepare_new_frame(State& state, const gfx::Renderer& renderer)
       std::println("Viewport texture resized to {}×{}", new_width, new_height);
 
     // TODO: on initialization a couple of intermediary resizes occur, including
-    //       a strange one to a resolution of 16×9 (yes, 16 pixels by 9 pixels)
+    // a strange one to a resolution of 16×9 (yes, 16 pixels by 9 pixels)
     texture_desc_.size.width = new_width;
     texture_desc_.size.height = new_height;
     texture_ = renderer.device().CreateTexture(&texture_desc_);
@@ -245,7 +245,7 @@ void Viewport::prepare_new_frame(State& state, const gfx::Renderer& renderer)
     view_ = texture_.CreateView(&VIEW_DESC);
     pass_color_attachment_.view = view_;
 
-    pending_resize_ = std::nullopt;
+    pending_resize_.reset();
   }
 
   Uniforms unif = {
