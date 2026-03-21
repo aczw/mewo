@@ -210,7 +210,7 @@ FrameContext Renderer::prepare_new_frame()
     const Error& error = uncaptured_error_.value();
     std::println(
         "Uncaptured WebGPU error. Type: {}. Message (below):\n{}", error.type_name, error.message);
-    uncaptured_error_ = std::nullopt;
+    uncaptured_error_.reset();
   }
 
   wgpu::SurfaceTexture surface_texture;

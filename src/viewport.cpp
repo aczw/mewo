@@ -225,7 +225,7 @@ void Viewport::prepare_new_frame(State& state, const gfx::Renderer& renderer)
         std::println("Shader compilation errors occurred, viewport render pipeline not updated");
     }
 
-    pending_run_request_ = std::nullopt;
+    pending_run_request_.reset();
   }
 
   if (pending_resize_.has_value()) {
@@ -245,7 +245,7 @@ void Viewport::prepare_new_frame(State& state, const gfx::Renderer& renderer)
     view_ = texture_.CreateView(&VIEW_DESC);
     pass_color_attachment_.view = view_;
 
-    pending_resize_ = std::nullopt;
+    pending_resize_.reset();
   }
 
   Uniforms unif = {
