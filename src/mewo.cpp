@@ -53,12 +53,14 @@ void Mewo::run()
 
     if (state_.pending_project_open.has_value()) {
       try {
-        Project project(state_.pending_project_open.value());
+        const auto& project = project_.emplace(state_.pending_project_open.value());
+
         editor_.set_visible_code(
             fs::read_wgsl_shader(project.root() / Project::WGSL_SHADER_FILE_NAME));
         viewport_.set_pending_run_request(editor_.combined_code());
+        window_.set_project_in_title(project);
       } catch (const Exception& ex) {
-        std::println("Failed to open project: {}", ex.what());
+        std::println("Failed to set new project: {}", ex.what());
       }
 
       state_.pending_project_open.reset();
