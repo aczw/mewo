@@ -2,8 +2,8 @@
 
 #include "editor.hpp"
 #include "exception.hpp"
-#include "fs.hpp"
 #include "gfx/frame_context.hpp"
+#include "io.hpp"
 #include "project.hpp"
 
 #include <SDL3/SDL.h>
@@ -42,7 +42,7 @@ void Mewo::run()
         const auto& project = project_.emplace(state_.pending_project_open.value());
 
         editor_.set_visible_code(
-            fs::read_wgsl_shader(project.root() / Project::WGSL_SHADER_FILE_NAME));
+            io::read_wgsl_shader(project.root() / Project::WGSL_SHADER_FILE_NAME));
         viewport_.set_pending_run_request(editor_.combined_code());
         window_.set_project_in_title(project);
       } catch (const Exception& ex) {

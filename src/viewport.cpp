@@ -2,10 +2,10 @@
 
 #include "aspect_ratio.hpp"
 #include "exception.hpp"
-#include "fs.hpp"
 #include "gfx/create.hpp"
 #include "gfx/renderer.hpp"
 #include "gui/layout.hpp"
+#include "io.hpp"
 #include "query.hpp"
 
 #include <SDL3/SDL_timer.h>
@@ -84,7 +84,7 @@ Viewport::Viewport(const Assets& assets, const State& state, const gfx::Renderer
   };
 
   const auto& [vert_module_opt, vert_diagnostics] = gfx::create::shader_module_from_wgsl(renderer,
-      fs::read_wgsl_shader(assets.get("shaders/viewport.vert.wgsl")), "viewport-vert-shader");
+      io::read_wgsl_shader(assets.get("shaders/viewport.vert.wgsl")), "viewport-vert-shader");
 
   if (!vert_module_opt.has_value()) {
     throw Exception("Compiling viewport vertex shader failed! {} diagnostics reported",
@@ -99,7 +99,7 @@ Viewport::Viewport(const Assets& assets, const State& state, const gfx::Renderer
 
   // Compile a default fragment shader to enable render pipeline creation in constructor
   const auto& [frag_module_opt, frag_diagnostics] = gfx::create::shader_module_from_wgsl(renderer,
-      fs::read_wgsl_shader(assets.get("shaders/viewport.frag.wgsl")),
+      io::read_wgsl_shader(assets.get("shaders/viewport.frag.wgsl")),
       DEFAULT_FRAG_SHADER_LABEL.data());
 
   if (!frag_module_opt.has_value()) {

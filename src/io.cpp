@@ -1,4 +1,4 @@
-#include "fs.hpp"
+#include "io.hpp"
 
 #include "exception.hpp"
 #include "project.hpp"
@@ -10,15 +10,17 @@
 #include <string>
 #include <string_view>
 
-namespace mewo::fs {
+namespace mewo::io {
 
 static constexpr std::string_view WGSL_FILE_EXTENSION = ".wgsl";
 
 std::string read_file(const std::filesystem::path& file_path)
 {
+  namespace fs = std::filesystem;
+
   auto path_str = file_path.string();
 
-  if (!std::filesystem::exists(file_path) || !std::filesystem::is_regular_file(file_path))
+  if (!fs::exists(file_path) || !fs::is_regular_file(file_path))
     throw Exception("\"{}\" does not exist or is not regular", path_str);
 
   // Open in binary mode because otherwise it might do weird things with newlines/carriage returns
@@ -27,7 +29,7 @@ std::string read_file(const std::filesystem::path& file_path)
   if (!file || !file.is_open())
     throw Exception("Failed to open \"{}\"", path_str);
 
-  auto file_size = static_cast<size_t>(std::filesystem::file_size(file_path));
+  auto file_size = static_cast<size_t>(fs::file_size(file_path));
 
   std::string source;
   source.resize(file_size);
@@ -54,29 +56,31 @@ std::string read_wgsl_shader(const std::filesystem::path& file_path)
 
 void save_as(const std::filesystem::path& folder_path, std::string_view code)
 {
+  namespace fs = std::filesystem;
+
   // TODO: can probably take this repeated part and put it in a separate function
   auto path_str = folder_path.string();
 
-  if (!std::filesystem::exists(folder_path)) {
+  if (!fs::exists(folder_path)) {
     std::println("error: \"{}\" does not exist", path_str);
     return;
   }
 
-  auto absolute_path = std::filesystem::absolute(folder_path);
+  auto absolute_path = fs::absolute(folder_path);
   path_str = absolute_path.string();
 
-  if (!std::filesystem::is_directory(absolute_path)) {
+  if (!fs::is_directory(absolute_path)) {
     std::println("error: \"{}\" is not a folder", path_str);
     return;
   }
 
-  if (!std::filesystem::is_empty(absolute_path)) {
+  if (!fs::is_empty(absolute_path)) {
     std::println("error: \"{}\" is not empty, abandoning", path_str);
     return;
   }
 
   // Create Mewo folder
-  if (!std::filesystem::create_directory(absolute_path / Project::MEWO_FOLDER_NAME)) {
+  if (!fs::create_directory(absolute_path / Project::MEWO_FOLDER_NAME)) {
     std::println(
         "error: failed to create {1} folder at \"{0}/{1}\"", path_str, Project::MEWO_FOLDER_NAME);
     return;

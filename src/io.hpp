@@ -4,7 +4,7 @@
 #include <string>
 #include <string_view>
 
-namespace mewo::fs {
+namespace mewo::io {
 
 std::string read_file(const std::filesystem::path& file_path);
 

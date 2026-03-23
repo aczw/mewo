@@ -2,7 +2,7 @@
 
 #include "aspect_ratio.hpp"
 #include "editor.hpp"
-#include "fs.hpp"
+#include "io.hpp"
 #include "utility.hpp"
 
 #include <SDL3/SDL_dialog.h>
@@ -95,7 +95,7 @@ void Layout::build(Pending& pending, State& state, const sdl::Window& window,
               if (count > 1)
                 std::println("warning: more than one folder selected, using last one");
 
-              fs::save_as(folder_path, static_cast<const Editor*>(userdata)->visible_code());
+              io::save_as(folder_path, static_cast<const Editor*>(userdata)->visible_code());
             },
             static_cast<void*>(&editor), window.get(), nullptr, false);
       }
