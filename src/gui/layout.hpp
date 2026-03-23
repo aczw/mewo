@@ -4,7 +4,6 @@
 #include "gui/context.hpp"
 #include "pending.hpp"
 #include "sdl/window.hpp"
-#include "state.hpp"
 #include "viewport.hpp"
 
 #include <imgui.h>
@@ -17,8 +16,8 @@ class Layout {
   static constexpr float SPLIT_LEFT_RATIO = 0.5f;
 
   /// Builds the GUI and records additional data into respective classes. Called every frame.
-  void build(Pending& pending, State& state, const sdl::Window& window, const Context& gui_ctx,
-      Editor& editor, Viewport& viewport);
+  void build(Pending& pending, const sdl::Window& window, const Context& gui_ctx, Editor& editor,
+      Viewport& viewport);
 
   private:
   /// Sets up the overall docking layout. Only needs to be called once. Can only

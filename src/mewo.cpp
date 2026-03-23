@@ -37,9 +37,9 @@ void Mewo::run()
     viewport_.prepare_new_frame(state_, renderer_);
     gui_ctx_.prepare_new_frame();
 
-    if (state_.pending_project_open.has_value()) {
+    if (auto& requested_project = pending_.project_open; requested_project) {
       try {
-        const auto& project = project_.emplace(state_.pending_project_open.value());
+        const auto& project = project_.emplace(requested_project.value());
 
         editor_.set_visible_code(
             io::read_wgsl_shader(project.root() / Project::WGSL_SHADER_FILE_NAME));
@@ -49,7 +49,7 @@ void Mewo::run()
         std::println("Failed to set new project: {}", ex.what());
       }
 
-      state_.pending_project_open.reset();
+      requested_project.reset();
     }
 
     while (SDL_PollEvent(&event)) {
@@ -70,7 +70,7 @@ void Mewo::run()
       }
     }
 
-    layout_.build(pending_, state_, window_, gui_ctx_, editor_, viewport_);
+    layout_.build(pending_, window_, gui_ctx_, editor_, viewport_);
 
     viewport_.record(frame_ctx);
     gui_ctx_.record(frame_ctx);

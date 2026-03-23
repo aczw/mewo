@@ -3,6 +3,7 @@
 #include "aspect_ratio.hpp"
 #include "editor.hpp"
 #include "io.hpp"
+#include "pending.hpp"
 #include "utility.hpp"
 
 #include <SDL3/SDL_dialog.h>
@@ -24,8 +25,8 @@ static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
 static constexpr std::string_view DIAGNOSTICS_WINDOW_NAME = "Diagnostics";
 static constexpr std::string_view VIEWPORT_WINDOW_NAME = "Viewport";
 
-void Layout::build(Pending& pending, State& state, const sdl::Window& window,
-    const Context& gui_ctx, Editor& editor, Viewport& viewport)
+void Layout::build(Pending& pending, const sdl::Window& window, const Context& gui_ctx,
+    Editor& editor, Viewport& viewport)
 {
   // Once the layout is created, the ID remains constant.
   if (const ImGuiID dockspace_id = ImGui::GetID("main-dockspace");
@@ -63,9 +64,9 @@ void Layout::build(Pending& pending, State& state, const sdl::Window& window,
               if (count > 1)
                 std::println("warning: more than one folder selected, using last one");
 
-              static_cast<State*>(userdata)->pending_project_open = folder_path;
+              static_cast<Pending*>(userdata)->project_open = folder_path;
             },
-            static_cast<void*>(&state), window.get(), nullptr, false);
+            static_cast<void*>(&pending), window.get(), nullptr, false);
       }
 
       ImGui::Separator();
