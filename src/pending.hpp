@@ -14,11 +14,13 @@ namespace mewo {
 /// Collects pending operations to be applied and processed in the next frame.
 class Pending {
   public:
-  bool quit() const { return quit_; }
+  bool& quit() { return quit_; }
 
   std::optional<std::filesystem::path>& project_open() { return project_open_; }
 
   std::optional<std::filesystem::path>& project_save_as() { return project_save_as_; }
+
+  bool& project_save() { return project_save_; }
 
   std::optional<std::pair<uint32_t, uint32_t>>& viewport_resize() { return viewport_resize_; }
 
@@ -35,6 +37,8 @@ class Pending {
   {
     project_save_as_ = project_directory;
   }
+
+  void request_project_save() { project_save_ = true; }
 
   /// Uses given width and derives the height from the aspect ratio.
   void request_viewport_resize(uint32_t new_width, AspectRatio::Preset ratio_preset)
@@ -56,6 +60,7 @@ class Pending {
   bool quit_ = false;
   std::optional<std::filesystem::path> project_open_;
   std::optional<std::filesystem::path> project_save_as_;
+  bool project_save_ = false;
   /// Can't resize the same frame because the viewport texture might already
   /// be submitted for display in the GUI.
   std::optional<std::pair<uint32_t, uint32_t>> viewport_resize_;

@@ -41,6 +41,8 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
       if (ImGui::MenuItem("Open...")) {
         // TODO: probably can't use this for macOS because it doesn't let you create a
         // folder from within the dialog by default
+        // TODO: move this function call to `Mewo::prepare_new_frame`, and somehow block
+        // on callback finishing?
         SDL_ShowOpenFolderDialog(
             [](void* userdata, const char* const* filelist, int) -> void {
               if (filelist == nullptr) {
@@ -71,11 +73,13 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
       ImGui::Separator();
 
       if (ImGui::MenuItem("Save"))
-        std::println("saved!");
+        pending.request_project_save();
 
       if (ImGui::MenuItem("Save As...")) {
         // TODO: probably can't use this for macOS because it doesn't let you create a
         // folder from within the dialog by default
+        // TODO: move this function call to `Mewo::prepare_new_frame`, and somehow block
+        // on callback finishing?
         SDL_ShowOpenFolderDialog(
             [](void* userdata, const char* const* filelist, int) -> void {
               if (filelist == nullptr) {

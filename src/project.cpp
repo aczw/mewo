@@ -1,8 +1,11 @@
 #include "project.hpp"
 
 #include "exception.hpp"
+#include "query.hpp"
 
 #include <filesystem>
+#include <fstream>
+#include <print>
 
 namespace mewo {
 
@@ -28,6 +31,57 @@ Project::Project(const std::filesystem::path& folder_to_open)
 
   root_ = absolute;
   name_ = root_.filename().string();
+}
+
+Project Project::save_as(const std::filesystem::path& directory, std::string_view code)
+{
+  namespace fs = std::filesystem;
+
+  auto path_str = directory.string();
+
+  if (!fs::exists(directory))
+    throw Exception("\"{}\" does not exist", path_str);
+
+  auto absolute_path = fs::absolute(directory);
+  path_str = absolute_path.string();
+
+  if (!fs::is_directory(absolute_path))
+    throw Exception("\"{}\" is not a folder", path_str);
+
+  if (!fs::is_empty(absolute_path))
+    throw Exception("\"{}\" is not empty, abandoning", path_str);
+
+  // Create Mewo folder
+  if (!fs::create_directory(absolute_path / Project::MEWO_FOLDER_NAME)) {
+    throw Exception(
+        "Failed to create {1} folder at \"{0}/{1}\"", path_str, Project::MEWO_FOLDER_NAME);
+  }
+
+  if constexpr (query::is_debug())
+    std::println("Saved as project \"{}\"", path_str);
+
+  auto new_project = Project(absolute_path, SkipPathValidationTag {});
+  new_project.save(code);
+
+  return new_project;
+}
+
+void Project::save(std::string_view code) const
+{
+  auto shader_file = shader();
+
+  if (std::ofstream shader_file_stream(shader_file);
+      !shader_file_stream || !shader_file_stream.is_open()) {
+    throw Exception("Failed to access \"{}\" for writing", shader_file.string());
+  } else {
+    shader_file_stream << code;
+  }
+}
+
+Project::Project(const std::filesystem::path& existing_directory, SkipPathValidationTag)
+    : root_(std::filesystem::absolute(existing_directory))
+    , name_(root_.filename().string())
+{
 }
 
 }

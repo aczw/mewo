@@ -1,13 +1,10 @@
 #include "io.hpp"
 
 #include "exception.hpp"
-#include "project.hpp"
-#include "query.hpp"
 
 #include <filesystem>
 #include <fstream>
 #include <ios>
-#include <print>
 #include <string>
 #include <string_view>
 
@@ -54,46 +51,6 @@ std::string read_wgsl_shader(const std::filesystem::path& file_path)
         WGSL_FILE_EXTENSION);
 
   return source;
-}
-
-Project save_as(const std::filesystem::path& folder_path, std::string_view code)
-{
-  namespace fs = std::filesystem;
-
-  auto path_str = folder_path.string();
-
-  if (!fs::exists(folder_path))
-    throw Exception("\"{}\" does not exist", path_str);
-
-  auto absolute_path = fs::absolute(folder_path);
-  path_str = absolute_path.string();
-
-  if (!fs::is_directory(absolute_path))
-    throw Exception("\"{}\" is not a folder", path_str);
-
-  if (!fs::is_empty(absolute_path))
-    throw Exception("\"{}\" is not empty, abandoning", path_str);
-
-  // Create Mewo folder
-  if (!fs::create_directory(absolute_path / Project::MEWO_FOLDER_NAME)) {
-    throw Exception(
-        "Failed to create {1} folder at \"{0}/{1}\"", path_str, Project::MEWO_FOLDER_NAME);
-  }
-
-  if (std::ofstream shader_file(absolute_path / Project::WGSL_SHADER_FILE_NAME);
-      !shader_file || !shader_file.is_open()) {
-    throw Exception(
-        "Failed to access \"{}/{}\" for writing", path_str, Project::WGSL_SHADER_FILE_NAME);
-  } else {
-    shader_file << code;
-  }
-
-  if constexpr (query::is_debug())
-    std::println("Saved as project \"{}\"", path_str);
-
-  // TODO: this goes through another arguably redundant round of filesystem checks.
-  // Some way to skip repeating the same work?
-  return Project(path_str);
 }
 
 }

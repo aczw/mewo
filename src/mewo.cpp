@@ -69,12 +69,11 @@ const gfx::FrameContext Mewo::prepare_new_frame()
     try {
       const auto& project = project_.emplace(requested_open.value());
 
-      editor_.set_visible_code(
-          io::read_wgsl_shader(project.root() / Project::WGSL_SHADER_FILE_NAME));
+      editor_.set_visible_code(io::read_wgsl_shader(project.shader()));
       pending_.request_run(editor_.combined_code());
       window_.update_project_in_title(project);
     } catch (const Exception& ex) {
-      std::println("Failed to set new project: {}", ex.what());
+      std::println("Failed to open project: {}", ex.what());
     }
 
     requested_open.reset();
@@ -84,13 +83,32 @@ const gfx::FrameContext Mewo::prepare_new_frame()
   // to update the editor or request a new run.
   if (auto& requested_save_as = pending_.project_save_as(); requested_save_as) {
     try {
-      project_ = io::save_as(requested_save_as.value(), editor_.visible_code());
+      project_ = Project::save_as(requested_save_as.value(), editor_.visible_code());
       window_.update_project_in_title(project_.value());
     } catch (const Exception& ex) {
-      std::println("Project save as request failed: {}", ex.what());
+      std::println("Project save as failed: {}", ex.what());
     }
 
     requested_save_as.reset();
+  }
+
+  if (bool& requested_save = pending_.project_save(); requested_save) {
+    if (project_) {
+      try {
+        project_->save(editor_.visible_code());
+        if constexpr (query::is_debug())
+          std::println("Saved project \"{}\"", project_->name());
+      } catch (const Exception& ex) {
+        std::println("Project save failed: {}", ex.what());
+      }
+    } else {
+      // TODO: a requested save with no currently active project should invoke a save as. This
+      // requires first requesting the user for a directory to save in. That logic is currently
+      // in `Layout::build`, so fix that first.
+      std::println("No active project to save!");
+    }
+
+    requested_save = false;
   }
 
   if (auto& requested_resize = pending_.viewport_resize(); requested_resize) {
