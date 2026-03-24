@@ -144,48 +144,6 @@ Viewport::Viewport(const Assets& assets, const State& state, const gfx::Renderer
   };
 }
 
-const wgpu::TextureView& Viewport::view() const { return view_; }
-
-Viewport::Mode Viewport::mode() const { return mode_; }
-
-AspectRatio::Preset Viewport::ratio_preset() const { return ratio_preset_; }
-
-uint32_t Viewport::width() const { return width_; }
-
-uint32_t Viewport::height() const { return height_; }
-
-const std::vector<gfx::CompilationDiagnostic>& Viewport::diagnostics() const
-{
-  return diagnostics_;
-}
-
-void Viewport::set_mode(Mode mode) { mode_ = mode; }
-
-void Viewport::set_ratio_preset(AspectRatio::Preset preset) { ratio_preset_ = preset; }
-
-void Viewport::set_width(uint32_t width) { width_ = width; };
-
-void Viewport::set_height(uint32_t height) { height_ = height; };
-
-void Viewport::set_pending_resize() { set_pending_resize(width_, height_); }
-
-void Viewport::set_pending_resize(uint32_t new_width)
-{
-  float inverse_ratio = AspectRatio::get_inverse_value(ratio_preset_);
-  float height = std::floor(static_cast<float>(new_width) * inverse_ratio);
-  pending_resize_ = { new_width, static_cast<uint32_t>(height) };
-}
-
-void Viewport::set_pending_resize(uint32_t new_width, uint32_t new_height)
-{
-  pending_resize_ = { new_width, new_height };
-}
-
-void Viewport::set_pending_run_request(std::string_view new_code)
-{
-  pending_run_request_ = std::string(new_code);
-}
-
 void Viewport::record(const gfx::FrameContext& frame_ctx) const
 {
   wgpu::RenderPassEncoder render_pass = frame_ctx.encoder.BeginRenderPass(&pass_desc_);
@@ -195,12 +153,6 @@ void Viewport::record(const gfx::FrameContext& frame_ctx) const
   render_pass.Draw(6);
 
   render_pass.End();
-}
-
-void Viewport::update_render_pipeline(const wgpu::Device& device)
-{
-  render_pipeline_desc_.fragment = &fragment_state_;
-  render_pipeline_ = device.CreateRenderPipeline(&render_pipeline_desc_);
 }
 
 void Viewport::prepare_new_frame(State& state, const gfx::Renderer& renderer)

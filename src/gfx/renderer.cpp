@@ -21,7 +21,9 @@
 
 namespace mewo::gfx {
 
-static std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextureStatus status)
+namespace {
+
+std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextureStatus status)
 {
   switch (status) {
     // clang-format off
@@ -36,6 +38,8 @@ static std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextur
   default:
     utility::enum_unreachable("wgpu::SurfaceGetCurrentTextureStatus", status);
   }
+}
+
 }
 
 Renderer::Renderer(const sdl::Window& window)
@@ -186,18 +190,6 @@ Renderer::Renderer(const sdl::Window& window)
   queue_ = device_.GetQueue();
 }
 
-Renderer::~Renderer() { surface_.Unconfigure(); }
-
-const wgpu::Instance& Renderer::instance() const { return instance_; }
-
-const wgpu::Device& Renderer::device() const { return device_; }
-
-const wgpu::Surface& Renderer::surface() const { return surface_; }
-
-const wgpu::SurfaceConfiguration& Renderer::surface_config() const { return surface_config_; }
-
-const wgpu::Queue& Renderer::queue() const { return queue_; }
-
 FrameContext Renderer::prepare_new_frame()
 {
   if (device_lost_error_.has_value()) {
@@ -237,14 +229,6 @@ FrameContext Renderer::prepare_new_frame()
     .surface_view = surface_texture.texture.CreateView(&SURFACE_VIEW_DESC),
     .encoder = device_.CreateCommandEncoder(&CMD_ENCODER_DESC),
   };
-}
-
-void Renderer::resize(uint32_t new_width, uint32_t new_height)
-{
-  surface_config_.width = new_width;
-  surface_config_.height = new_height;
-
-  surface_.Configure(&surface_config_);
 }
 
 }

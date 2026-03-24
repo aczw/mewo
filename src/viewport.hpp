@@ -12,6 +12,7 @@
 #include <array>
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -37,35 +38,66 @@ class Viewport {
   Viewport(const Assets& assets, const State& state, const gfx::Renderer& renderer,
       std::string_view initial_code);
 
-  const wgpu::TextureView& view() const;
-  Mode mode() const;
-  AspectRatio::Preset ratio_preset() const;
-  uint32_t width() const;
-  uint32_t height() const;
-  const std::vector<gfx::CompilationDiagnostic>& diagnostics() const;
+  const wgpu::TextureView& view() const { return view_; };
 
-  void set_mode(Mode display_mode);
-  void set_ratio_preset(AspectRatio::Preset preset);
-  void set_width(uint32_t width);
-  void set_height(uint32_t height);
-  /// Will use preexisting width and height.
-  void set_pending_resize();
-  /// Will use given width, deriving the height from the current aspect ratio preset.
-  void set_pending_resize(uint32_t new_width);
-  /// Will use given width and height.
-  void set_pending_resize(uint32_t new_width, uint32_t new_height);
-  void set_pending_run_request(std::string_view new_code);
+  Mode mode() const { return mode_; }
+
+  AspectRatio::Preset ratio_preset() const { return ratio_preset_; }
+
+  uint32_t width() const { return width_; }
+
+  uint32_t height() const { return height_; }
+
+  const std::vector<gfx::CompilationDiagnostic>& diagnostics() const { return diagnostics_; }
+
+  void set_mode(Mode mode) { mode_ = mode; }
+
+  void set_ratio_preset(AspectRatio::Preset ratio_preset) { ratio_preset_ = ratio_preset; }
+
+  void set_size(uint32_t width, uint32_t height)
+  {
+    width_ = width;
+    height_ = height;
+  }
+
+  /// Uses preexisting width and height.
+  void set_pending_resize() { set_pending_resize(width_, height_); }
+
+  /// Uses given width and derives the height from the current aspect ratio preset.
+  void set_pending_resize(uint32_t new_width)
+  {
+    float inverse_ratio = AspectRatio::get_inverse_value(ratio_preset_);
+    float height = std::floor(static_cast<float>(new_width) * inverse_ratio);
+    pending_resize_ = { new_width, static_cast<uint32_t>(height) };
+  }
+
+  /// Uses given width and height.
+  void set_pending_resize(uint32_t new_width, uint32_t new_height)
+  {
+    pending_resize_ = { new_width, new_height };
+  }
+
+  void set_pending_run_request(std::string_view new_code)
+  {
+    pending_run_request_ = std::string(new_code);
+  }
 
   void record(const gfx::FrameContext& frame_ctx) const;
+
   /// Updates the fragment shader and creates the render pipeline.
-  void update_render_pipeline(const wgpu::Device& device);
+  void update_render_pipeline(const wgpu::Device& device)
+  {
+    render_pipeline_desc_.fragment = &fragment_state_;
+    render_pipeline_ = device.CreateRenderPipeline(&render_pipeline_desc_);
+  }
+
   /// Updates uniform buffer and checks for a pending resize, applying it if it exists.
   void prepare_new_frame(State& state, const gfx::Renderer& renderer);
 
   private:
-  struct Uniforms {
+  struct alignas(8) Uniforms {
     float time = 0;
-    alignas(8) std::array<float, 2> resolution = {};
+    std::array<float, 2> resolution = {};
   };
 
   wgpu::Buffer unif_buf_;

@@ -17,7 +17,9 @@
 
 namespace mewo {
 
-static std::filesystem::path get_executable_path()
+namespace {
+
+std::filesystem::path find_executable_directory()
 {
   static constexpr size_t MAX_FILE_PATH_LENGTH = 1024;
 
@@ -48,8 +50,10 @@ static std::filesystem::path get_executable_path()
 #endif
 }
 
+}
+
 Assets::Assets()
-    : executable_path_(get_executable_path())
+    : executable_directory_(find_executable_directory())
 {
   using namespace std::string_view_literals;
 
@@ -62,22 +66,17 @@ Assets::Assets()
   };
 
   for (auto asset_dir : POSSIBLE_ASSETS_DIRS) {
-    if (auto full_path = executable_path_ / asset_dir; std::filesystem::exists(full_path)) {
-      assets_path_ = std::filesystem::canonical(full_path);
+    if (auto full_path = executable_directory_ / asset_dir; std::filesystem::exists(full_path)) {
+      assets_directory_ = std::filesystem::canonical(full_path);
       break;
     }
   }
 
-  if (assets_path_.empty()) {
+  if (assets_directory_.empty()) {
     throw Exception("Assets directory was not found");
   } else {
-    std::println("Assets directory found at \"{}\"", assets_path_.string());
+    std::println("Assets directory found at \"{}\"", assets_directory_.string());
   }
-}
-
-std::filesystem::path Assets::get(std::string_view relative_path) const
-{
-  return assets_path_ / relative_path;
 }
 
 }

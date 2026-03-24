@@ -13,8 +13,9 @@ class Project {
 
   Project(const std::filesystem::path& folder_to_open);
 
-  const std::string& name() const;
-  const std::filesystem::path& root() const;
+  const std::string& name() const { return name_; }
+
+  const std::filesystem::path& root() const { return root_; }
 
   private:
   std::string name_;
