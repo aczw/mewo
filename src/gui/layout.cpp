@@ -64,7 +64,7 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
               if (count > 1)
                 std::println("warning: more than one folder selected, using last one");
 
-              static_cast<Pending*>(userdata)->project_open = folder_path;
+              static_cast<Pending*>(userdata)->request_project_open(folder_path);
             },
             static_cast<void*>(&pending), window.get(), nullptr, false);
       }
@@ -104,7 +104,7 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
       ImGui::Separator();
 
       if (ImGui::MenuItem("Quit"))
-        pending.quit = true;
+        pending.request_quit();
 
       ImGui::EndMenu();
     }

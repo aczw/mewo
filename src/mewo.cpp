@@ -22,14 +22,14 @@ void Mewo::run()
   const wgpu::Device& device = renderer_.device();
   const wgpu::Queue& queue = renderer_.queue();
 
-  while (!pending_.quit) {
+  while (!pending_.quit()) {
     device.Tick();
 
     const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
     viewport_.prepare_new_frame(state_, renderer_);
     gui_ctx_.prepare_new_frame();
 
-    if (auto& requested_project = pending_.project_open; requested_project) {
+    if (auto& requested_project = pending_.project_open(); requested_project) {
       try {
         const auto& project = project_.emplace(requested_project.value());
 
@@ -50,7 +50,7 @@ void Mewo::run()
       switch (event.type) {
       case SDL_EVENT_QUIT:
       case SDL_EVENT_WINDOW_CLOSE_REQUESTED: {
-        pending_.quit = true;
+        pending_.request_quit();
         break;
       }
 
