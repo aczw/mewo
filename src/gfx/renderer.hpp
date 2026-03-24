@@ -16,21 +16,33 @@ class Renderer {
   static constexpr auto WAIT_TIMEOUT_MAX = std::numeric_limits<uint64_t>::max();
 
   Renderer(const sdl::Window& window);
-  ~Renderer();
+
+  ~Renderer() { surface_.Unconfigure(); }
 
   Renderer(const Renderer&) = delete;
+
   Renderer& operator=(const Renderer&) = delete;
 
-  const wgpu::Instance& instance() const;
-  const wgpu::Device& device() const;
-  const wgpu::Surface& surface() const;
-  const wgpu::SurfaceConfiguration& surface_config() const;
-  const wgpu::Queue& queue() const;
+  const wgpu::Instance& instance() const { return instance_; }
+
+  const wgpu::Device& device() const { return device_; }
+
+  const wgpu::Surface& surface() const { return surface_; }
+
+  const wgpu::SurfaceConfiguration& surface_config() const { return surface_config_; }
+
+  const wgpu::Queue& queue() const { return queue_; }
 
   /// Checks if any errors have occurred in the graphics context, and throws accordingly.
   /// Otherwise, it returns a texture view of the current surface and a new command encoder.
   FrameContext prepare_new_frame();
-  void resize(uint32_t new_width, uint32_t new_height);
+
+  void resize(uint32_t new_width, uint32_t new_height)
+  {
+    surface_config_.width = new_width;
+    surface_config_.height = new_height;
+    surface_.Configure(&surface_config_);
+  }
 
   private:
   wgpu::Instance instance_;

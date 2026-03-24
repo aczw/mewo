@@ -45,24 +45,6 @@ Context::Context(const Assets& assets, const sdl::Window& window, const gfx::Ren
   viewport_ = ImGui::GetMainViewport();
 }
 
-Context::~Context()
-{
-  ImGui_ImplWGPU_Shutdown();
-  ImGui_ImplSDL3_Shutdown();
-  ImGui::DestroyContext();
-}
-
-const ImGuiViewport* Context::viewport() const { return viewport_; }
-
-const Context::Fonts& Context::fonts() const { return fonts_; }
-
-void Context::prepare_new_frame() const
-{
-  ImGui_ImplWGPU_NewFrame();
-  ImGui_ImplSDL3_NewFrame();
-  ImGui::NewFrame();
-}
-
 void Context::record(const gfx::FrameContext& frame_ctx) const
 {
   ImGui::Render();

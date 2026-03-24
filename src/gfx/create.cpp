@@ -15,7 +15,9 @@
 
 namespace mewo::gfx::create {
 
-static std::string_view get_compilation_mesage_type(wgpu::CompilationMessageType msg_type)
+namespace {
+
+std::string_view get_compilation_mesage_type(wgpu::CompilationMessageType msg_type)
 {
   switch (msg_type) {
     // clang-format off
@@ -27,6 +29,8 @@ static std::string_view get_compilation_mesage_type(wgpu::CompilationMessageType
   default:
     utility::enum_unreachable("wgpu::CompilationMessageType", msg_type);
   }
+}
+
 }
 
 ShaderCompilationResult shader_module_from_wgsl(

@@ -6,6 +6,8 @@
 #include "sdl/window.hpp"
 
 #include <imgui.h>
+#include <imgui_impl_sdl3.h>
+#include <imgui_impl_wgpu.h>
 #include <webgpu/webgpu_cpp.h>
 
 namespace mewo::gui {
@@ -19,15 +21,28 @@ class Context {
   };
 
   Context(const Assets& assets, const sdl::Window& window, const gfx::Renderer& renderer);
-  ~Context();
+
+  ~Context()
+  {
+    ImGui_ImplWGPU_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+    ImGui::DestroyContext();
+  }
 
   Context(const Context&) = delete;
   Context& operator=(const Context&) = delete;
 
-  const ImGuiViewport* viewport() const;
-  const Fonts& fonts() const;
+  const ImGuiViewport* viewport() const { return viewport_; }
 
-  void prepare_new_frame() const;
+  const Fonts& fonts() const { return fonts_; }
+
+  void prepare_new_frame() const
+  {
+    ImGui_ImplWGPU_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
+    ImGui::NewFrame();
+  }
+
   void record(const gfx::FrameContext& frame_ctx) const;
 
   private:
