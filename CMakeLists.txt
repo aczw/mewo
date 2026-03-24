@@ -111,8 +111,7 @@ set(MEWO_GFX_DIR ${MEWO_SRC_DIR}/gfx)
 set(MEWO_GUI_DIR ${MEWO_SRC_DIR}/gui)
 set(MEWO_SDL_DIR ${MEWO_SRC_DIR}/sdl)
 
-add_executable(mewo 
-  ${MEWO_SDL_DIR}/context.cpp
+add_executable(mewo
   ${MEWO_SDL_DIR}/context.hpp
   ${MEWO_SDL_DIR}/window.cpp
   ${MEWO_SDL_DIR}/window.hpp
