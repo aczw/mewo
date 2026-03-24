@@ -8,7 +8,7 @@
 #include "project.hpp"
 #include "query.hpp"
 
-#include <SDL3/SDL.h>
+#include <SDL3/SDL_timer.h>
 #include <imgui_impl_sdl3.h>
 #include <webgpu/webgpu_cpp.h>
 
@@ -28,6 +28,7 @@ void Mewo::run()
     device.Tick();
 
     const gfx::FrameContext frame_ctx = prepare_new_frame();
+    float current_time = static_cast<float>(SDL_GetTicksNS()) / 1'000'000'000.f;
 
     while (SDL_PollEvent(&event)) {
       ImGui_ImplSDL3_ProcessEvent(&event);
@@ -49,7 +50,7 @@ void Mewo::run()
 
     layout_.build(pending_, window_, gui_ctx_, editor_, viewport_);
 
-    viewport_.record(frame_ctx);
+    viewport_.record(queue, frame_ctx, current_time);
     gui_ctx_.record(frame_ctx);
 
     static constexpr wgpu::CommandBufferDescriptor CMD_BUF_DESC = { .label = "command-buffer" };
@@ -113,7 +114,6 @@ const gfx::FrameContext Mewo::prepare_new_frame()
     requested_run.reset();
   }
 
-  viewport_.prepare_new_frame(state_, renderer_);
   gui_ctx_.prepare_new_frame();
 
   return frame_ctx;

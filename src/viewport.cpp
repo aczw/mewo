@@ -7,7 +7,6 @@
 #include "gui/layout.hpp"
 #include "io.hpp"
 
-#include <SDL3/SDL_timer.h>
 #include <webgpu/webgpu_cpp.h>
 
 #include <cassert>
@@ -17,8 +16,8 @@
 
 namespace mewo {
 
-Viewport::Viewport(Pending& pending, const Assets& assets, const State& state,
-    const gfx::Renderer& renderer, std::string_view initial_code)
+Viewport::Viewport(Pending& pending, const Assets& assets, const gfx::Renderer& renderer,
+    std::string_view initial_code)
 {
   const wgpu::Device& device = renderer.device();
   const wgpu::SurfaceConfiguration& surface_config = renderer.surface_config();
@@ -37,7 +36,7 @@ Viewport::Viewport(Pending& pending, const Assets& assets, const State& state,
   auto width_whole = static_cast<uint32_t>(width);
   auto height_whole = static_cast<uint32_t>(height);
 
-  Uniforms unif = { .time = state.time, .resolution = { width, height } };
+  Uniforms unif = { .resolution = { width, height } };
   renderer.queue().WriteBuffer(unif_buf_, 0, &unif, sizeof(Uniforms));
 
   wgpu::BindGroupLayoutEntry render_pipeline_unif_bgl_entry = {
@@ -130,21 +129,31 @@ Viewport::Viewport(Pending& pending, const Assets& assets, const State& state,
   };
 }
 
-void Viewport::record(const gfx::FrameContext& frame_ctx) const
+void Viewport::record(
+    const wgpu::Queue& queue, const gfx::FrameContext& frame_ctx, float current_time) const
 {
-  wgpu::RenderPassEncoder render_pass = frame_ctx.encoder.BeginRenderPass(&pass_desc_);
+  Uniforms unif = {
+    .time = current_time,
+    .resolution
+    = { static_cast<float>(texture_.GetWidth()), static_cast<float>(texture_.GetHeight()) },
+  };
 
-  render_pass.SetPipeline(render_pipeline_);
-  render_pass.SetBindGroup(0, render_pipeline_bg_);
-  render_pass.Draw(6);
+  queue.WriteBuffer(unif_buf_, 0, &unif, sizeof(Uniforms));
 
-  render_pass.End();
+  {
+    wgpu::RenderPassEncoder render_pass = frame_ctx.encoder.BeginRenderPass(&pass_desc_);
+
+    render_pass.SetPipeline(render_pipeline_);
+    render_pass.SetBindGroup(0, render_pipeline_bg_);
+    render_pass.Draw(6);
+
+    render_pass.End();
+  }
 }
 
 void Viewport::update(const wgpu::ShaderModule& fragment_module, const wgpu::Device& device)
 {
   assert(fragment_module);
-  assert(device);
 
   fragment_state_ = {
     .module = fragment_module,
@@ -155,20 +164,6 @@ void Viewport::update(const wgpu::ShaderModule& fragment_module, const wgpu::Dev
 
   render_pipeline_desc_.fragment = &fragment_state_;
   render_pipeline_ = device.CreateRenderPipeline(&render_pipeline_desc_);
-}
-
-void Viewport::prepare_new_frame(State& state, const gfx::Renderer& renderer)
-{
-  Uniforms unif = {
-    .time = static_cast<float>(SDL_GetTicksNS()) / 1'000'000'000.f,
-    .resolution
-    = { static_cast<float>(texture_.GetWidth()), static_cast<float>(texture_.GetHeight()) },
-  };
-
-  renderer.queue().WriteBuffer(unif_buf_, 0, &unif, sizeof(Uniforms));
-
-  // TODO: update time in the main render loop, not within this class
-  state.time = unif.time;
 }
 
 void Viewport::resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height)

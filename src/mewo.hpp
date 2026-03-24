@@ -22,7 +22,7 @@ class Mewo {
       : renderer_(window_)
       , gui_ctx_(assets_, window_, renderer_)
       , editor_(assets_)
-      , viewport_(pending_, assets_, state_, renderer_, editor_.combined_code())
+      , viewport_(pending_, assets_, renderer_, editor_.combined_code())
   {
   }
 
@@ -32,7 +32,6 @@ class Mewo {
   private:
   Pending pending_;
   Assets assets_;
-  State state_;
 
   sdl::Context sdl_ctx_;
   sdl::Window window_;

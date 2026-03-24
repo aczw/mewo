@@ -5,7 +5,6 @@
 #include "gfx/frame_context.hpp"
 #include "gfx/renderer.hpp"
 #include "pending.hpp"
-#include "state.hpp"
 
 #include <webgpu/webgpu_cpp.h>
 
@@ -33,8 +32,8 @@ class Viewport {
 
   static constexpr std::string_view FRAGMENT_SHADER_LABEL = "viewport-frag-shader";
 
-  Viewport(Pending& pending, const Assets& assets, const State& state,
-      const gfx::Renderer& renderer, std::string_view initial_code);
+  Viewport(Pending& pending, const Assets& assets, const gfx::Renderer& renderer,
+      std::string_view initial_code);
 
   const wgpu::TextureView& view() const { return view_; };
 
@@ -56,12 +55,10 @@ class Viewport {
     height_ = height;
   }
 
-  void record(const gfx::FrameContext& frame_ctx) const;
+  void record(
+      const wgpu::Queue& queue, const gfx::FrameContext& frame_ctx, float current_time) const;
 
   void update(const wgpu::ShaderModule& fragment_module, const wgpu::Device& device);
-
-  /// Updates uniform buffer and checks for a pending resize, applying it if it exists.
-  void prepare_new_frame(State& state, const gfx::Renderer& renderer);
 
   void resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height);
 
