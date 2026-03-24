@@ -2,7 +2,6 @@
 
 #include "aspect_ratio.hpp"
 #include "editor.hpp"
-#include "io.hpp"
 #include "pending.hpp"
 #include "utility.hpp"
 
@@ -71,6 +70,9 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
 
       ImGui::Separator();
 
+      if (ImGui::MenuItem("Save"))
+        std::println("saved!");
+
       if (ImGui::MenuItem("Save As...")) {
         // TODO: probably can't use this for macOS because it doesn't let you create a
         // folder from within the dialog by default
@@ -96,9 +98,9 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
               if (count > 1)
                 std::println("warning: more than one folder selected, using last one");
 
-              io::save_as(folder_path, static_cast<const Editor*>(userdata)->visible_code());
+              static_cast<Pending*>(userdata)->request_project_save_as(folder_path);
             },
-            static_cast<void*>(&editor), window.get(), nullptr, false);
+            static_cast<void*>(&pending), window.get(), nullptr, false);
       }
 
       ImGui::Separator();

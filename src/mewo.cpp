@@ -65,9 +65,9 @@ const gfx::FrameContext Mewo::prepare_new_frame()
 {
   const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
 
-  if (auto& requested_project = pending_.project_open(); requested_project) {
+  if (auto& requested_open = pending_.project_open(); requested_open) {
     try {
-      const auto& project = project_.emplace(requested_project.value());
+      const auto& project = project_.emplace(requested_open.value());
 
       editor_.set_visible_code(
           io::read_wgsl_shader(project.root() / Project::WGSL_SHADER_FILE_NAME));
@@ -77,7 +77,20 @@ const gfx::FrameContext Mewo::prepare_new_frame()
       std::println("Failed to set new project: {}", ex.what());
     }
 
-    requested_project.reset();
+    requested_open.reset();
+  }
+
+  // Since we're only making a copy of the current state, there's no need
+  // to update the editor or request a new run.
+  if (auto& requested_save_as = pending_.project_save_as(); requested_save_as) {
+    try {
+      project_ = io::save_as(requested_save_as.value(), editor_.visible_code());
+      window_.update_project_in_title(project_.value());
+    } catch (const Exception& ex) {
+      std::println("Project save as request failed: {}", ex.what());
+    }
+
+    requested_save_as.reset();
   }
 
   if (auto& requested_resize = pending_.viewport_resize(); requested_resize) {

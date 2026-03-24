@@ -18,6 +18,8 @@ class Pending {
 
   std::optional<std::filesystem::path>& project_open() { return project_open_; }
 
+  std::optional<std::filesystem::path>& project_save_as() { return project_save_as_; }
+
   std::optional<std::pair<uint32_t, uint32_t>>& viewport_resize() { return viewport_resize_; }
 
   std::optional<std::string>& run() { return run_; }
@@ -27,6 +29,11 @@ class Pending {
   void request_project_open(const std::filesystem::path& project_directory)
   {
     project_open_ = project_directory;
+  }
+
+  void request_project_save_as(const std::filesystem::path& project_directory)
+  {
+    project_save_as_ = project_directory;
   }
 
   /// Uses given width and derives the height from the aspect ratio.
@@ -48,6 +55,7 @@ class Pending {
   private:
   bool quit_ = false;
   std::optional<std::filesystem::path> project_open_;
+  std::optional<std::filesystem::path> project_save_as_;
   /// Can't resize the same frame because the viewport texture might already
   /// be submitted for display in the GUI.
   std::optional<std::pair<uint32_t, uint32_t>> viewport_resize_;
