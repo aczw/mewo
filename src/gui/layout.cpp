@@ -262,8 +262,7 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
       // box active and is still entering values
       if (curr_width != prev_width || curr_height != prev_height) {
         viewport.set_pending_resize(curr_width, curr_height);
-        viewport.set_width(curr_width);
-        viewport.set_height(curr_height);
+        viewport.set_size(curr_width, curr_height);
       }
 
       break;
