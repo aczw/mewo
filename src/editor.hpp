@@ -1,6 +1,7 @@
 #pragma once
 
 #include "assets.hpp"
+#include "gfx/compilation_diagnostic.hpp"
 
 #include <string>
 #include <string_view>
@@ -15,9 +16,17 @@ class Editor {
 
   const std::string& visible_code() const { return visible_code_; }
 
+  const gfx::CompilationDiagnostics& diagnostics() const { return diagnostics_; }
+
   void set_visible_code(std::string_view visible_code)
   {
     visible_code_ = std::string(visible_code);
+  }
+
+  /// Editor always takes ownership of shader compilation diagnostics.
+  void set_diagnostics(gfx::CompilationDiagnostics&& diagnostics)
+  {
+    diagnostics_ = std::move(diagnostics);
   }
 
   std::string combined_code() const
@@ -29,6 +38,8 @@ class Editor {
   private:
   std::string prefix_;
   std::string visible_code_;
+
+  gfx::CompilationDiagnostics diagnostics_;
 };
 
 }

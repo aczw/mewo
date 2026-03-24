@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace mewo::gfx {
 
@@ -13,5 +14,7 @@ struct CompilationDiagnostic {
   uint64_t line_pos = {};
   std::string highlight;
 };
+
+using CompilationDiagnostics = std::vector<CompilationDiagnostic>;
 
 }

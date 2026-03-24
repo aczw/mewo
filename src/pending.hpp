@@ -5,18 +5,22 @@
 #include <cstdint>
 #include <filesystem>
 #include <optional>
+#include <string>
+#include <string_view>
 #include <utility>
 
 namespace mewo {
 
 /// Collects pending operations to be applied and processed in the next frame.
-struct Pending {
+class Pending {
   public:
   bool quit() const { return quit_; }
 
   std::optional<std::filesystem::path>& project_open() { return project_open_; }
 
   std::optional<std::pair<uint32_t, uint32_t>>& viewport_resize() { return viewport_resize_; }
+
+  std::optional<std::string>& run() { return run_; }
 
   void request_quit() { quit_ = true; }
 
@@ -39,12 +43,16 @@ struct Pending {
     viewport_resize_ = { new_width, new_height };
   }
 
+  void request_run(std::string_view new_combined_code) { run_ = std::string(new_combined_code); }
+
   private:
   bool quit_ = false;
   std::optional<std::filesystem::path> project_open_;
   /// Can't resize the same frame because the viewport texture might already
   /// be submitted for display in the GUI.
   std::optional<std::pair<uint32_t, uint32_t>> viewport_resize_;
+  /// Stores combined fragment shader.
+  std::optional<std::string> run_;
 };
 
 }

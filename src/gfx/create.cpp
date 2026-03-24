@@ -11,7 +11,6 @@
 #include <optional>
 #include <string>
 #include <string_view>
-#include <vector>
 
 namespace mewo::gfx::create {
 
@@ -44,7 +43,7 @@ ShaderCompilationResult shader_module_from_wgsl(
   };
 
   wgpu::ShaderModule shader = renderer.device().CreateShaderModule(&shader_module_desc);
-  std::vector<CompilationDiagnostic> diagnostics;
+  gfx::CompilationDiagnostics diagnostics;
   bool did_error_occur = false;
 
   wgpu::WaitStatus shader_status = renderer.instance().WaitAny(

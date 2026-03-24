@@ -2,7 +2,6 @@
 
 #include "aspect_ratio.hpp"
 #include "assets.hpp"
-#include "gfx/compilation_diagnostic.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/renderer.hpp"
 #include "pending.hpp"
@@ -12,10 +11,7 @@
 
 #include <array>
 #include <cstdint>
-#include <optional>
-#include <string>
 #include <string_view>
-#include <vector>
 
 namespace mewo {
 
@@ -35,6 +31,8 @@ class Viewport {
     Resolution,
   };
 
+  static constexpr std::string_view FRAGMENT_SHADER_LABEL = "viewport-frag-shader";
+
   Viewport(Pending& pending, const Assets& assets, const State& state,
       const gfx::Renderer& renderer, std::string_view initial_code);
 
@@ -48,8 +46,6 @@ class Viewport {
 
   uint32_t height() const { return height_; }
 
-  const std::vector<gfx::CompilationDiagnostic>& diagnostics() const { return diagnostics_; }
-
   void set_mode(Mode mode) { mode_ = mode; }
 
   void set_ratio_preset(AspectRatio::Preset ratio_preset) { ratio_preset_ = ratio_preset; }
@@ -60,19 +56,9 @@ class Viewport {
     height_ = height;
   }
 
-  void set_pending_run_request(std::string_view new_code)
-  {
-    pending_run_request_ = std::string(new_code);
-  }
-
   void record(const gfx::FrameContext& frame_ctx) const;
 
-  /// Updates the fragment shader and creates the render pipeline.
-  void update_render_pipeline(const wgpu::Device& device)
-  {
-    render_pipeline_desc_.fragment = &fragment_state_;
-    render_pipeline_ = device.CreateRenderPipeline(&render_pipeline_desc_);
-  }
+  void update(const wgpu::ShaderModule& fragment_module, const wgpu::Device& device);
 
   /// Updates uniform buffer and checks for a pending resize, applying it if it exists.
   void prepare_new_frame(State& state, const gfx::Renderer& renderer);
@@ -105,12 +91,6 @@ class Viewport {
   AspectRatio::Preset ratio_preset_ = AspectRatio::Preset::e16_9;
   uint32_t width_ = 0;
   uint32_t height_ = 0;
-
-  /// Stores pending (combined) fragment shader that will be applied next frame. Populated
-  /// while building UI for current frame.
-  std::optional<std::string> pending_run_request_;
-
-  std::vector<gfx::CompilationDiagnostic> diagnostics_;
 };
 
 }

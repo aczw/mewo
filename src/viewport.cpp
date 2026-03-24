@@ -6,20 +6,16 @@
 #include "gfx/renderer.hpp"
 #include "gui/layout.hpp"
 #include "io.hpp"
-#include "query.hpp"
 
 #include <SDL3/SDL_timer.h>
 #include <webgpu/webgpu_cpp.h>
 
+#include <cassert>
 #include <cmath>
-#include <optional>
-#include <print>
 #include <string_view>
 #include <utility>
 
 namespace mewo {
-
-static constexpr std::string_view DEFAULT_FRAG_SHADER_LABEL = "viewport-frag-shader";
 
 Viewport::Viewport(Pending& pending, const Assets& assets, const State& state,
     const gfx::Renderer& renderer, std::string_view initial_code)
@@ -98,26 +94,16 @@ Viewport::Viewport(Pending& pending, const Assets& assets, const State& state,
   };
 
   // Compile a default fragment shader to enable render pipeline creation in constructor
-  const auto& [frag_module_opt, frag_diagnostics] = gfx::create::shader_module_from_wgsl(renderer,
-      io::read_wgsl_shader(assets.get("shaders/viewport.frag.wgsl")),
-      DEFAULT_FRAG_SHADER_LABEL.data());
+  const auto& [frag_module, frag_diagnostics] = gfx::create::shader_module_from_wgsl(renderer,
+      io::read_wgsl_shader(assets.get("shaders/viewport.frag.wgsl")), FRAGMENT_SHADER_LABEL);
 
-  if (!frag_module_opt.has_value()) {
+  if (!frag_module.has_value()) {
     throw Exception("Compiling default viewport fragment shader failed! {} diagnostics reported",
         frag_diagnostics.size());
   }
 
-  fragment_state_ = {
-    .module = frag_module_opt.value(),
-    .entryPoint = "main",
-    .targetCount = 1,
-    .targets = &color_target_state_,
-  };
-
-  update_render_pipeline(device);
-
-  // Also send off a compilation request for the actual fragment shader
-  set_pending_run_request(initial_code);
+  update(frag_module.value(), device);
+  pending.request_run(initial_code);
 
   texture_desc_ = {
     .label = "viewport-texture",
@@ -155,31 +141,24 @@ void Viewport::record(const gfx::FrameContext& frame_ctx) const
   render_pass.End();
 }
 
+void Viewport::update(const wgpu::ShaderModule& fragment_module, const wgpu::Device& device)
+{
+  assert(fragment_module);
+  assert(device);
+
+  fragment_state_ = {
+    .module = fragment_module,
+    .entryPoint = "main",
+    .targetCount = 1,
+    .targets = &color_target_state_,
+  };
+
+  render_pipeline_desc_.fragment = &fragment_state_;
+  render_pipeline_ = device.CreateRenderPipeline(&render_pipeline_desc_);
+}
+
 void Viewport::prepare_new_frame(State& state, const gfx::Renderer& renderer)
 {
-  if (pending_run_request_.has_value()) {
-    // TODO: check if the code is the same before creating new fragment shader module
-    // (how expensive is this anyway?)
-    auto frag_result = gfx::create::shader_module_from_wgsl(
-        renderer, pending_run_request_.value(), DEFAULT_FRAG_SHADER_LABEL.data());
-    diagnostics_ = std::move(frag_result.second);
-
-    std::println("Shader compilation generated {} diagnostic(s)", diagnostics_.size());
-
-    if (const auto& frag_module_opt = frag_result.first; frag_module_opt.has_value()) {
-      fragment_state_.module = frag_module_opt.value();
-      update_render_pipeline(renderer.device());
-
-      if constexpr (query::is_debug())
-        std::println("Updated viewport render pipeline");
-    } else {
-      if constexpr (query::is_debug())
-        std::println("Shader compilation errors occurred, viewport render pipeline not updated");
-    }
-
-    pending_run_request_.reset();
-  }
-
   Uniforms unif = {
     .time = static_cast<float>(SDL_GetTicksNS()) / 1'000'000'000.f,
     .resolution

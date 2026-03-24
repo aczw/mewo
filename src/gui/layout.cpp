@@ -127,7 +127,7 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
     ImGui::Begin(DIAGNOSTICS_WINDOW_NAME.data());
 
     ImGui::PushFont(gui_ctx.fonts().geist_mono, 0.f);
-    if (const auto& diagnostics = viewport.diagnostics(); diagnostics.size() > 0) {
+    if (const auto& diagnostics = editor.diagnostics(); diagnostics.size() > 0) {
       for (const auto& diag : diagnostics) {
         ImGui::Text("(%llu:%llu) %s: %s", diag.line_num, diag.line_pos, diag.type_name.data(),
             diag.message.c_str());
@@ -193,7 +193,7 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
     }
 
     if (ImGui::Button("Run"))
-      viewport.set_pending_run_request(editor.combined_code());
+      pending.request_run(editor.combined_code());
 
     {
       using Mode = Viewport::Mode;

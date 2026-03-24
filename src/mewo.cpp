@@ -2,9 +2,11 @@
 
 #include "editor.hpp"
 #include "exception.hpp"
+#include "gfx/create.hpp"
 #include "gfx/frame_context.hpp"
 #include "io.hpp"
 #include "project.hpp"
+#include "query.hpp"
 
 #include <SDL3/SDL.h>
 #include <imgui_impl_sdl3.h>
@@ -62,15 +64,13 @@ const gfx::FrameContext Mewo::prepare_new_frame()
 {
   const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
 
-  gui_ctx_.prepare_new_frame();
-
   if (auto& requested_project = pending_.project_open(); requested_project) {
     try {
       const auto& project = project_.emplace(requested_project.value());
 
       editor_.set_visible_code(
           io::read_wgsl_shader(project.root() / Project::WGSL_SHADER_FILE_NAME));
-      viewport_.set_pending_run_request(editor_.combined_code());
+      pending_.request_run(editor_.combined_code());
       window_.update_project_in_title(project);
     } catch (const Exception& ex) {
       std::println("Failed to set new project: {}", ex.what());
@@ -89,7 +89,32 @@ const gfx::FrameContext Mewo::prepare_new_frame()
     requested_resize.reset();
   }
 
+  if (auto& requested_run = pending_.run(); requested_run) {
+    // TODO: check if the code is the same before creating new fragment shader module
+    // (how expensive is this anyway?)
+    auto compilation_result = gfx::create::shader_module_from_wgsl(
+        renderer_, requested_run.value(), Viewport::FRAGMENT_SHADER_LABEL);
+
+    editor_.set_diagnostics(std::move(compilation_result.second));
+
+    if constexpr (query::is_debug())
+      std::println("Shader compilation generated {} diagnostic(s)", editor_.diagnostics().size());
+
+    if (const auto& fragment_module = compilation_result.first; fragment_module) {
+      viewport_.update(fragment_module.value(), renderer_.device());
+
+      if constexpr (query::is_debug())
+        std::println("Updated viewport render pipeline");
+    } else {
+      if constexpr (query::is_debug())
+        std::println("Shader compilation errors occurred, viewport render pipeline not updated");
+    }
+
+    requested_run.reset();
+  }
+
   viewport_.prepare_new_frame(state_, renderer_);
+  gui_ctx_.prepare_new_frame();
 
   return frame_ctx;
 }
