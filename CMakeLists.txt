@@ -136,7 +136,6 @@ add_executable(mewo
   ${MEWO_SRC_DIR}/assets.hpp
   ${MEWO_SRC_DIR}/editor.cpp
   ${MEWO_SRC_DIR}/editor.hpp
-  ${MEWO_SRC_DIR}/exception.cpp
   ${MEWO_SRC_DIR}/exception.hpp
   ${MEWO_SRC_DIR}/io.cpp
   ${MEWO_SRC_DIR}/io.hpp

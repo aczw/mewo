@@ -9,7 +9,10 @@ namespace mewo {
 
 class Exception : public std::runtime_error {
   public:
-  explicit Exception(const std::string& message);
+  explicit Exception(const std::string& message)
+      : std::runtime_error(message)
+  {
+  }
 
   template <typename... Args>
   Exception(std::format_string<Args...> format, Args&&... args)

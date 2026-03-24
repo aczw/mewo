@@ -17,7 +17,13 @@ namespace mewo {
 
 class Mewo {
   public:
-  Mewo();
+  Mewo()
+      : renderer_(window_)
+      , gui_ctx_(assets_, window_, renderer_)
+      , editor_(assets_)
+      , viewport_(assets_, state_, renderer_, editor_.combined_code())
+  {
+  }
 
   void run();
 

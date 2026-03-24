@@ -15,14 +15,6 @@
 
 namespace mewo {
 
-Mewo::Mewo()
-    : renderer_(window_)
-    , gui_ctx_(assets_, window_, renderer_)
-    , editor_(assets_)
-    , viewport_(assets_, state_, renderer_, editor_.combined_code())
-{
-}
-
 void Mewo::run()
 {
   SDL_Event event = {};
