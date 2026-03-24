@@ -21,8 +21,8 @@ namespace mewo {
 
 static constexpr std::string_view DEFAULT_FRAG_SHADER_LABEL = "viewport-frag-shader";
 
-Viewport::Viewport(const Assets& assets, const State& state, const gfx::Renderer& renderer,
-    std::string_view initial_code)
+Viewport::Viewport(Pending& pending, const Assets& assets, const State& state,
+    const gfx::Renderer& renderer, std::string_view initial_code)
 {
   const wgpu::Device& device = renderer.device();
   const wgpu::SurfaceConfiguration& surface_config = renderer.surface_config();
@@ -125,7 +125,7 @@ Viewport::Viewport(const Assets& assets, const State& state, const gfx::Renderer
     .format = surface_config.format,
   };
 
-  set_pending_resize(width_whole, height_whole);
+  pending.request_viewport_resize(width_whole, height_whole);
 
   // Use the width and height from the aspect ratio preset as initial values
   width_ = width_whole;
@@ -180,26 +180,6 @@ void Viewport::prepare_new_frame(State& state, const gfx::Renderer& renderer)
     pending_run_request_.reset();
   }
 
-  if (pending_resize_.has_value()) {
-    auto [new_width, new_height] = pending_resize_.value();
-
-    if constexpr (query::is_debug())
-      std::println("Viewport texture resized to {}×{}", new_width, new_height);
-
-    // TODO: on initialization a couple of intermediary resizes occur, including
-    // a strange one to a resolution of 16×9 (yes, 16 pixels by 9 pixels)
-    texture_desc_.size.width = new_width;
-    texture_desc_.size.height = new_height;
-    texture_ = renderer.device().CreateTexture(&texture_desc_);
-
-    static const wgpu::TextureViewDescriptor VIEW_DESC = { .label = "viewport-view" };
-
-    view_ = texture_.CreateView(&VIEW_DESC);
-    pass_color_attachment_.view = view_;
-
-    pending_resize_.reset();
-  }
-
   Uniforms unif = {
     .time = static_cast<float>(SDL_GetTicksNS()) / 1'000'000'000.f,
     .resolution
@@ -210,6 +190,20 @@ void Viewport::prepare_new_frame(State& state, const gfx::Renderer& renderer)
 
   // TODO: update time in the main render loop, not within this class
   state.time = unif.time;
+}
+
+void Viewport::resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height)
+{
+  // TODO: on initialization a couple of intermediary resizes occur, including
+  // a strange one to a resolution of 16×9 (yes, 16 pixels by 9 pixels)
+  texture_desc_.size.width = new_width;
+  texture_desc_.size.height = new_height;
+  texture_ = device.CreateTexture(&texture_desc_);
+
+  static constexpr wgpu::TextureViewDescriptor VIEW_DESC = { .label = "viewport-view" };
+
+  view_ = texture_.CreateView(&VIEW_DESC);
+  pass_color_attachment_.view = view_;
 }
 
 }

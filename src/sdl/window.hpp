@@ -21,7 +21,7 @@ class Window {
 
   std::pair<uint32_t, uint32_t> size_in_pixels() const;
 
-  void set_project_in_title(const Project& project)
+  void update_project_in_title(const Project& project)
   {
     SDL_SetWindowTitle(handle_.get(), title_from_project_name(project.name()).c_str());
   }

@@ -1,7 +1,11 @@
 #pragma once
 
+#include "aspect_ratio.hpp"
+
+#include <cstdint>
 #include <filesystem>
 #include <optional>
+#include <utility>
 
 namespace mewo {
 
@@ -12,6 +16,8 @@ struct Pending {
 
   std::optional<std::filesystem::path>& project_open() { return project_open_; }
 
+  std::optional<std::pair<uint32_t, uint32_t>>& viewport_resize() { return viewport_resize_; }
+
   void request_quit() { quit_ = true; }
 
   void request_project_open(const std::filesystem::path& project_directory)
@@ -19,9 +25,26 @@ struct Pending {
     project_open_ = project_directory;
   }
 
+  /// Uses given width and derives the height from the aspect ratio.
+  void request_viewport_resize(uint32_t new_width, AspectRatio::Preset ratio_preset)
+  {
+    float inverse_ratio = AspectRatio::get_inverse_value(ratio_preset);
+    float height = std::floor(static_cast<float>(new_width) * inverse_ratio);
+    viewport_resize_ = { new_width, static_cast<uint32_t>(height) };
+  }
+
+  /// Uses given width and height.
+  void request_viewport_resize(uint32_t new_width, uint32_t new_height)
+  {
+    viewport_resize_ = { new_width, new_height };
+  }
+
   private:
   bool quit_ = false;
   std::optional<std::filesystem::path> project_open_;
+  /// Can't resize the same frame because the viewport texture might already
+  /// be submitted for display in the GUI.
+  std::optional<std::pair<uint32_t, uint32_t>> viewport_resize_;
 };
 
 }

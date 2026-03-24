@@ -167,7 +167,7 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
     // TODO: don't submit if user is actively dragging the window to be bigger/smaller
     if (prev_mode == Viewport::Mode::AspectRatio
         && curr_viewport_window_width != prev_viewport_window_width_) {
-      viewport.set_pending_resize(curr_viewport_window_width);
+      pending.request_viewport_resize(curr_viewport_window_width, viewport.ratio_preset());
     }
 
     {
@@ -209,11 +209,11 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
 
         switch (curr_mode) {
         case Viewport::Mode::AspectRatio:
-          viewport.set_pending_resize(curr_viewport_window_width);
+          pending.request_viewport_resize(curr_viewport_window_width, viewport.ratio_preset());
           break;
 
         case Viewport::Mode::Resolution:
-          viewport.set_pending_resize();
+          pending.request_viewport_resize(prev_width, prev_height);
           break;
 
         default:
@@ -237,9 +237,8 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
       ImGui::RadioButton("16:9", &prev_preset_value, std::to_underlying(Preset::e16_9));
 
       if (auto curr_preset = static_cast<Preset>(prev_preset_value); curr_preset != prev_preset) {
-        // Set ratio preset before submitting resize, because it has to use the new ratio
+        pending.request_viewport_resize(curr_viewport_window_width, curr_preset);
         viewport.set_ratio_preset(curr_preset);
-        viewport.set_pending_resize(curr_viewport_window_width);
       }
 
       break;
@@ -261,8 +260,8 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
       // TODO: don't submit if user is currently selecting/dragging the slider, or has the
       // box active and is still entering values
       if (curr_width != prev_width || curr_height != prev_height) {
-        viewport.set_pending_resize(curr_width, curr_height);
-        viewport.set_size(curr_width, curr_height);
+        pending.request_viewport_resize(curr_width, curr_height);
+        viewport.set_resolution(curr_width, curr_height);
       }
 
       break;

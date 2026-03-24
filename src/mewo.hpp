@@ -2,6 +2,7 @@
 
 #include "assets.hpp"
 #include "editor.hpp"
+#include "gfx/frame_context.hpp"
 #include "gfx/renderer.hpp"
 #include "gui/context.hpp"
 #include "gui/layout.hpp"
@@ -21,13 +22,15 @@ class Mewo {
       : renderer_(window_)
       , gui_ctx_(assets_, window_, renderer_)
       , editor_(assets_)
-      , viewport_(assets_, state_, renderer_, editor_.combined_code())
+      , viewport_(pending_, assets_, state_, renderer_, editor_.combined_code())
   {
   }
 
   void run();
+  const gfx::FrameContext prepare_new_frame();
 
   private:
+  Pending pending_;
   Assets assets_;
   State state_;
 
@@ -43,7 +46,6 @@ class Mewo {
   Viewport viewport_;
 
   std::optional<Project> project_;
-  Pending pending_;
 };
 
 }

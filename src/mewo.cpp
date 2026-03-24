@@ -25,24 +25,7 @@ void Mewo::run()
   while (!pending_.quit()) {
     device.Tick();
 
-    const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
-    viewport_.prepare_new_frame(state_, renderer_);
-    gui_ctx_.prepare_new_frame();
-
-    if (auto& requested_project = pending_.project_open(); requested_project) {
-      try {
-        const auto& project = project_.emplace(requested_project.value());
-
-        editor_.set_visible_code(
-            io::read_wgsl_shader(project.root() / Project::WGSL_SHADER_FILE_NAME));
-        viewport_.set_pending_run_request(editor_.combined_code());
-        window_.set_project_in_title(project);
-      } catch (const Exception& ex) {
-        std::println("Failed to set new project: {}", ex.what());
-      }
-
-      requested_project.reset();
-    }
+    const gfx::FrameContext frame_ctx = prepare_new_frame();
 
     while (SDL_PollEvent(&event)) {
       ImGui_ImplSDL3_ProcessEvent(&event);
@@ -73,6 +56,42 @@ void Mewo::run()
     queue.Submit(1, &cmd_buf);
     renderer_.surface().Present();
   }
+}
+
+const gfx::FrameContext Mewo::prepare_new_frame()
+{
+  const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
+
+  gui_ctx_.prepare_new_frame();
+
+  if (auto& requested_project = pending_.project_open(); requested_project) {
+    try {
+      const auto& project = project_.emplace(requested_project.value());
+
+      editor_.set_visible_code(
+          io::read_wgsl_shader(project.root() / Project::WGSL_SHADER_FILE_NAME));
+      viewport_.set_pending_run_request(editor_.combined_code());
+      window_.update_project_in_title(project);
+    } catch (const Exception& ex) {
+      std::println("Failed to set new project: {}", ex.what());
+    }
+
+    requested_project.reset();
+  }
+
+  if (auto& requested_resize = pending_.viewport_resize(); requested_resize) {
+    auto [new_width, new_height] = requested_resize.value();
+
+    if constexpr (query::is_debug())
+      std::println("Viewport texture resized to {}×{}", new_width, new_height);
+
+    viewport_.resize(renderer_.device(), new_width, new_height);
+    requested_resize.reset();
+  }
+
+  viewport_.prepare_new_frame(state_, renderer_);
+
+  return frame_ctx;
 }
 
 }

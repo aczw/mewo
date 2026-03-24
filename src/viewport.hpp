@@ -5,6 +5,7 @@
 #include "gfx/compilation_diagnostic.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/renderer.hpp"
+#include "pending.hpp"
 #include "state.hpp"
 
 #include <webgpu/webgpu_cpp.h>
@@ -14,7 +15,6 @@
 #include <optional>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <vector>
 
 namespace mewo {
@@ -35,8 +35,8 @@ class Viewport {
     Resolution,
   };
 
-  Viewport(const Assets& assets, const State& state, const gfx::Renderer& renderer,
-      std::string_view initial_code);
+  Viewport(Pending& pending, const Assets& assets, const State& state,
+      const gfx::Renderer& renderer, std::string_view initial_code);
 
   const wgpu::TextureView& view() const { return view_; };
 
@@ -54,27 +54,10 @@ class Viewport {
 
   void set_ratio_preset(AspectRatio::Preset ratio_preset) { ratio_preset_ = ratio_preset; }
 
-  void set_size(uint32_t width, uint32_t height)
+  void set_resolution(uint32_t width, uint32_t height)
   {
     width_ = width;
     height_ = height;
-  }
-
-  /// Uses preexisting width and height.
-  void set_pending_resize() { set_pending_resize(width_, height_); }
-
-  /// Uses given width and derives the height from the current aspect ratio preset.
-  void set_pending_resize(uint32_t new_width)
-  {
-    float inverse_ratio = AspectRatio::get_inverse_value(ratio_preset_);
-    float height = std::floor(static_cast<float>(new_width) * inverse_ratio);
-    pending_resize_ = { new_width, static_cast<uint32_t>(height) };
-  }
-
-  /// Uses given width and height.
-  void set_pending_resize(uint32_t new_width, uint32_t new_height)
-  {
-    pending_resize_ = { new_width, new_height };
   }
 
   void set_pending_run_request(std::string_view new_code)
@@ -93,6 +76,8 @@ class Viewport {
 
   /// Updates uniform buffer and checks for a pending resize, applying it if it exists.
   void prepare_new_frame(State& state, const gfx::Renderer& renderer);
+
+  void resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height);
 
   private:
   struct alignas(8) Uniforms {
@@ -121,10 +106,6 @@ class Viewport {
   uint32_t width_ = 0;
   uint32_t height_ = 0;
 
-  /// Stores the pending texture resize that will be applied next frame. Populated while
-  /// building the UI for the current frame. We can't resize in the same frame because
-  /// the texture may already have been submitted for display in the GUI.
-  std::optional<std::pair<uint32_t, uint32_t>> pending_resize_;
   /// Stores pending (combined) fragment shader that will be applied next frame. Populated
   /// while building UI for current frame.
   std::optional<std::string> pending_run_request_;
