@@ -29,8 +29,8 @@ Project::Project(const std::filesystem::path& folder_to_open)
   if (!fs::exists(mewo_folder) || !fs::is_directory(mewo_folder))
     throw Exception("\"{}\" either does not exist or is not a folder", mewo_folder.string());
 
-  root_ = absolute;
-  name_ = root_.filename().string();
+  root_directory_ = absolute;
+  name_ = root_directory_.filename().string();
 }
 
 Project Project::save_as(const std::filesystem::path& directory, std::string_view code)
@@ -68,19 +68,18 @@ Project Project::save_as(const std::filesystem::path& directory, std::string_vie
 
 void Project::save(std::string_view code) const
 {
-  auto shader_file = shader();
+  auto file_location = shader_file_location();
 
-  if (std::ofstream shader_file_stream(shader_file);
-      !shader_file_stream || !shader_file_stream.is_open()) {
-    throw Exception("Failed to access \"{}\" for writing", shader_file.string());
+  if (std::ofstream shader_file(file_location); !shader_file || !shader_file.is_open()) {
+    throw Exception("Failed to access \"{}\" for writing", file_location.string());
   } else {
-    shader_file_stream << code;
+    shader_file << code;
   }
 }
 
 Project::Project(const std::filesystem::path& existing_directory, SkipPathValidationTag)
-    : root_(std::filesystem::absolute(existing_directory))
-    , name_(root_.filename().string())
+    : root_directory_(std::filesystem::absolute(existing_directory))
+    , name_(root_directory_.filename().string())
 {
 }
 

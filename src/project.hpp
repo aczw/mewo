@@ -15,11 +15,11 @@ class Project {
   /// Creates a new project directory and saves the newly-created project.
   static Project save_as(const std::filesystem::path& directory, std::string_view code);
 
-  const std::filesystem::path& root() const { return root_; }
+  const std::filesystem::path& root_directory() const { return root_directory_; }
 
   const std::string& name() const { return name_; }
 
-  std::filesystem::path shader() const { return root_ / "shader.wgsl"; }
+  std::filesystem::path shader_file_location() const { return root_directory_ / "shader.wgsl"; }
 
   void save(std::string_view code) const;
 
@@ -28,7 +28,7 @@ class Project {
 
   Project(const std::filesystem::path& existing_directory, SkipPathValidationTag);
 
-  std::filesystem::path root_; ///< Absolute file path to root folder.
+  std::filesystem::path root_directory_; ///< Absolute file path to root folder.
   std::string name_;
 };
 

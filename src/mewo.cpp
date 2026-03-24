@@ -69,7 +69,7 @@ const gfx::FrameContext Mewo::prepare_new_frame()
     try {
       const auto& project = project_.emplace(requested_open.value());
 
-      editor_.set_visible_code(io::read_wgsl_shader(project.shader()));
+      editor_.set_visible_code(io::read_wgsl_shader(project.shader_file_location()));
       pending_.request_run(editor_.combined_code());
       window_.update_project_in_title(project);
     } catch (const Exception& ex) {
