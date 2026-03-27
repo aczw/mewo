@@ -12,7 +12,7 @@
 namespace mewo::gfx {
 
 class Renderer {
-  public:
+ public:
   static constexpr auto WAIT_TIMEOUT_MAX = std::numeric_limits<uint64_t>::max();
 
   Renderer(const sdl::Window& window);
@@ -37,14 +37,13 @@ class Renderer {
   /// Otherwise, it returns a texture view of the current surface and a new command encoder.
   FrameContext prepare_new_frame();
 
-  void resize(uint32_t new_width, uint32_t new_height)
-  {
+  void resize(uint32_t new_width, uint32_t new_height) {
     surface_config_.width = new_width;
     surface_config_.height = new_height;
     surface_.Configure(&surface_config_);
   }
 
-  private:
+ private:
   wgpu::Instance instance_;
   wgpu::Device device_;
   wgpu::Surface surface_;
@@ -57,4 +56,4 @@ class Renderer {
   std::optional<Error> uncaptured_error_;
 };
 
-}
+}  // namespace mewo::gfx

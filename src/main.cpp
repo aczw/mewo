@@ -5,8 +5,7 @@
 #include <exception>
 #include <print>
 
-int main(int, char*[])
-{
+int main(int, char*[]) {
   int status = EXIT_SUCCESS;
 
   try {

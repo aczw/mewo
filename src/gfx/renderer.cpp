@@ -23,27 +23,22 @@ namespace mewo::gfx {
 
 namespace {
 
-std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextureStatus status)
-{
+std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextureStatus status) {
   switch (status) {
-    // clang-format off
-  case wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal: return "SuccessOptimal";
-  case wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal: return "SuccessSuboptimal";
-  case wgpu::SurfaceGetCurrentTextureStatus::Timeout: return "Timeout";
-  case wgpu::SurfaceGetCurrentTextureStatus::Outdated: return "Viewportdated";
-  case wgpu::SurfaceGetCurrentTextureStatus::Lost: return "Lost";
-  case wgpu::SurfaceGetCurrentTextureStatus::Error: return "Error";
-    // clang-format on
+    case wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal: return "SuccessOptimal";
+    case wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal: return "SuccessSuboptimal";
+    case wgpu::SurfaceGetCurrentTextureStatus::Timeout: return "Timeout";
+    case wgpu::SurfaceGetCurrentTextureStatus::Outdated: return "Viewportdated";
+    case wgpu::SurfaceGetCurrentTextureStatus::Lost: return "Lost";
+    case wgpu::SurfaceGetCurrentTextureStatus::Error: return "Error";
 
-  default:
-    utility::enum_unreachable("wgpu::SurfaceGetCurrentTextureStatus", status);
+    default: utility::enum_unreachable("wgpu::SurfaceGetCurrentTextureStatus", status);
   }
 }
 
-}
+}  // namespace
 
-Renderer::Renderer(const sdl::Window& window)
-{
+Renderer::Renderer(const sdl::Window& window) {
   auto timed_wait_any = wgpu::InstanceFeatureName::TimedWaitAny;
   wgpu::InstanceDescriptor instance_desc = {
     .requiredFeatureCount = 1,
@@ -62,16 +57,21 @@ Renderer::Renderer(const sdl::Window& window)
   };
 
   wgpu::WaitStatus adapter_status = instance_.WaitAny(
-      instance_.RequestAdapter(&adapter_opts, wgpu::CallbackMode::WaitAnyOnly,
-          [&adapter](wgpu::RequestAdapterStatus status, wgpu::Adapter acquired_adapter,
-              wgpu::StringView message) {
-            // Throwing here is safe because we wait on callback execution in the current thread
-            if (status != wgpu::RequestAdapterStatus::Success)
-              throw Exception("Failed to request WebGPU adapter: {}", message.data);
+    instance_.RequestAdapter(
+      &adapter_opts,
+      wgpu::CallbackMode::WaitAnyOnly,
+      [&adapter](
+        wgpu::RequestAdapterStatus status, wgpu::Adapter acquired_adapter, wgpu::StringView message
+      ) {
+        // Throwing here is safe because we wait on callback execution in the current thread
+        if (status != wgpu::RequestAdapterStatus::Success)
+          throw Exception("Failed to request WebGPU adapter: {}", message.data);
 
-            adapter = std::move(acquired_adapter);
-          }),
-      WAIT_TIMEOUT_MAX);
+        adapter = std::move(acquired_adapter);
+      }
+    ),
+    WAIT_TIMEOUT_MAX
+  );
 
   if (!adapter || adapter_status != wgpu::WaitStatus::Success)
     throw Exception("Waiting on wgpu::Instance::RequestAdapter failed");
@@ -79,59 +79,74 @@ Renderer::Renderer(const sdl::Window& window)
   if constexpr (query::is_debug())
     ImGui_ImplWGPU_DebugPrintAdapterInfo(adapter.Get());
 
-  wgpu::DeviceDescriptor device_desc = { {
-      .label = "device",
-      .defaultQueue = { .label = "default-queue" },
-  } };
+  wgpu::DeviceDescriptor device_desc = {{
+    .label = "device",
+    .defaultQueue = {.label = "default-queue"},
+  }};
 
   // Dawn-specific functionality to enable/disable certain runtime features
   if constexpr (query::is_debug()) {
-    static constexpr std::array DAWN_ENABLED_TOGGLES = { "enable_immediate_error_handling" };
+    static constexpr std::array DAWN_ENABLED_TOGGLES = {"enable_immediate_error_handling"};
 
-    static const wgpu::DawnTogglesDescriptor DAWN_TOGGLES_DESC = { {
-        .enabledToggleCount = DAWN_ENABLED_TOGGLES.size(),
-        .enabledToggles = DAWN_ENABLED_TOGGLES.data(),
-    } };
+    static const wgpu::DawnTogglesDescriptor DAWN_TOGGLES_DESC = {{
+      .enabledToggleCount = DAWN_ENABLED_TOGGLES.size(),
+      .enabledToggles = DAWN_ENABLED_TOGGLES.data(),
+    }};
 
     device_desc.nextInChain = &DAWN_TOGGLES_DESC;
   }
 
   device_desc.SetDeviceLostCallback(
-      wgpu::CallbackMode::AllowSpontaneous,
-      [](const wgpu::Device&, wgpu::DeviceLostReason type, wgpu::StringView message,
-          std::optional<Error>* device_lost_error) {
-        auto reason = static_cast<WGPUDeviceLostReason>(type);
+    wgpu::CallbackMode::AllowSpontaneous,
+    [](
+      const wgpu::Device&,
+      wgpu::DeviceLostReason type,
+      wgpu::StringView message,
+      std::optional<Error>* device_lost_error
+    ) {
+      auto reason = static_cast<WGPUDeviceLostReason>(type);
 
-        *device_lost_error = {
-          .type_name = ImGui_ImplWGPU_GetDeviceLostReasonName(reason),
-          .message = std::string(message),
-        };
-      },
-      &device_lost_error_);
+      *device_lost_error = {
+        .type_name = ImGui_ImplWGPU_GetDeviceLostReasonName(reason),
+        .message = std::string(message),
+      };
+    },
+    &device_lost_error_
+  );
 
   device_desc.SetUncapturedErrorCallback(
-      [](const wgpu::Device&, wgpu::ErrorType type, wgpu::StringView message,
-          std::optional<Error>* uncaptured_error) {
-        auto error_type = static_cast<WGPUErrorType>(type);
+    [](
+      const wgpu::Device&,
+      wgpu::ErrorType type,
+      wgpu::StringView message,
+      std::optional<Error>* uncaptured_error
+    ) {
+      auto error_type = static_cast<WGPUErrorType>(type);
 
-        *uncaptured_error = {
-          .type_name = ImGui_ImplWGPU_GetErrorTypeName(error_type),
-          .message = std::string(message),
-        };
-      },
-      &uncaptured_error_);
+      *uncaptured_error = {
+        .type_name = ImGui_ImplWGPU_GetErrorTypeName(error_type),
+        .message = std::string(message),
+      };
+    },
+    &uncaptured_error_
+  );
 
   wgpu::WaitStatus device_status = instance_.WaitAny(
-      adapter.RequestDevice(&device_desc, wgpu::CallbackMode::WaitAnyOnly,
-          [this](wgpu::RequestDeviceStatus status, wgpu::Device acquired_device,
-              wgpu::StringView message) {
-            // Throwing here is safe because we wait on callback execution in the current thread
-            if (status != wgpu::RequestDeviceStatus::Success)
-              throw Exception("Failed to request WebGPU device: {}", message.data);
+    adapter.RequestDevice(
+      &device_desc,
+      wgpu::CallbackMode::WaitAnyOnly,
+      [this](
+        wgpu::RequestDeviceStatus status, wgpu::Device acquired_device, wgpu::StringView message
+      ) {
+        // Throwing here is safe because we wait on callback execution in the current thread
+        if (status != wgpu::RequestDeviceStatus::Success)
+          throw Exception("Failed to request WebGPU device: {}", message.data);
 
-            device_ = std::move(acquired_device);
-          }),
-      WAIT_TIMEOUT_MAX);
+        device_ = std::move(acquired_device);
+      }
+    ),
+    WAIT_TIMEOUT_MAX
+  );
 
   if (!device_ || device_status != wgpu::WaitStatus::Success)
     throw Exception("Waiting on wgpu::Adapter::RequestDevice failed");
@@ -146,11 +161,13 @@ Renderer::Renderer(const sdl::Window& window)
 #if defined(SDL_PLATFORM_MACOS)
     .System = "cocoa",
     .RawWindow = static_cast<void*>(
-        SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nullptr)),
+      SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nullptr)
+    ),
 #elif defined(SDL_PLATFORM_WIN32)
     .System = "win32",
     .RawWindow = static_cast<void*>(
-        SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr)),
+      SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr)
+    ),
     .RawInstance = static_cast<void*>(GetModuleHandle(nullptr)),
 #else
 #error "Unsupported platform. Supported platforms are macOS and Windows"
@@ -190,18 +207,19 @@ Renderer::Renderer(const sdl::Window& window)
   queue_ = device_.GetQueue();
 }
 
-FrameContext Renderer::prepare_new_frame()
-{
+FrameContext Renderer::prepare_new_frame() {
   if (device_lost_error_.has_value()) {
     const Error& error = device_lost_error_.value();
     throw Exception(
-        "WebGPU device lost. Reason: {}. Message (below):\n{}", error.type_name, error.message);
+      "WebGPU device lost. Reason: {}. Message (below):\n{}", error.type_name, error.message
+    );
   }
 
   if (uncaptured_error_.has_value()) {
     const Error& error = uncaptured_error_.value();
     std::println(
-        "Uncaptured WebGPU error. Type: {}. Message (below):\n{}", error.type_name, error.message);
+      "Uncaptured WebGPU error. Type: {}. Message (below):\n{}", error.type_name, error.message
+    );
     uncaptured_error_.reset();
   }
 
@@ -209,8 +227,8 @@ FrameContext Renderer::prepare_new_frame()
   surface_.GetCurrentTexture(&surface_texture);
 
   if (auto status = surface_texture.status;
-      status != wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal
-      && status != wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal) {
+      status != wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal &&
+      status != wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal) {
     throw Exception("WebGPU surface texture status: {}", get_surface_texture_status(status));
   } else if (status == wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal) {
     std::println("warning: surface texture is suboptimal");
@@ -223,7 +241,7 @@ FrameContext Renderer::prepare_new_frame()
     .aspect = wgpu::TextureAspect::All,
   };
 
-  static constexpr wgpu::CommandEncoderDescriptor CMD_ENCODER_DESC = { .label = "command-encoder" };
+  static constexpr wgpu::CommandEncoderDescriptor CMD_ENCODER_DESC = {.label = "command-encoder"};
 
   return {
     .surface_view = surface_texture.texture.CreateView(&SURFACE_VIEW_DESC),
@@ -231,4 +249,4 @@ FrameContext Renderer::prepare_new_frame()
   };
 }
 
-}
+}  // namespace mewo::gfx

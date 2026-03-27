@@ -7,7 +7,7 @@
 namespace mewo {
 
 class Project {
-  public:
+ public:
   static constexpr std::string_view MEWO_FOLDER_NAME = ".mewo";
 
   Project(const std::filesystem::path& folder_to_open);
@@ -23,13 +23,13 @@ class Project {
 
   void save(std::string_view code) const;
 
-  private:
-  struct SkipPathValidationTag { };
+ private:
+  struct SkipPathValidationTag {};
 
   Project(const std::filesystem::path& existing_directory, SkipPathValidationTag);
 
-  std::filesystem::path root_directory_; ///< Absolute file path to root folder.
+  std::filesystem::path root_directory_;  ///< Absolute file path to root folder.
   std::string name_;
 };
 
-}
+}  // namespace mewo

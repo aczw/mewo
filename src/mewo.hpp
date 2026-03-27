@@ -17,19 +17,17 @@
 namespace mewo {
 
 class Mewo {
-  public:
+ public:
   Mewo()
-      : renderer_(window_)
-      , gui_ctx_(assets_, window_, renderer_)
-      , editor_(assets_)
-      , viewport_(pending_, assets_, renderer_, editor_.combined_code())
-  {
-  }
+      : renderer_(window_),
+        gui_ctx_(assets_, window_, renderer_),
+        editor_(assets_),
+        viewport_(pending_, assets_, renderer_, editor_.combined_code()) {}
 
   void run();
   const gfx::FrameContext prepare_new_frame();
 
-  private:
+ private:
   Pending pending_;
   Assets assets_;
 
@@ -47,4 +45,4 @@ class Mewo {
   std::optional<Project> project_;
 };
 
-}
+}  // namespace mewo

@@ -13,7 +13,7 @@ namespace mewo {
 
 /// Collects pending operations to be applied and processed in the next frame.
 class Pending {
-  public:
+ public:
   bool& quit() { return quit_; }
 
   std::optional<std::filesystem::path>& project_open() { return project_open_; }
@@ -28,35 +28,31 @@ class Pending {
 
   void request_quit() { quit_ = true; }
 
-  void request_project_open(const std::filesystem::path& project_directory)
-  {
+  void request_project_open(const std::filesystem::path& project_directory) {
     project_open_ = project_directory;
   }
 
-  void request_project_save_as(const std::filesystem::path& project_directory)
-  {
+  void request_project_save_as(const std::filesystem::path& project_directory) {
     project_save_as_ = project_directory;
   }
 
   void request_project_save() { project_save_ = true; }
 
   /// Uses given width and derives the height from the aspect ratio.
-  void request_viewport_resize(uint32_t new_width, AspectRatio::Preset ratio_preset)
-  {
+  void request_viewport_resize(uint32_t new_width, AspectRatio::Preset ratio_preset) {
     float inverse_ratio = AspectRatio::get_inverse_value(ratio_preset);
     float height = std::floor(static_cast<float>(new_width) * inverse_ratio);
-    viewport_resize_ = { new_width, static_cast<uint32_t>(height) };
+    viewport_resize_ = {new_width, static_cast<uint32_t>(height)};
   }
 
   /// Uses given width and height.
-  void request_viewport_resize(uint32_t new_width, uint32_t new_height)
-  {
-    viewport_resize_ = { new_width, new_height };
+  void request_viewport_resize(uint32_t new_width, uint32_t new_height) {
+    viewport_resize_ = {new_width, new_height};
   }
 
   void request_run(std::string_view new_combined_code) { run_ = std::string(new_combined_code); }
 
-  private:
+ private:
   bool quit_ = false;
   std::optional<std::filesystem::path> project_open_;
   std::optional<std::filesystem::path> project_save_as_;
@@ -68,4 +64,4 @@ class Pending {
   std::optional<std::string> run_;
 };
 
-}
+}  // namespace mewo

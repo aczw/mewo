@@ -9,7 +9,7 @@
 namespace mewo {
 
 class Editor {
-  public:
+ public:
   Editor(const Assets& assets);
 
   std::string& visible_code() { return visible_code_; }
@@ -18,28 +18,25 @@ class Editor {
 
   const gfx::CompilationDiagnostics& diagnostics() const { return diagnostics_; }
 
-  void set_visible_code(std::string_view visible_code)
-  {
+  void set_visible_code(std::string_view visible_code) {
     visible_code_ = std::string(visible_code);
   }
 
   /// Editor always takes ownership of shader compilation diagnostics.
-  void set_diagnostics(gfx::CompilationDiagnostics&& diagnostics)
-  {
+  void set_diagnostics(gfx::CompilationDiagnostics&& diagnostics) {
     diagnostics_ = std::move(diagnostics);
   }
 
-  std::string combined_code() const
-  {
+  std::string combined_code() const {
     // TODO: cache this?
     return prefix_ + "\n\n" + visible_code_;
   }
 
-  private:
+ private:
   std::string prefix_;
   std::string visible_code_;
 
   gfx::CompilationDiagnostics diagnostics_;
 };
 
-}
+}  // namespace mewo

@@ -19,8 +19,7 @@ namespace mewo {
 
 namespace {
 
-std::filesystem::path find_executable_directory()
-{
+std::filesystem::path find_executable_directory() {
   static constexpr size_t MAX_FILE_PATH_LENGTH = 1024;
 
 #if defined(SDL_PLATFORM_MACOS)
@@ -50,11 +49,9 @@ std::filesystem::path find_executable_directory()
 #endif
 }
 
-}
+}  // namespace
 
-Assets::Assets()
-    : executable_directory_(find_executable_directory())
-{
+Assets::Assets() : executable_directory_(find_executable_directory()) {
   using namespace std::string_view_literals;
 
   // There are two possible places where assets can be located, depending on whether
@@ -79,4 +76,4 @@ Assets::Assets()
   }
 }
 
-}
+}  // namespace mewo

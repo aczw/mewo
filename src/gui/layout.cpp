@@ -24,16 +24,21 @@ static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
 static constexpr std::string_view DIAGNOSTICS_WINDOW_NAME = "Diagnostics";
 static constexpr std::string_view VIEWPORT_WINDOW_NAME = "Viewport";
 
-void Layout::build(Pending& pending, const sdl::Window& window, const Context& gui_ctx,
-    Editor& editor, Viewport& viewport)
-{
+void Layout::build(
+  Pending& pending,
+  const sdl::Window& window,
+  const Context& gui_ctx,
+  Editor& editor,
+  Viewport& viewport
+) {
   // Once the layout is created, the ID remains constant.
   if (const ImGuiID dockspace_id = ImGui::GetID("main-dockspace");
       ImGui::DockBuilderGetNode(dockspace_id) == nullptr) {
     set_up_initial_layout(gui_ctx, dockspace_id);
   } else {
     ImGui::DockSpaceOverViewport(
-        dockspace_id, gui_ctx.viewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+      dockspace_id, gui_ctx.viewport(), ImGuiDockNodeFlags_PassthruCentralNode
+    );
   }
 
   if (ImGui::BeginMainMenuBar()) {
@@ -44,30 +49,34 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
         // TODO: move this function call to `Mewo::prepare_new_frame`, and somehow block
         // on callback finishing?
         SDL_ShowOpenFolderDialog(
-            [](void* userdata, const char* const* filelist, int) -> void {
-              if (filelist == nullptr) {
-                std::println("error: {}", SDL_GetError());
-                return;
-              }
+          [](void* userdata, const char* const* filelist, int) -> void {
+            if (filelist == nullptr) {
+              std::println("error: {}", SDL_GetError());
+              return;
+            }
 
-              if (*filelist == nullptr)
-                return;
+            if (*filelist == nullptr)
+              return;
 
-              const char* folder_path = nullptr;
-              int count = 0;
+            const char* folder_path = nullptr;
+            int count = 0;
 
-              while (*filelist) {
-                folder_path = *filelist;
-                filelist += 1;
-                count += 1;
-              }
+            while (*filelist) {
+              folder_path = *filelist;
+              filelist += 1;
+              count += 1;
+            }
 
-              if (count > 1)
-                std::println("warning: more than one folder selected, using last one");
+            if (count > 1)
+              std::println("warning: more than one folder selected, using last one");
 
-              static_cast<Pending*>(userdata)->request_project_open(folder_path);
-            },
-            static_cast<void*>(&pending), window.get(), nullptr, false);
+            static_cast<Pending*>(userdata)->request_project_open(folder_path);
+          },
+          static_cast<void*>(&pending),
+          window.get(),
+          nullptr,
+          false
+        );
       }
 
       ImGui::Separator();
@@ -81,30 +90,34 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
         // TODO: move this function call to `Mewo::prepare_new_frame`, and somehow block
         // on callback finishing?
         SDL_ShowOpenFolderDialog(
-            [](void* userdata, const char* const* filelist, int) -> void {
-              if (filelist == nullptr) {
-                std::println("error: {}", SDL_GetError());
-                return;
-              }
+          [](void* userdata, const char* const* filelist, int) -> void {
+            if (filelist == nullptr) {
+              std::println("error: {}", SDL_GetError());
+              return;
+            }
 
-              if (*filelist == nullptr)
-                return;
+            if (*filelist == nullptr)
+              return;
 
-              const char* folder_path = nullptr;
-              int count = 0;
+            const char* folder_path = nullptr;
+            int count = 0;
 
-              while (*filelist) {
-                folder_path = *filelist;
-                filelist += 1;
-                count += 1;
-              }
+            while (*filelist) {
+              folder_path = *filelist;
+              filelist += 1;
+              count += 1;
+            }
 
-              if (count > 1)
-                std::println("warning: more than one folder selected, using last one");
+            if (count > 1)
+              std::println("warning: more than one folder selected, using last one");
 
-              static_cast<Pending*>(userdata)->request_project_save_as(folder_path);
-            },
-            static_cast<void*>(&pending), window.get(), nullptr, false);
+            static_cast<Pending*>(userdata)->request_project_save_as(folder_path);
+          },
+          static_cast<void*>(&pending),
+          window.get(),
+          nullptr,
+          false
+        );
       }
 
       ImGui::Separator();
@@ -135,8 +148,13 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
     ImGui::PushFont(gui_ctx.fonts().geist_mono, 0.f);
     if (const auto& diagnostics = editor.diagnostics(); diagnostics.size() > 0) {
       for (const auto& diag : diagnostics) {
-        ImGui::Text("(%llu:%llu) %s: %s", diag.line_num, diag.line_pos, diag.type_name.data(),
-            diag.message.c_str());
+        ImGui::Text(
+          "(%llu:%llu) %s: %s",
+          diag.line_num,
+          diag.line_pos,
+          diag.type_name.data(),
+          diag.message.c_str()
+        );
         ImGui::Text("%s", diag.highlight.c_str());
 
         std::string indicators;
@@ -171,8 +189,8 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
     // This only applies if the viewport mode is based on the aspect ratio.
     //
     // TODO: don't submit if user is actively dragging the window to be bigger/smaller
-    if (prev_mode == Viewport::Mode::AspectRatio
-        && curr_viewport_window_width != prev_viewport_window_width_) {
+    if (prev_mode == Viewport::Mode::AspectRatio &&
+        curr_viewport_window_width != prev_viewport_window_width_) {
       pending.request_viewport_resize(curr_viewport_window_width, viewport.ratio_preset());
     }
 
@@ -182,15 +200,13 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
 
       auto inverse_ratio = std::invoke([&] -> float {
         switch (prev_mode) {
-        case Viewport::Mode::AspectRatio:
-          return AspectRatio::get_inverse_value(prev_preset);
+          case Viewport::Mode::AspectRatio: return AspectRatio::get_inverse_value(prev_preset);
 
-        case Viewport::Mode::Resolution:
-          // TODO: division by zero possible
-          return static_cast<float>(prev_height) / static_cast<float>(prev_width);
+          case Viewport::Mode::Resolution:
+            // TODO: division by zero possible
+            return static_cast<float>(prev_height) / static_cast<float>(prev_width);
 
-        default:
-          utility::enum_unreachable("Viewport::Mode", prev_mode);
+          default: utility::enum_unreachable("Viewport::Mode", prev_mode);
         }
       });
 
@@ -214,67 +230,72 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
         viewport.set_mode(curr_mode);
 
         switch (curr_mode) {
-        case Viewport::Mode::AspectRatio:
-          pending.request_viewport_resize(curr_viewport_window_width, viewport.ratio_preset());
-          break;
+          case Viewport::Mode::AspectRatio:
+            pending.request_viewport_resize(curr_viewport_window_width, viewport.ratio_preset());
+            break;
 
-        case Viewport::Mode::Resolution:
-          pending.request_viewport_resize(prev_width, prev_height);
-          break;
+          case Viewport::Mode::Resolution:
+            pending.request_viewport_resize(prev_width, prev_height);
+            break;
 
-        default:
-          utility::enum_unreachable("Viewport::Mode", curr_mode);
+          default: utility::enum_unreachable("Viewport::Mode", curr_mode);
         }
       }
     }
 
     switch (prev_mode) {
-    case Viewport::Mode::AspectRatio: {
-      using Preset = AspectRatio::Preset;
+      case Viewport::Mode::AspectRatio: {
+        using Preset = AspectRatio::Preset;
 
-      int prev_preset_value = std::to_underlying(prev_preset);
+        int prev_preset_value = std::to_underlying(prev_preset);
 
-      ImGui::RadioButton("1:1", &prev_preset_value, std::to_underlying(Preset::e1_1));
-      ImGui::SameLine();
-      ImGui::RadioButton("2:1", &prev_preset_value, std::to_underlying(Preset::e2_1));
-      ImGui::SameLine();
-      ImGui::RadioButton("3:2", &prev_preset_value, std::to_underlying(Preset::e3_2));
-      ImGui::SameLine();
-      ImGui::RadioButton("16:9", &prev_preset_value, std::to_underlying(Preset::e16_9));
+        ImGui::RadioButton("1:1", &prev_preset_value, std::to_underlying(Preset::e1_1));
+        ImGui::SameLine();
+        ImGui::RadioButton("2:1", &prev_preset_value, std::to_underlying(Preset::e2_1));
+        ImGui::SameLine();
+        ImGui::RadioButton("3:2", &prev_preset_value, std::to_underlying(Preset::e3_2));
+        ImGui::SameLine();
+        ImGui::RadioButton("16:9", &prev_preset_value, std::to_underlying(Preset::e16_9));
 
-      if (auto curr_preset = static_cast<Preset>(prev_preset_value); curr_preset != prev_preset) {
-        pending.request_viewport_resize(curr_viewport_window_width, curr_preset);
-        viewport.set_ratio_preset(curr_preset);
+        if (auto curr_preset = static_cast<Preset>(prev_preset_value); curr_preset != prev_preset) {
+          pending.request_viewport_resize(curr_viewport_window_width, curr_preset);
+          viewport.set_ratio_preset(curr_preset);
+        }
+
+        break;
       }
 
-      break;
-    }
+      case Viewport::Mode::Resolution: {
+        static constexpr auto SLIDER_FLAGS = ImGuiSliderFlags_AlwaysClamp;
+        static constexpr int VIEWPORT_SIZE_MIN = 2;
+        static constexpr int VIEWPORT_SIZE_MAX = 2048;
 
-    case Viewport::Mode::Resolution: {
-      static constexpr auto SLIDER_FLAGS = ImGuiSliderFlags_AlwaysClamp;
-      static constexpr int VIEWPORT_SIZE_MIN = 2;
-      static constexpr int VIEWPORT_SIZE_MAX = 2048;
+        std::array prev_size = {static_cast<int>(prev_width), static_cast<int>(prev_height)};
 
-      std::array prev_size = { static_cast<int>(prev_width), static_cast<int>(prev_height) };
+        ImGui::DragInt2(
+          "Width/Height",
+          prev_size.data(),
+          1.f,
+          VIEWPORT_SIZE_MIN,
+          VIEWPORT_SIZE_MAX,
+          "%d px",
+          SLIDER_FLAGS
+        );
 
-      ImGui::DragInt2("Width/Height", prev_size.data(), 1.f, VIEWPORT_SIZE_MIN, VIEWPORT_SIZE_MAX,
-          "%d px", SLIDER_FLAGS);
+        uint32_t curr_width = static_cast<uint32_t>(prev_size[0]);
+        uint32_t curr_height = static_cast<uint32_t>(prev_size[1]);
 
-      uint32_t curr_width = static_cast<uint32_t>(prev_size[0]);
-      uint32_t curr_height = static_cast<uint32_t>(prev_size[1]);
+        // TODO: don't submit if user is currently selecting/dragging the slider, or has the
+        // box active and is still entering values
+        if (curr_width != prev_width || curr_height != prev_height) {
+          pending.request_viewport_resize(curr_width, curr_height);
+          viewport.set_resolution(curr_width, curr_height);
+        }
 
-      // TODO: don't submit if user is currently selecting/dragging the slider, or has the
-      // box active and is still entering values
-      if (curr_width != prev_width || curr_height != prev_height) {
-        pending.request_viewport_resize(curr_width, curr_height);
-        viewport.set_resolution(curr_width, curr_height);
+        break;
       }
 
-      break;
-    }
-
-    default:
-      utility::enum_unreachable("Viewport::Mode", prev_mode);
+      default: utility::enum_unreachable("Viewport::Mode", prev_mode);
     }
 
     prev_viewport_window_width_ = curr_viewport_window_width;
@@ -283,8 +304,7 @@ void Layout::build(Pending& pending, const sdl::Window& window, const Context& g
   }
 }
 
-void Layout::set_up_initial_layout(const Context& gui_ctx, ImGuiID dockspace_id) const
-{
+void Layout::set_up_initial_layout(const Context& gui_ctx, ImGuiID dockspace_id) const {
   ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
   ImGui::DockBuilderSetNodeSize(dockspace_id, gui_ctx.viewport()->Size);
 
@@ -303,4 +323,4 @@ void Layout::set_up_initial_layout(const Context& gui_ctx, ImGuiID dockspace_id)
   ImGui::DockBuilderFinish(dockspace_id);
 }
 
-}
+}  // namespace mewo::gui

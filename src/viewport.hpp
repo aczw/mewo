@@ -20,7 +20,7 @@ namespace mewo {
 /// This class does not own the fragment shader, and only uses it to set up the graphics pipeline.
 /// Therefore it only takes views to any references of code.
 class Viewport {
-  public:
+ public:
   /// Affects the shape of the output as well as how the underlying texture is updated, like
   /// when a window or panel is resized.
   enum class Mode : int {
@@ -32,8 +32,12 @@ class Viewport {
 
   static constexpr std::string_view FRAGMENT_SHADER_LABEL = "viewport-frag-shader";
 
-  Viewport(Pending& pending, const Assets& assets, const gfx::Renderer& renderer,
-      std::string_view initial_code);
+  Viewport(
+    Pending& pending,
+    const Assets& assets,
+    const gfx::Renderer& renderer,
+    std::string_view initial_code
+  );
 
   const wgpu::TextureView& view() const { return view_; };
 
@@ -49,20 +53,22 @@ class Viewport {
 
   void set_ratio_preset(AspectRatio::Preset ratio_preset) { ratio_preset_ = ratio_preset; }
 
-  void set_resolution(uint32_t width, uint32_t height)
-  {
+  void set_resolution(uint32_t width, uint32_t height) {
     width_ = width;
     height_ = height;
   }
 
   void record(
-      const wgpu::Queue& queue, const gfx::FrameContext& frame_ctx, float current_time) const;
+    const wgpu::Queue& queue,
+    const gfx::FrameContext& frame_ctx,
+    float current_time
+  ) const;
 
   void update(const wgpu::ShaderModule& fragment_module, const wgpu::Device& device);
 
   void resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height);
 
-  private:
+ private:
   struct alignas(8) Uniforms {
     float time = 0;
     std::array<float, 2> resolution = {};
@@ -90,4 +96,4 @@ class Viewport {
   uint32_t height_ = 0;
 };
 
-}
+}  // namespace mewo

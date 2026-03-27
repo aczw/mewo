@@ -15,4 +15,4 @@ struct Error {
   std::string message;
 };
 
-}
+}  // namespace mewo::gfx

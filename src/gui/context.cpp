@@ -8,8 +8,7 @@
 
 namespace mewo::gui {
 
-Context::Context(const Assets& assets, const sdl::Window& window, const gfx::Renderer& renderer)
-{
+Context::Context(const Assets& assets, const sdl::Window& window, const gfx::Renderer& renderer) {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
 
@@ -35,8 +34,8 @@ Context::Context(const Assets& assets, const sdl::Window& window, const gfx::Ren
 
   ImGui_ImplWGPU_InitInfo wgpu_init_info;
   wgpu_init_info.Device = renderer.device().Get();
-  wgpu_init_info.RenderTargetFormat
-      = static_cast<WGPUTextureFormat>(renderer.surface_config().format);
+  wgpu_init_info.RenderTargetFormat =
+    static_cast<WGPUTextureFormat>(renderer.surface_config().format);
   ImGui_ImplWGPU_Init(&wgpu_init_info);
 
   ImGui_ImplSDL3_InitForOther(window.get());
@@ -45,8 +44,7 @@ Context::Context(const Assets& assets, const sdl::Window& window, const gfx::Ren
   viewport_ = ImGui::GetMainViewport();
 }
 
-void Context::record(const gfx::FrameContext& frame_ctx) const
-{
+void Context::record(const gfx::FrameContext& frame_ctx) const {
   ImGui::Render();
 
   auto& [surface_view, encoder] = frame_ctx;
@@ -68,4 +66,4 @@ void Context::record(const gfx::FrameContext& frame_ctx) const
   render_pass.End();
 }
 
-}
+}  // namespace mewo::gui

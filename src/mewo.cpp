@@ -17,8 +17,7 @@
 
 namespace mewo {
 
-void Mewo::run()
-{
+void Mewo::run() {
   SDL_Event event = {};
 
   const wgpu::Device& device = renderer_.device();
@@ -34,17 +33,17 @@ void Mewo::run()
       ImGui_ImplSDL3_ProcessEvent(&event);
 
       switch (event.type) {
-      case SDL_EVENT_QUIT:
-      case SDL_EVENT_WINDOW_CLOSE_REQUESTED: {
-        pending_.request_quit();
-        break;
-      }
+        case SDL_EVENT_QUIT:
+        case SDL_EVENT_WINDOW_CLOSE_REQUESTED: {
+          pending_.request_quit();
+          break;
+        }
 
-      case SDL_EVENT_WINDOW_RESIZED: {
-        auto [new_width, new_height] = window_.size_in_pixels();
-        renderer_.resize(new_width, new_height);
-        break;
-      }
+        case SDL_EVENT_WINDOW_RESIZED: {
+          auto [new_width, new_height] = window_.size_in_pixels();
+          renderer_.resize(new_width, new_height);
+          break;
+        }
       }
     }
 
@@ -53,7 +52,7 @@ void Mewo::run()
     viewport_.record(queue, frame_ctx, current_time);
     gui_ctx_.record(frame_ctx);
 
-    static constexpr wgpu::CommandBufferDescriptor CMD_BUF_DESC = { .label = "command-buffer" };
+    static constexpr wgpu::CommandBufferDescriptor CMD_BUF_DESC = {.label = "command-buffer"};
     wgpu::CommandBuffer cmd_buf = frame_ctx.encoder.Finish(&CMD_BUF_DESC);
 
     queue.Submit(1, &cmd_buf);
@@ -61,8 +60,7 @@ void Mewo::run()
   }
 }
 
-const gfx::FrameContext Mewo::prepare_new_frame()
-{
+const gfx::FrameContext Mewo::prepare_new_frame() {
   const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
 
   if (auto& requested_open = pending_.project_open(); requested_open) {
@@ -125,7 +123,8 @@ const gfx::FrameContext Mewo::prepare_new_frame()
     // TODO: check if the code is the same before creating new fragment shader module
     // (how expensive is this anyway?)
     auto compilation_result = gfx::create::shader_module_from_wgsl(
-        renderer_, requested_run.value(), Viewport::FRAGMENT_SHADER_LABEL);
+      renderer_, requested_run.value(), Viewport::FRAGMENT_SHADER_LABEL
+    );
 
     editor_.set_diagnostics(std::move(compilation_result.second));
 
@@ -150,4 +149,4 @@ const gfx::FrameContext Mewo::prepare_new_frame()
   return frame_ctx;
 }
 
-}
+}  // namespace mewo

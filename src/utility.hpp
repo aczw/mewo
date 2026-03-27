@@ -13,8 +13,7 @@ namespace mewo::utility {
 /// Otherwise, it calls `std::unreachable()` which invokes UB.
 template <class Enum>
   requires std::is_enum_v<Enum>
-inline void enum_unreachable(std::string_view enum_name, Enum value)
-{
+inline void enum_unreachable(std::string_view enum_name, Enum value) {
   if constexpr (query::is_debug()) {
     throw Exception("Unhandled {} case: {}", enum_name, std::to_underlying(value));
   } else {
@@ -22,4 +21,4 @@ inline void enum_unreachable(std::string_view enum_name, Enum value)
   }
 }
 
-}
+}  // namespace mewo::utility

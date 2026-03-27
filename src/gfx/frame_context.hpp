@@ -9,4 +9,4 @@ struct FrameContext {
   wgpu::CommandEncoder encoder;
 };
 
-}
+}  // namespace mewo::gfx

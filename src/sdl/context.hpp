@@ -8,17 +8,15 @@ namespace mewo::sdl {
 
 /// Initializes and maintains SDL.
 class Context {
-  public:
+ public:
   static constexpr auto SDL_SUBSYSTEMS = SDL_INIT_VIDEO;
 
-  Context()
-  {
+  Context() {
     if (!SDL_Init(SDL_SUBSYSTEMS))
       throw Exception("Failed to initialize SDL: {}", SDL_GetError());
   }
 
-  ~Context()
-  {
+  ~Context() {
     SDL_QuitSubSystem(SDL_SUBSYSTEMS);
     SDL_Quit();
   }
@@ -27,4 +25,4 @@ class Context {
   Context& operator=(const Context&) = delete;
 };
 
-}
+}  // namespace mewo::sdl

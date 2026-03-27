@@ -12,14 +12,19 @@
 namespace mewo::gui {
 
 class Layout {
-  public:
+ public:
   static constexpr float SPLIT_LEFT_RATIO = 0.5f;
 
   /// Builds the GUI and records additional data into respective classes. Called every frame.
-  void build(Pending& pending, const sdl::Window& window, const Context& gui_ctx, Editor& editor,
-      Viewport& viewport);
+  void build(
+    Pending& pending,
+    const sdl::Window& window,
+    const Context& gui_ctx,
+    Editor& editor,
+    Viewport& viewport
+  );
 
-  private:
+ private:
   /// Sets up the overall docking layout. Only needs to be called once. Can only
   /// be called after a new frame is initiated, so it's not possible in the constructor.
   void set_up_initial_layout(const Context& gui_ctx, ImGuiID dockspace_id) const;
@@ -29,4 +34,4 @@ class Layout {
   uint32_t prev_viewport_window_width_ = 0;
 };
 
-}
+}  // namespace mewo::gui

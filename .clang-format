@@ -1,14 +1,23 @@
-BasedOnStyle: WebKit
+BasedOnStyle: Chromium
 
 ColumnLimit: 100
 UseTab: Never
 IndentWidth: 2
 TabWidth: 2
+ContinuationIndentWidth: 2
 
 InsertNewlineAtEOF: true
 WrapNamespaceBodyWithEmptyLines: Always
 SeparateDefinitionBlocks: Always
 NamespaceIndentation: None
+
+BinPackArguments: false
+BinPackParameters: OnePerLine
+AlignAfterOpenBracket: BlockIndent
+BreakAfterReturnType: Automatic
+PenaltyReturnTypeOnItsOwnLine: 1000
+AllowShortFunctionsOnASingleLine: All
+AllowShortCaseLabelsOnASingleLine: true
 
 IncludeBlocks: Regroup
 IncludeCategories:

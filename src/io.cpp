@@ -12,8 +12,7 @@ namespace mewo::io {
 
 static constexpr std::string_view WGSL_FILE_EXTENSION = ".wgsl";
 
-std::string read_file(const std::filesystem::path& file_path)
-{
+std::string read_file(const std::filesystem::path& file_path) {
   namespace fs = std::filesystem;
 
   auto path_str = file_path.string();
@@ -39,18 +38,19 @@ std::string read_file(const std::filesystem::path& file_path)
   return source;
 }
 
-std::string read_wgsl_shader(const std::filesystem::path& file_path)
-{
+std::string read_wgsl_shader(const std::filesystem::path& file_path) {
   // File path may not exist so it can only be converted weakly
   auto weak_path = std::filesystem::weakly_canonical(file_path);
 
   std::string source = read_file(weak_path);
 
-  if (file_path.extension() != WGSL_FILE_EXTENSION)
-    throw Exception("\"{}\" is not a WGSL shader (does not end with {})", weak_path.string(),
-        WGSL_FILE_EXTENSION);
+  if (file_path.extension() != WGSL_FILE_EXTENSION) {
+    throw Exception(
+      "\"{}\" is not a WGSL shader (does not end with {})", weak_path.string(), WGSL_FILE_EXTENSION
+    );
+  }
 
   return source;
 }
 
-}
+}  // namespace mewo::io

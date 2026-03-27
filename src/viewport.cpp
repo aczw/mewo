@@ -16,9 +16,12 @@
 
 namespace mewo {
 
-Viewport::Viewport(Pending& pending, const Assets& assets, const gfx::Renderer& renderer,
-    std::string_view initial_code)
-{
+Viewport::Viewport(
+  Pending& pending,
+  const Assets& assets,
+  const gfx::Renderer& renderer,
+  std::string_view initial_code
+) {
   const wgpu::Device& device = renderer.device();
   const wgpu::SurfaceConfiguration& surface_config = renderer.surface_config();
 
@@ -30,13 +33,13 @@ Viewport::Viewport(Pending& pending, const Assets& assets, const gfx::Renderer& 
 
   unif_buf_ = device.CreateBuffer(&unif_buf_desc);
 
-  float width
-      = std::floor(static_cast<float>(surface_config.width) * gui::Layout::SPLIT_LEFT_RATIO);
+  float width =
+    std::floor(static_cast<float>(surface_config.width) * gui::Layout::SPLIT_LEFT_RATIO);
   float height = std::floor(width * AspectRatio::get_inverse_value(ratio_preset_));
   auto width_whole = static_cast<uint32_t>(width);
   auto height_whole = static_cast<uint32_t>(height);
 
-  Uniforms unif = { .resolution = { width, height } };
+  Uniforms unif = {.resolution = {width, height}};
   renderer.queue().WriteBuffer(unif_buf_, 0, &unif, sizeof(Uniforms));
 
   wgpu::BindGroupLayoutEntry render_pipeline_unif_bgl_entry = {
@@ -70,7 +73,7 @@ Viewport::Viewport(Pending& pending, const Assets& assets, const gfx::Renderer& 
 
   render_pipeline_bg_ = device.CreateBindGroup(&render_pipeline_bg_desc);
 
-  color_target_state_ = { .format = surface_config.format };
+  color_target_state_ = {.format = surface_config.format};
 
   wgpu::PipelineLayoutDescriptor render_pipeline_layout_desc = {
     .label = "viewport-render-pipeline-layout",
@@ -78,27 +81,32 @@ Viewport::Viewport(Pending& pending, const Assets& assets, const gfx::Renderer& 
     .bindGroupLayouts = &render_pipeline_bgl_,
   };
 
-  const auto& [vert_module_opt, vert_diagnostics] = gfx::create::shader_module_from_wgsl(renderer,
-      io::read_wgsl_shader(assets.get("shaders/viewport.vert.wgsl")), "viewport-vert-shader");
+  const auto& [vert_module_opt, vert_diagnostics] = gfx::create::shader_module_from_wgsl(
+    renderer, io::read_wgsl_shader(assets.get("shaders/viewport.vert.wgsl")), "viewport-vert-shader"
+  );
 
   if (!vert_module_opt.has_value()) {
-    throw Exception("Compiling viewport vertex shader failed! {} diagnostics reported",
-        vert_diagnostics.size());
+    throw Exception(
+      "Compiling viewport vertex shader failed! {} diagnostics reported", vert_diagnostics.size()
+    );
   }
 
   render_pipeline_desc_ = {
     .label = "viewport-render-pipeline",
     .layout = device.CreatePipelineLayout(&render_pipeline_layout_desc),
-    .vertex = { .module = vert_module_opt.value(), .entryPoint = "main" },
+    .vertex = {.module = vert_module_opt.value(), .entryPoint = "main"},
   };
 
   // Compile a default fragment shader to enable render pipeline creation in constructor
-  const auto& [frag_module, frag_diagnostics] = gfx::create::shader_module_from_wgsl(renderer,
-      io::read_wgsl_shader(assets.get("shaders/viewport.frag.wgsl")), FRAGMENT_SHADER_LABEL);
+  const auto& [frag_module, frag_diagnostics] = gfx::create::shader_module_from_wgsl(
+    renderer, io::read_wgsl_shader(assets.get("shaders/viewport.frag.wgsl")), FRAGMENT_SHADER_LABEL
+  );
 
   if (!frag_module.has_value()) {
-    throw Exception("Compiling default viewport fragment shader failed! {} diagnostics reported",
-        frag_diagnostics.size());
+    throw Exception(
+      "Compiling default viewport fragment shader failed! {} diagnostics reported",
+      frag_diagnostics.size()
+    );
   }
 
   update(frag_module.value(), device);
@@ -130,12 +138,15 @@ Viewport::Viewport(Pending& pending, const Assets& assets, const gfx::Renderer& 
 }
 
 void Viewport::record(
-    const wgpu::Queue& queue, const gfx::FrameContext& frame_ctx, float current_time) const
-{
+  const wgpu::Queue& queue,
+  const gfx::FrameContext& frame_ctx,
+  float current_time
+) const {
   Uniforms unif = {
     .time = current_time,
-    .resolution
-    = { static_cast<float>(texture_.GetWidth()), static_cast<float>(texture_.GetHeight()) },
+    .resolution = {
+      static_cast<float>(texture_.GetWidth()), static_cast<float>(texture_.GetHeight())
+    },
   };
 
   queue.WriteBuffer(unif_buf_, 0, &unif, sizeof(Uniforms));
@@ -151,8 +162,7 @@ void Viewport::record(
   }
 }
 
-void Viewport::update(const wgpu::ShaderModule& fragment_module, const wgpu::Device& device)
-{
+void Viewport::update(const wgpu::ShaderModule& fragment_module, const wgpu::Device& device) {
   assert(fragment_module);
 
   fragment_state_ = {
@@ -166,18 +176,17 @@ void Viewport::update(const wgpu::ShaderModule& fragment_module, const wgpu::Dev
   render_pipeline_ = device.CreateRenderPipeline(&render_pipeline_desc_);
 }
 
-void Viewport::resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height)
-{
+void Viewport::resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height) {
   // TODO: on initialization a couple of intermediary resizes occur, including
   // a strange one to a resolution of 16×9 (yes, 16 pixels by 9 pixels)
   texture_desc_.size.width = new_width;
   texture_desc_.size.height = new_height;
   texture_ = device.CreateTexture(&texture_desc_);
 
-  static constexpr wgpu::TextureViewDescriptor VIEW_DESC = { .label = "viewport-view" };
+  static constexpr wgpu::TextureViewDescriptor VIEW_DESC = {.label = "viewport-view"};
 
   view_ = texture_.CreateView(&VIEW_DESC);
   pass_color_attachment_.view = view_;
 }
 
-}
+}  // namespace mewo

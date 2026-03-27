@@ -9,7 +9,7 @@ namespace mewo::gfx {
 
 struct CompilationDiagnostic {
   std::string message;
-  std::string_view type_name; ///< Will reference statically-allocated string.
+  std::string_view type_name;  ///< Will reference statically-allocated string.
   uint64_t line_num = {};
   uint64_t line_pos = {};
   std::string highlight;
@@ -17,4 +17,4 @@ struct CompilationDiagnostic {
 
 using CompilationDiagnostics = std::vector<CompilationDiagnostic>;
 
-}
+}  // namespace mewo::gfx

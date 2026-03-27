@@ -14,30 +14,29 @@ namespace mewo::sdl {
 /// RAII wrapper for `SDL_Window`. Note that copy operations are implicitly deleted
 /// because of the `std::unique_ptr` member.
 class Window {
-  public:
+ public:
   Window();
 
   SDL_Window* get() const { return handle_.get(); }
 
   std::pair<uint32_t, uint32_t> size_in_pixels() const;
 
-  void update_project_in_title(const Project& project)
-  {
+  void update_project_in_title(const Project& project) {
     SDL_SetWindowTitle(handle_.get(), title_from_project_name(project.name()).c_str());
   }
 
-  private:
+ private:
   struct SDLWindowDeleter {
     void operator()(SDL_Window* window) { SDL_DestroyWindow(window); }
   };
 
-  std::string title_from_project_name(std::string_view name)
-  {
+  std::string title_from_project_name(std::string_view name) {
     return std::format(
-        "{}{} — Mewo {}", query::is_debug() ? "[DEBUG] " : "", name, query::version_full());
+      "{}{} — Mewo {}", query::is_debug() ? "[DEBUG] " : "", name, query::version_full()
+    );
   }
 
   std::unique_ptr<SDL_Window, SDLWindowDeleter> handle_;
 };
 
-}
+}  // namespace mewo::sdl
