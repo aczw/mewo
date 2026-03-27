@@ -3,8 +3,8 @@
 #include "editor.hpp"
 #include "gui/context.hpp"
 #include "pending.hpp"
-#include "sdl/window.hpp"
 #include "viewport.hpp"
+#include "window.hpp"
 
 #include <imgui.h>
 #include <webgpu/webgpu_cpp.h>
@@ -18,7 +18,7 @@ class Layout {
   /// Builds the GUI and records additional data into respective classes. Called every frame.
   void build(
     Pending& pending,
-    const sdl::Window& window,
+    const Window& window,
     const Context& gui_ctx,
     Editor& editor,
     Viewport& viewport

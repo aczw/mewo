@@ -2,7 +2,7 @@
 
 #include "error.hpp"
 #include "frame_context.hpp"
-#include "sdl/window.hpp"
+#include "window.hpp"
 
 #include <webgpu/webgpu_cpp.h>
 
@@ -15,7 +15,7 @@ class Renderer {
  public:
   static constexpr auto WAIT_TIMEOUT_MAX = std::numeric_limits<uint64_t>::max();
 
-  Renderer(const sdl::Window& window);
+  Renderer(const Window& window);
 
   ~Renderer() { surface_.Unconfigure(); }
 

@@ -2,7 +2,7 @@
 
 #include "gfx/frame_context.hpp"
 #include "gfx/renderer.hpp"
-#include "sdl/window.hpp"
+#include "window.hpp"
 
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
@@ -23,7 +23,7 @@ class Context {
 
   Context(
     const std::filesystem::path& assets_dir,
-    const sdl::Window& window,
+    const Window& window,
     const gfx::Renderer& renderer
   );
 

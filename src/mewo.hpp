@@ -7,9 +7,8 @@
 #include "gui/layout.hpp"
 #include "pending.hpp"
 #include "project.hpp"
-#include "sdl/context.hpp"
-#include "sdl/window.hpp"
 #include "viewport.hpp"
+#include "window.hpp"
 
 #include <filesystem>
 #include <optional>
@@ -29,8 +28,7 @@ class Mewo {
 
   Pending pending_;
 
-  sdl::Context sdl_ctx_;
-  sdl::Window window_;
+  Window window_;
 
   gfx::Renderer renderer_;
 

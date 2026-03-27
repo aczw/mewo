@@ -26,7 +26,7 @@ static constexpr std::string_view VIEWPORT_WINDOW_NAME = "Viewport";
 
 void Layout::build(
   Pending& pending,
-  const sdl::Window& window,
+  const Window& window,
   const Context& gui_ctx,
   Editor& editor,
   Viewport& viewport

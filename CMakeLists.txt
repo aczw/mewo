@@ -115,14 +115,9 @@ set(MEWO_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(MEWO_ENGINE_DIR ${MEWO_SRC_DIR}/engine)
 set(MEWO_GFX_DIR ${MEWO_SRC_DIR}/gfx)
 set(MEWO_GUI_DIR ${MEWO_SRC_DIR}/gui)
-set(MEWO_SDL_DIR ${MEWO_SRC_DIR}/sdl)
 
 add_executable(mewo
   ${MEWO_ENGINE_DIR}/event.hpp
-
-  ${MEWO_SDL_DIR}/context.hpp
-  ${MEWO_SDL_DIR}/window.cpp
-  ${MEWO_SDL_DIR}/window.hpp
 
   ${MEWO_GFX_DIR}/compilation_diagnostic.hpp
   ${MEWO_GFX_DIR}/create.cpp
@@ -155,6 +150,8 @@ add_executable(mewo
   ${MEWO_SRC_DIR}/utility.hpp
   ${MEWO_SRC_DIR}/viewport.cpp
   ${MEWO_SRC_DIR}/viewport.hpp
+  ${MEWO_SRC_DIR}/window.cpp
+  ${MEWO_SRC_DIR}/window.hpp
 )
 
 # So I can always include files starting from `src` instead of ugly relative paths

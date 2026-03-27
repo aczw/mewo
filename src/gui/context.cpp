@@ -10,7 +10,7 @@ namespace mewo::gui {
 
 Context::Context(
   const std::filesystem::path& assets_dir,
-  const sdl::Window& window,
+  const Window& window,
   const gfx::Renderer& renderer
 ) {
   IMGUI_CHECKVERSION();

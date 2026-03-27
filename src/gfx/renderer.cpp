@@ -38,7 +38,7 @@ std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextureStatus
 
 }  // namespace
 
-Renderer::Renderer(const sdl::Window& window) {
+Renderer::Renderer(const Window& window) {
   auto timed_wait_any = wgpu::InstanceFeatureName::TimedWaitAny;
   wgpu::InstanceDescriptor instance_desc = {
     .requiredFeatureCount = 1,
