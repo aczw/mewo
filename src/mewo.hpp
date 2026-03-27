@@ -3,7 +3,6 @@
 #include "editor.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/gfx.hpp"
-#include "gui/context.hpp"
 #include "gui/layout.hpp"
 #include "pending.hpp"
 #include "project.hpp"
@@ -30,8 +29,6 @@ class Mewo {
 
   Window window_;
   gfx::Gfx gfx_;
-
-  gui::Context gui_ctx_;
   gui::Layout layout_;
 
   Editor editor_;

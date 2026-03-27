@@ -8,6 +8,8 @@
 #include <SDL3/SDL_dialog.h>
 #include <SDL3/SDL_error.h>
 #include <imgui.h>
+#include <imgui_impl_sdl3.h>
+#include <imgui_impl_wgpu.h>
 #include <imgui_internal.h>
 #include <imgui_stdlib.h>
 #include <webgpu/webgpu.h>
@@ -24,21 +26,47 @@ static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
 static constexpr std::string_view DIAGNOSTICS_WINDOW_NAME = "Diagnostics";
 static constexpr std::string_view VIEWPORT_WINDOW_NAME = "Viewport";
 
-void Layout::build(
-  Pending& pending,
-  const Window& window,
-  const Context& gui_ctx,
-  Editor& editor,
-  Viewport& viewport
-) {
+Layout::Layout(const std::filesystem::path& assets_dir, const Window& window, const gfx::Gfx& gfx) {
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+
+  ImGuiIO& io = ImGui::GetIO();
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+  io.IniFilename = nullptr;
+  io.ConfigDpiScaleFonts = true;
+  io.ConfigDpiScaleViewports = true;
+
+  auto inter_path = assets_dir / "fonts/inter_4.1/Inter-Regular.ttf";
+  auto geist_mono_path = assets_dir / "fonts/geist_mono_1.7/GeistMono-Regular.ttf";
+
+  fonts_ = {
+    .inter = io.Fonts->AddFontFromFileTTF(inter_path.string().c_str()),
+    .geist_mono = io.Fonts->AddFontFromFileTTF(geist_mono_path.string().c_str()),
+  };
+
+  ImGui::StyleColorsDark();
+  ImGuiStyle& style = ImGui::GetStyle();
+  style.FontSizeBase = 15.f;
+
+  ImGui_ImplWGPU_InitInfo wgpu_init_info;
+  wgpu_init_info.Device = gfx.device().Get();
+  wgpu_init_info.RenderTargetFormat = static_cast<WGPUTextureFormat>(gfx.surface_config().format);
+  ImGui_ImplWGPU_Init(&wgpu_init_info);
+
+  ImGui_ImplSDL3_InitForOther(window.get());
+
+  // Can be set once upfront because there's only one viewport
+  viewport_ = ImGui::GetMainViewport();
+}
+
+void Layout::build(Pending& pending, const Window& window, Editor& editor, Viewport& viewport) {
   // Once the layout is created, the ID remains constant.
   if (const ImGuiID dockspace_id = ImGui::GetID("main-dockspace");
       ImGui::DockBuilderGetNode(dockspace_id) == nullptr) {
-    set_up_initial_layout(gui_ctx, dockspace_id);
+    set_up_initial_layout(dockspace_id);
   } else {
-    ImGui::DockSpaceOverViewport(
-      dockspace_id, gui_ctx.viewport(), ImGuiDockNodeFlags_PassthruCentralNode
-    );
+    ImGui::DockSpaceOverViewport(dockspace_id, viewport_, ImGuiDockNodeFlags_PassthruCentralNode);
   }
 
   if (ImGui::BeginMainMenuBar()) {
@@ -134,7 +162,7 @@ void Layout::build(
   {
     ImGui::Begin(EDITOR_WINDOW_NAME.data());
 
-    ImGui::PushFont(gui_ctx.fonts().geist_mono, 0.f);
+    ImGui::PushFont(fonts_.geist_mono, 0.f);
     ImVec2 window_size = ImGui::GetContentRegionAvail();
     ImGui::InputTextMultiline("##editor", &editor.visible_code(), window_size);
     ImGui::PopFont();
@@ -145,7 +173,7 @@ void Layout::build(
   {
     ImGui::Begin(DIAGNOSTICS_WINDOW_NAME.data());
 
-    ImGui::PushFont(gui_ctx.fonts().geist_mono, 0.f);
+    ImGui::PushFont(fonts_.geist_mono, 0.f);
     if (const auto& diagnostics = editor.diagnostics(); diagnostics.size() > 0) {
       for (const auto& diag : diagnostics) {
         ImGui::Text(
@@ -304,9 +332,31 @@ void Layout::build(
   }
 }
 
-void Layout::set_up_initial_layout(const Context& gui_ctx, ImGuiID dockspace_id) const {
+void Layout::record(const gfx::FrameContext& frame_ctx) const {
+  ImGui::Render();
+
+  auto& [surface_view, encoder] = frame_ctx;
+
+  wgpu::RenderPassColorAttachment color_attachment = {
+    .view = surface_view,
+    .loadOp = wgpu::LoadOp::Load,
+    .storeOp = wgpu::StoreOp::Store,
+  };
+
+  wgpu::RenderPassDescriptor render_pass_desc = {
+    .label = "imgui-render-pass",
+    .colorAttachmentCount = 1,
+    .colorAttachments = &color_attachment,
+  };
+
+  wgpu::RenderPassEncoder render_pass = encoder.BeginRenderPass(&render_pass_desc);
+  ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), render_pass.Get());
+  render_pass.End();
+}
+
+void Layout::set_up_initial_layout(ImGuiID dockspace_id) const {
   ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
-  ImGui::DockBuilderSetNodeSize(dockspace_id, gui_ctx.viewport()->Size);
+  ImGui::DockBuilderSetNodeSize(dockspace_id, viewport_->Size);
 
   ImGuiID left_id = {};
   ImGuiID right_id = {};

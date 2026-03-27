@@ -56,7 +56,7 @@ Mewo::Mewo()
     : executable_dir_(os::find_executable_dir()),
       assets_dir_(find_assets_dir(executable_dir_)),
       gfx_(window_),
-      gui_ctx_(assets_dir_, window_, gfx_),
+      layout_(assets_dir_, window_, gfx_),
       editor_(assets_dir_),
       viewport_(pending_, assets_dir_, gfx_, editor_.combined_code()) {}
 
@@ -90,10 +90,10 @@ void Mewo::run() {
       }
     }
 
-    layout_.build(pending_, window_, gui_ctx_, editor_, viewport_);
+    layout_.build(pending_, window_, editor_, viewport_);
 
     viewport_.record(queue, frame_ctx, current_time);
-    gui_ctx_.record(frame_ctx);
+    layout_.record(frame_ctx);
 
     static constexpr wgpu::CommandBufferDescriptor CMD_BUF_DESC = {.label = "command-buffer"};
     wgpu::CommandBuffer cmd_buf = frame_ctx.encoder.Finish(&CMD_BUF_DESC);
@@ -187,7 +187,7 @@ const gfx::FrameContext Mewo::prepare_new_frame() {
     requested_run.reset();
   }
 
-  gui_ctx_.prepare_new_frame();
+  layout_.prepare_new_frame();
 
   return frame_ctx;
 }

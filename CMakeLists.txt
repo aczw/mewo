@@ -127,8 +127,6 @@ add_executable(mewo
   ${MEWO_GFX_DIR}/gfx.cpp
   ${MEWO_GFX_DIR}/gfx.hpp
 
-  ${MEWO_GUI_DIR}/context.cpp
-  ${MEWO_GUI_DIR}/context.hpp
   ${MEWO_GUI_DIR}/layout.cpp
   ${MEWO_GUI_DIR}/layout.hpp
 
