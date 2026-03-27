@@ -138,8 +138,6 @@ add_executable(mewo
   ${MEWO_GUI_DIR}/layout.hpp
 
   ${MEWO_SRC_DIR}/aspect_ratio.hpp
-  ${MEWO_SRC_DIR}/assets.cpp
-  ${MEWO_SRC_DIR}/assets.hpp
   ${MEWO_SRC_DIR}/editor.cpp
   ${MEWO_SRC_DIR}/editor.hpp
   ${MEWO_SRC_DIR}/exception.hpp

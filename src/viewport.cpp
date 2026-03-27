@@ -12,13 +12,12 @@
 #include <cassert>
 #include <cmath>
 #include <string_view>
-#include <utility>
 
 namespace mewo {
 
 Viewport::Viewport(
   Pending& pending,
-  const Assets& assets,
+  const std::filesystem::path& assets_dir,
   const gfx::Renderer& renderer,
   std::string_view initial_code
 ) {
@@ -82,7 +81,9 @@ Viewport::Viewport(
   };
 
   const auto& [vert_module_opt, vert_diagnostics] = gfx::create::shader_module_from_wgsl(
-    renderer, io::read_wgsl_shader(assets.get("shaders/viewport.vert.wgsl")), "viewport-vert-shader"
+    renderer,
+    io::read_wgsl_shader(assets_dir / "shaders/viewport.vert.wgsl"),
+    "viewport-vert-shader"
   );
 
   if (!vert_module_opt.has_value()) {
@@ -99,7 +100,7 @@ Viewport::Viewport(
 
   // Compile a default fragment shader to enable render pipeline creation in constructor
   const auto& [frag_module, frag_diagnostics] = gfx::create::shader_module_from_wgsl(
-    renderer, io::read_wgsl_shader(assets.get("shaders/viewport.frag.wgsl")), FRAGMENT_SHADER_LABEL
+    renderer, io::read_wgsl_shader(assets_dir / "shaders/viewport.frag.wgsl"), FRAGMENT_SHADER_LABEL
   );
 
   if (!frag_module.has_value()) {

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "aspect_ratio.hpp"
-#include "assets.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/renderer.hpp"
 #include "pending.hpp"
@@ -10,6 +9,7 @@
 
 #include <array>
 #include <cstdint>
+#include <filesystem>
 #include <string_view>
 
 namespace mewo {
@@ -34,7 +34,7 @@ class Viewport {
 
   Viewport(
     Pending& pending,
-    const Assets& assets,
+    const std::filesystem::path& assets_dir,
     const gfx::Renderer& renderer,
     std::string_view initial_code
   );

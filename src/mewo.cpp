@@ -1,6 +1,5 @@
 #include "mewo.hpp"
 
-#include "assets.hpp"
 #include "editor.hpp"
 #include "exception.hpp"
 #include "gfx/create.hpp"
@@ -14,18 +13,52 @@
 #include <imgui_impl_sdl3.h>
 #include <webgpu/webgpu_cpp.h>
 
+#include <filesystem>
 #include <optional>
 #include <print>
 
 namespace mewo {
 
+namespace {
+
+std::filesystem::path find_assets_dir(const std::filesystem::path& executable_dir) {
+  using namespace std::string_view_literals;
+
+  // There are two possible places where assets can be located, depending on whether
+  // the executable is launched from the build directory (during development), or from
+  // the final release folder. This way I can support both.
+  static constexpr std::array POSSIBLE_ASSETS_DIRS = {
+    "./assets"sv,
+    "../../assets"sv,
+  };
+
+  std::filesystem::path assets_dir;
+
+  for (auto possible_dir : POSSIBLE_ASSETS_DIRS) {
+    if (auto full_path = executable_dir / possible_dir; std::filesystem::exists(full_path)) {
+      assets_dir = std::filesystem::canonical(full_path);
+      break;
+    }
+  }
+
+  if (assets_dir.empty()) [[unlikely]] {
+    throw Exception("Assets directory was not found");
+  } else {
+    std::println("Assets directory: {}", assets_dir.string());
+  }
+
+  return assets_dir;
+}
+
+}  // namespace
+
 Mewo::Mewo()
     : executable_dir_(os::find_executable_dir()),
-      assets_(executable_dir_),
+      assets_dir_(find_assets_dir(executable_dir_)),
       renderer_(window_),
-      gui_ctx_(assets_, window_, renderer_),
-      editor_(assets_),
-      viewport_(pending_, assets_, renderer_, editor_.combined_code()) {}
+      gui_ctx_(assets_dir_, window_, renderer_),
+      editor_(assets_dir_),
+      viewport_(pending_, assets_dir_, renderer_, editor_.combined_code()) {}
 
 void Mewo::run() {
   SDL_Event event = {};

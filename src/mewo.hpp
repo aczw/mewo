@@ -1,6 +1,5 @@
 #pragma once
 
-#include "assets.hpp"
 #include "editor.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/renderer.hpp"
@@ -26,9 +25,9 @@ class Mewo {
 
  private:
   std::filesystem::path executable_dir_;
+  std::filesystem::path assets_dir_;
 
   Pending pending_;
-  Assets assets_;
 
   sdl::Context sdl_ctx_;
   sdl::Window window_;

@@ -8,7 +8,11 @@
 
 namespace mewo::gui {
 
-Context::Context(const Assets& assets, const sdl::Window& window, const gfx::Renderer& renderer) {
+Context::Context(
+  const std::filesystem::path& assets_dir,
+  const sdl::Window& window,
+  const gfx::Renderer& renderer
+) {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
 
@@ -17,12 +21,12 @@ Context::Context(const Assets& assets, const sdl::Window& window, const gfx::Ren
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   io.IniFilename = nullptr;
 
-  auto inter_path = assets.get("fonts/inter_4.1/Inter-Regular.ttf").string();
-  auto geist_mono_path = assets.get("fonts/geist_mono_1.7/GeistMono-Regular.ttf").string();
+  auto inter_path = assets_dir / "fonts/inter_4.1/Inter-Regular.ttf";
+  auto geist_mono_path = assets_dir / "fonts/geist_mono_1.7/GeistMono-Regular.ttf";
 
   fonts_ = {
-    .inter = io.Fonts->AddFontFromFileTTF(inter_path.c_str()),
-    .geist_mono = io.Fonts->AddFontFromFileTTF(geist_mono_path.c_str()),
+    .inter = io.Fonts->AddFontFromFileTTF(inter_path.string().c_str()),
+    .geist_mono = io.Fonts->AddFontFromFileTTF(geist_mono_path.string().c_str()),
   };
 
   io.ConfigDpiScaleFonts = true;

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "assets.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/renderer.hpp"
 #include "sdl/window.hpp"
@@ -9,6 +8,8 @@
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_wgpu.h>
 #include <webgpu/webgpu_cpp.h>
+
+#include <filesystem>
 
 namespace mewo::gui {
 
@@ -20,7 +21,11 @@ class Context {
     ImFont* geist_mono = nullptr;
   };
 
-  Context(const Assets& assets, const sdl::Window& window, const gfx::Renderer& renderer);
+  Context(
+    const std::filesystem::path& assets_dir,
+    const sdl::Window& window,
+    const gfx::Renderer& renderer
+  );
 
   ~Context() {
     ImGui_ImplWGPU_Shutdown();
