@@ -20,7 +20,7 @@
 #include <string_view>
 #include <utility>
 
-namespace mewo::gui {
+namespace mewo::ui {
 
 static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
 static constexpr std::string_view DIAGNOSTICS_WINDOW_NAME = "Diagnostics";
@@ -373,4 +373,4 @@ void Layout::set_up_initial_layout(ImGuiID dockspace_id) const {
   ImGui::DockBuilderFinish(dockspace_id);
 }
 
-}  // namespace mewo::gui
+}  // namespace mewo::ui

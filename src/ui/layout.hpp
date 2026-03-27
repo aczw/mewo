@@ -13,7 +13,7 @@
 
 #include <filesystem>
 
-namespace mewo::gui {
+namespace mewo::ui {
 
 class Layout {
  public:
@@ -56,4 +56,4 @@ class Layout {
   uint32_t prev_viewport_window_width_ = 0;
 };
 
-}  // namespace mewo::gui
+}  // namespace mewo::ui

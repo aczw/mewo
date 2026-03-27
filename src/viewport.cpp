@@ -32,8 +32,7 @@ Viewport::Viewport(
 
   unif_buf_ = device.CreateBuffer(&unif_buf_desc);
 
-  float width =
-    std::floor(static_cast<float>(surface_config.width) * gui::Layout::SPLIT_LEFT_RATIO);
+  float width = std::floor(static_cast<float>(surface_config.width) * ui::Layout::SPLIT_LEFT_RATIO);
   float height = std::floor(width * AspectRatio::get_inverse_value(ratio_preset_));
   auto width_whole = static_cast<uint32_t>(width);
   auto height_whole = static_cast<uint32_t>(height);
