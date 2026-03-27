@@ -10,7 +10,7 @@ namespace mewo {
 
 class Editor {
  public:
-  Editor(const Assets& assets);
+  explicit Editor(const Assets& assets);
 
   std::string& visible_code() { return visible_code_; }
 

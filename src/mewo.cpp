@@ -6,6 +6,7 @@
 #include "gfx/create.hpp"
 #include "gfx/frame_context.hpp"
 #include "io.hpp"
+#include "os.hpp"
 #include "project.hpp"
 #include "query.hpp"
 
@@ -16,52 +17,10 @@
 #include <optional>
 #include <print>
 
-#if defined(SDL_PLATFORM_MACOS)
-#include <mach-o/dyld.h>
-#include <vector>
-#elif defined(SDL_PLATFORM_WIN32)
-#include <array>
-#include <windows.h>
-#endif
-
 namespace mewo {
 
-namespace {
-
-std::filesystem::path find_executable_dir() {
-  static constexpr size_t MAX_FILE_PATH_LENGTH = 1024;
-
-#if defined(SDL_PLATFORM_MACOS)
-  uint32_t buf_size = MAX_FILE_PATH_LENGTH;
-  std::vector<char> path_vec(buf_size);
-
-  if (_NSGetExecutablePath(path_vec.data(), &buf_size) == -1) {
-    path_vec.resize(buf_size);
-
-    // Resize and try again. If it fails again, then we're in big trouble
-    if (_NSGetExecutablePath(path_vec.data(), &buf_size) == -1)
-      throw Exception("Call to _NSGetExecutablePath failed: buffer size not large enough");
-  }
-
-  // Path returned by `_NSGetExecutablePath` needs to be resolved
-  return std::filesystem::canonical(path_vec.data()).parent_path();
-#elif defined(SDL_PLATFORM_WIN32)
-  std::array<wchar_t, MAX_FILE_PATH_LENGTH> path_arr = {};
-
-  if (GetModuleFileNameW(nullptr, path_arr.data(), MAX_FILE_PATH_LENGTH) == 0)
-    throw Exception("Call to GetModuleFileNameW failed");
-
-  return std::filesystem::path(path_arr.data()).parent_path();
-#else
-#error "Unsupported platform. Supported platforms are macOS and Windows"
-  throw Exception("Unsupported platform. Supported platforms are macOS and Windows");
-#endif
-}
-
-}  // namespace
-
 Mewo::Mewo()
-    : executable_dir_(find_executable_dir()),
+    : executable_dir_(os::find_executable_dir()),
       assets_(executable_dir_),
       renderer_(window_),
       gui_ctx_(assets_, window_, renderer_),

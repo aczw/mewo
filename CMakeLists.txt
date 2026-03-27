@@ -145,6 +145,8 @@ add_executable(mewo
   ${MEWO_SRC_DIR}/main.cpp
   ${MEWO_SRC_DIR}/mewo.cpp
   ${MEWO_SRC_DIR}/mewo.hpp
+  ${MEWO_SRC_DIR}/os.cpp
+  ${MEWO_SRC_DIR}/os.hpp
   ${MEWO_SRC_DIR}/pending.hpp
   ${MEWO_SRC_DIR}/project.cpp
   ${MEWO_SRC_DIR}/project.hpp
