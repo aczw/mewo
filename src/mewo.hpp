@@ -3,9 +3,9 @@
 #include "editor.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/gfx.hpp"
-#include "gui/layout.hpp"
 #include "pending.hpp"
 #include "project.hpp"
+#include "ui/layout.hpp"
 #include "viewport.hpp"
 #include "window.hpp"
 

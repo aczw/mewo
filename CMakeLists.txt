@@ -94,7 +94,7 @@ endif()
 target_compile_definitions(imgui PUBLIC
   IMGUI_IMPL_WEBGPU_BACKEND_DAWN
   # Use our own imconfig.h file because I don't want to modify Git submodule
-  IMGUI_USER_CONFIG="../../src/gui/imconfig.h"
+  IMGUI_USER_CONFIG="../../src/ui/imconfig.h"
 )
 # Let Dear ImGui find its own files, and set it to PUBLIC so that it also propagates to Mewo
 # when it links against the target. Also include some subdirectories so I don't have to prefix
@@ -114,7 +114,7 @@ add_subdirectory(${MEWO_THIRD_PARTY_DIR}/nlohmann_json EXCLUDE_FROM_ALL)
 set(MEWO_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(MEWO_ENGINE_DIR ${MEWO_SRC_DIR}/engine)
 set(MEWO_GFX_DIR ${MEWO_SRC_DIR}/gfx)
-set(MEWO_GUI_DIR ${MEWO_SRC_DIR}/gui)
+set(MEWO_UI_DIR ${MEWO_SRC_DIR}/ui)
 
 add_executable(mewo
   ${MEWO_ENGINE_DIR}/event.hpp
@@ -127,8 +127,8 @@ add_executable(mewo
   ${MEWO_GFX_DIR}/gfx.cpp
   ${MEWO_GFX_DIR}/gfx.hpp
 
-  ${MEWO_GUI_DIR}/layout.cpp
-  ${MEWO_GUI_DIR}/layout.hpp
+  ${MEWO_UI_DIR}/layout.cpp
+  ${MEWO_UI_DIR}/layout.hpp
 
   ${MEWO_SRC_DIR}/aspect_ratio.hpp
   ${MEWO_SRC_DIR}/editor.cpp
