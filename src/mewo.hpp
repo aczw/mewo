@@ -29,8 +29,7 @@ class Mewo {
   Pending pending_;
 
   Window window_;
-
-  gfx::Renderer renderer_;
+  gfx::Gfx gfx_;
 
   gui::Context gui_ctx_;
   gui::Layout layout_;

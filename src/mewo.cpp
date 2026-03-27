@@ -55,16 +55,16 @@ std::filesystem::path find_assets_dir(const std::filesystem::path& executable_di
 Mewo::Mewo()
     : executable_dir_(os::find_executable_dir()),
       assets_dir_(find_assets_dir(executable_dir_)),
-      renderer_(window_),
-      gui_ctx_(assets_dir_, window_, renderer_),
+      gfx_(window_),
+      gui_ctx_(assets_dir_, window_, gfx_),
       editor_(assets_dir_),
-      viewport_(pending_, assets_dir_, renderer_, editor_.combined_code()) {}
+      viewport_(pending_, assets_dir_, gfx_, editor_.combined_code()) {}
 
 void Mewo::run() {
   SDL_Event event = {};
 
-  const wgpu::Device& device = renderer_.device();
-  const wgpu::Queue& queue = renderer_.queue();
+  const wgpu::Device& device = gfx_.device();
+  const wgpu::Queue& queue = gfx_.queue();
 
   while (!pending_.quit()) {
     device.Tick();
@@ -84,7 +84,7 @@ void Mewo::run() {
 
         case SDL_EVENT_WINDOW_RESIZED: {
           auto [new_width, new_height] = window_.size_in_pixels();
-          renderer_.resize(new_width, new_height);
+          gfx_.resize(new_width, new_height);
           break;
         }
       }
@@ -99,12 +99,12 @@ void Mewo::run() {
     wgpu::CommandBuffer cmd_buf = frame_ctx.encoder.Finish(&CMD_BUF_DESC);
 
     queue.Submit(1, &cmd_buf);
-    renderer_.surface().Present();
+    gfx_.surface().Present();
   }
 }
 
 const gfx::FrameContext Mewo::prepare_new_frame() {
-  const gfx::FrameContext frame_ctx = renderer_.prepare_new_frame();
+  const gfx::FrameContext frame_ctx = gfx_.prepare_new_frame();
 
   if (auto& requested_open = pending_.project_open(); requested_open) {
     try {
@@ -158,7 +158,7 @@ const gfx::FrameContext Mewo::prepare_new_frame() {
     if constexpr (query::is_debug())
       std::println("Viewport texture resized to {}×{}", new_width, new_height);
 
-    viewport_.resize(renderer_.device(), new_width, new_height);
+    viewport_.resize(gfx_.device(), new_width, new_height);
     requested_resize.reset();
   }
 
@@ -166,7 +166,7 @@ const gfx::FrameContext Mewo::prepare_new_frame() {
     // TODO: check if the code is the same before creating new fragment shader module
     // (how expensive is this anyway?)
     auto compilation_result = gfx::create::shader_module_from_wgsl(
-      renderer_, requested_run.value(), Viewport::FRAGMENT_SHADER_LABEL
+      gfx_, requested_run.value(), Viewport::FRAGMENT_SHADER_LABEL
     );
 
     editor_.set_diagnostics(std::move(compilation_result.second));
@@ -175,7 +175,7 @@ const gfx::FrameContext Mewo::prepare_new_frame() {
       std::println("Shader compilation generated {} diagnostic(s)", editor_.diagnostics().size());
 
     if (const auto& fragment_module = compilation_result.first; fragment_module) {
-      viewport_.update(fragment_module.value(), renderer_.device());
+      viewport_.update(fragment_module.value(), gfx_.device());
 
       if constexpr (query::is_debug())
         std::println("Updated viewport render pipeline");

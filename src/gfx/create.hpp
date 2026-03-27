@@ -15,7 +15,7 @@ using ShaderCompilationResult =
   std::pair<std::optional<wgpu::ShaderModule>, gfx::CompilationDiagnostics>;
 
 ShaderCompilationResult shader_module_from_wgsl(
-  const Renderer& renderer,
+  const Gfx& gfx,
   std::string_view code,
   std::string_view label
 );

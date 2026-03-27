@@ -35,7 +35,7 @@ class Viewport {
   Viewport(
     Pending& pending,
     const std::filesystem::path& assets_dir,
-    const gfx::Renderer& renderer,
+    const gfx::Gfx& gfx,
     std::string_view initial_code
   );
 

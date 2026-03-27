@@ -11,17 +11,17 @@
 
 namespace mewo::gfx {
 
-class Renderer {
+class Gfx {
  public:
   static constexpr auto WAIT_TIMEOUT_MAX = std::numeric_limits<uint64_t>::max();
 
-  Renderer(const Window& window);
+  Gfx(const Window& window);
 
-  ~Renderer() { surface_.Unconfigure(); }
+  ~Gfx() { surface_.Unconfigure(); }
 
-  Renderer(const Renderer&) = delete;
+  Gfx(const Gfx&) = delete;
 
-  Renderer& operator=(const Renderer&) = delete;
+  Gfx& operator=(const Gfx&) = delete;
 
   const wgpu::Instance& instance() const { return instance_; }
 

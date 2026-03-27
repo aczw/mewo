@@ -21,11 +21,7 @@ class Context {
     ImFont* geist_mono = nullptr;
   };
 
-  Context(
-    const std::filesystem::path& assets_dir,
-    const Window& window,
-    const gfx::Renderer& renderer
-  );
+  Context(const std::filesystem::path& assets_dir, const Window& window, const gfx::Gfx& gfx);
 
   ~Context() {
     ImGui_ImplWGPU_Shutdown();

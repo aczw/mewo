@@ -38,7 +38,7 @@ std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextureStatus
 
 }  // namespace
 
-Renderer::Renderer(const Window& window) {
+Gfx::Gfx(const Window& window) {
   auto timed_wait_any = wgpu::InstanceFeatureName::TimedWaitAny;
   wgpu::InstanceDescriptor instance_desc = {
     .requiredFeatureCount = 1,
@@ -207,7 +207,7 @@ Renderer::Renderer(const Window& window) {
   queue_ = device_.GetQueue();
 }
 
-FrameContext Renderer::prepare_new_frame() {
+FrameContext Gfx::prepare_new_frame() {
   if (device_lost_error_.has_value()) {
     const Error& error = device_lost_error_.value();
     throw Exception(

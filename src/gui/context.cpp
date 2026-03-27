@@ -11,7 +11,7 @@ namespace mewo::gui {
 Context::Context(
   const std::filesystem::path& assets_dir,
   const Window& window,
-  const gfx::Renderer& renderer
+  const gfx::Gfx& gfx
 ) {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -37,9 +37,8 @@ Context::Context(
   style.FontSizeBase = 15.f;
 
   ImGui_ImplWGPU_InitInfo wgpu_init_info;
-  wgpu_init_info.Device = renderer.device().Get();
-  wgpu_init_info.RenderTargetFormat =
-    static_cast<WGPUTextureFormat>(renderer.surface_config().format);
+  wgpu_init_info.Device = gfx.device().Get();
+  wgpu_init_info.RenderTargetFormat = static_cast<WGPUTextureFormat>(gfx.surface_config().format);
   ImGui_ImplWGPU_Init(&wgpu_init_info);
 
   ImGui_ImplSDL3_InitForOther(window.get());

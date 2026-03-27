@@ -18,11 +18,11 @@ namespace mewo {
 Viewport::Viewport(
   Pending& pending,
   const std::filesystem::path& assets_dir,
-  const gfx::Renderer& renderer,
+  const gfx::Gfx& gfx,
   std::string_view initial_code
 ) {
-  const wgpu::Device& device = renderer.device();
-  const wgpu::SurfaceConfiguration& surface_config = renderer.surface_config();
+  const wgpu::Device& device = gfx.device();
+  const wgpu::SurfaceConfiguration& surface_config = gfx.surface_config();
 
   wgpu::BufferDescriptor unif_buf_desc = {
     .label = "viewport-uniform-buffer",
@@ -39,7 +39,7 @@ Viewport::Viewport(
   auto height_whole = static_cast<uint32_t>(height);
 
   Uniforms unif = {.resolution = {width, height}};
-  renderer.queue().WriteBuffer(unif_buf_, 0, &unif, sizeof(Uniforms));
+  gfx.queue().WriteBuffer(unif_buf_, 0, &unif, sizeof(Uniforms));
 
   wgpu::BindGroupLayoutEntry render_pipeline_unif_bgl_entry = {
     .binding = 0,
@@ -81,9 +81,7 @@ Viewport::Viewport(
   };
 
   const auto& [vert_module_opt, vert_diagnostics] = gfx::create::shader_module_from_wgsl(
-    renderer,
-    io::read_wgsl_shader(assets_dir / "shaders/viewport.vert.wgsl"),
-    "viewport-vert-shader"
+    gfx, io::read_wgsl_shader(assets_dir / "shaders/viewport.vert.wgsl"), "viewport-vert-shader"
   );
 
   if (!vert_module_opt.has_value()) {
@@ -100,7 +98,7 @@ Viewport::Viewport(
 
   // Compile a default fragment shader to enable render pipeline creation in constructor
   const auto& [frag_module, frag_diagnostics] = gfx::create::shader_module_from_wgsl(
-    renderer, io::read_wgsl_shader(assets_dir / "shaders/viewport.frag.wgsl"), FRAGMENT_SHADER_LABEL
+    gfx, io::read_wgsl_shader(assets_dir / "shaders/viewport.frag.wgsl"), FRAGMENT_SHADER_LABEL
   );
 
   if (!frag_module.has_value()) {
