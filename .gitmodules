@@ -10,3 +10,6 @@
 [submodule "third_party/freetype"]
 	path = third_party/freetype
 	url = https://github.com/freetype/freetype
+[submodule "third_party/nlohmann_json"]
+	path = third_party/nlohmann_json
+	url = https://github.com/nlohmann/json

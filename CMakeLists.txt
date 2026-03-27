@@ -106,6 +106,11 @@ target_include_directories(imgui PUBLIC
 )
 target_link_libraries(imgui PRIVATE dawn::webgpu_dawn SDL3::SDL3 freetype)
 
+# Set up nlohmann/json
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+set(JSON_Install OFF CACHE INTERNAL "")
+add_subdirectory(${MEWO_THIRD_PARTY_DIR}/nlohmann_json EXCLUDE_FROM_ALL)
+
 set(MEWO_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(MEWO_GFX_DIR ${MEWO_SRC_DIR}/gfx)
 set(MEWO_GUI_DIR ${MEWO_SRC_DIR}/gui)
@@ -202,6 +207,7 @@ target_link_libraries(mewo PRIVATE
   dawn::webgpu_dawn
   SDL3::SDL3
   imgui
+  nlohmann_json::nlohmann_json
 )
 
 set(MEWO_DIST_README_FILE_PATH ${CMAKE_CURRENT_BINARY_DIR}/packaging/README.txt)
