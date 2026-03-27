@@ -2,7 +2,7 @@
 
 #include "exception.hpp"
 #include "gfx/compilation_diagnostic.hpp"
-#include "gfx/renderer.hpp"
+#include "gfx/gfx.hpp"
 #include "utility.hpp"
 
 #include <webgpu/webgpu_cpp.h>

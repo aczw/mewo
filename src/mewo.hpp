@@ -2,7 +2,7 @@
 
 #include "editor.hpp"
 #include "gfx/frame_context.hpp"
-#include "gfx/renderer.hpp"
+#include "gfx/gfx.hpp"
 #include "gui/context.hpp"
 #include "gui/layout.hpp"
 #include "pending.hpp"

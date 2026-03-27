@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gfx/compilation_diagnostic.hpp"
-#include "gfx/renderer.hpp"
+#include "gfx/gfx.hpp"
 
 #include <webgpu/webgpu_cpp.h>
 

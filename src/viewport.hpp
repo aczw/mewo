@@ -2,7 +2,7 @@
 
 #include "aspect_ratio.hpp"
 #include "gfx/frame_context.hpp"
-#include "gfx/renderer.hpp"
+#include "gfx/gfx.hpp"
 #include "pending.hpp"
 
 #include <webgpu/webgpu_cpp.h>

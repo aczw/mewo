@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gfx/frame_context.hpp"
-#include "gfx/renderer.hpp"
+#include "gfx/gfx.hpp"
 #include "window.hpp"
 
 #include <imgui.h>

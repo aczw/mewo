@@ -1,4 +1,4 @@
-#include "renderer.hpp"
+#include "gfx.hpp"
 
 #include "exception.hpp"
 #include "query.hpp"

@@ -3,7 +3,7 @@
 #include "aspect_ratio.hpp"
 #include "exception.hpp"
 #include "gfx/create.hpp"
-#include "gfx/renderer.hpp"
+#include "gfx/gfx.hpp"
 #include "gui/layout.hpp"
 #include "io.hpp"
 
