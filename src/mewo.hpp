@@ -29,7 +29,7 @@ class Mewo {
 
   Window window_;
   gfx::Gfx gfx_;
-  ui::Layout layout_;
+  ui::Gui gui_;
 
   Editor editor_;
   Viewport viewport_;

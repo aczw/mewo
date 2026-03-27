@@ -26,7 +26,7 @@ static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
 static constexpr std::string_view DIAGNOSTICS_WINDOW_NAME = "Diagnostics";
 static constexpr std::string_view VIEWPORT_WINDOW_NAME = "Viewport";
 
-Layout::Layout(const std::filesystem::path& assets_dir, const Window& window, const gfx::Gfx& gfx) {
+Gui::Gui(const std::filesystem::path& assets_dir, const Window& window, const gfx::Gfx& gfx) {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
 
@@ -60,7 +60,7 @@ Layout::Layout(const std::filesystem::path& assets_dir, const Window& window, co
   viewport_ = ImGui::GetMainViewport();
 }
 
-void Layout::build(Pending& pending, const Window& window, Editor& editor, Viewport& viewport) {
+void Gui::build(Pending& pending, const Window& window, Editor& editor, Viewport& viewport) {
   // Once the layout is created, the ID remains constant.
   if (const ImGuiID dockspace_id = ImGui::GetID("main-dockspace");
       ImGui::DockBuilderGetNode(dockspace_id) == nullptr) {
@@ -332,7 +332,7 @@ void Layout::build(Pending& pending, const Window& window, Editor& editor, Viewp
   }
 }
 
-void Layout::record(const gfx::FrameContext& frame_ctx) const {
+void Gui::record(const gfx::FrameContext& frame_ctx) const {
   ImGui::Render();
 
   auto& [surface_view, encoder] = frame_ctx;
@@ -354,7 +354,7 @@ void Layout::record(const gfx::FrameContext& frame_ctx) const {
   render_pass.End();
 }
 
-void Layout::set_up_initial_layout(ImGuiID dockspace_id) const {
+void Gui::set_up_initial_layout(ImGuiID dockspace_id) const {
   ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
   ImGui::DockBuilderSetNodeSize(dockspace_id, viewport_->Size);
 

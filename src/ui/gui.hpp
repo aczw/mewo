@@ -15,13 +15,13 @@
 
 namespace mewo::ui {
 
-class Layout {
+class Gui {
  public:
   static constexpr float SPLIT_LEFT_RATIO = 0.5f;
 
-  Layout(const std::filesystem::path& assets_dir, const Window& window, const gfx::Gfx& gfx);
+  Gui(const std::filesystem::path& assets_dir, const Window& window, const gfx::Gfx& gfx);
 
-  ~Layout() {
+  ~Gui() {
     ImGui_ImplWGPU_Shutdown();
     ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
