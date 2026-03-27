@@ -8,50 +8,9 @@
 #include <filesystem>
 #include <print>
 
-#if defined(SDL_PLATFORM_MACOS)
-#include <mach-o/dyld.h>
-#include <vector>
-#elif defined(SDL_PLATFORM_WIN32)
-#include <windows.h>
-#endif
-
 namespace mewo {
 
-namespace {
-
-std::filesystem::path find_executable_directory() {
-  static constexpr size_t MAX_FILE_PATH_LENGTH = 1024;
-
-#if defined(SDL_PLATFORM_MACOS)
-  uint32_t buf_size = MAX_FILE_PATH_LENGTH;
-  std::vector<char> path_vec(buf_size);
-
-  if (_NSGetExecutablePath(path_vec.data(), &buf_size) == -1) {
-    path_vec.resize(buf_size);
-
-    // Resize and try again. If it fails again, then we're in big trouble
-    if (_NSGetExecutablePath(path_vec.data(), &buf_size) == -1)
-      throw Exception("Call to _NSGetExecutablePath failed: buffer size not large enough");
-  }
-
-  // `_NSGetExecutablePath` needs to be resolved
-  return std::filesystem::canonical(path_vec.data()).parent_path();
-#elif defined(SDL_PLATFORM_WIN32)
-  std::array<wchar_t, MAX_FILE_PATH_LENGTH> path_arr = {};
-
-  if (GetModuleFileNameW(nullptr, path_arr.data(), MAX_FILE_PATH_LENGTH) == 0)
-    throw Exception("Call to GetModuleFileNameW failed");
-
-  return std::filesystem::path(path_arr.data()).parent_path();
-#else
-#error "Unsupported platform. Supported platforms are macOS and Windows"
-  throw Exception("Unsupported platform. Supported platforms are macOS and Windows");
-#endif
-}
-
-}  // namespace
-
-Assets::Assets() : executable_directory_(find_executable_directory()) {
+Assets::Assets(const std::filesystem::path& executable_dir) {
   using namespace std::string_view_literals;
 
   // There are two possible places where assets can be located, depending on whether
@@ -63,16 +22,16 @@ Assets::Assets() : executable_directory_(find_executable_directory()) {
   };
 
   for (auto asset_dir : POSSIBLE_ASSETS_DIRS) {
-    if (auto full_path = executable_directory_ / asset_dir; std::filesystem::exists(full_path)) {
-      assets_directory_ = std::filesystem::canonical(full_path);
+    if (auto full_path = executable_dir / asset_dir; std::filesystem::exists(full_path)) {
+      directory_ = std::filesystem::canonical(full_path);
       break;
     }
   }
 
-  if (assets_directory_.empty()) {
+  if (directory_.empty()) {
     throw Exception("Assets directory was not found");
   } else {
-    std::println("Assets directory found at \"{}\"", assets_directory_.string());
+    std::println("Assets directory found at \"{}\"", directory_.string());
   }
 }
 

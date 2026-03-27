@@ -12,22 +12,21 @@
 #include "sdl/window.hpp"
 #include "viewport.hpp"
 
+#include <filesystem>
 #include <optional>
 
 namespace mewo {
 
 class Mewo {
  public:
-  Mewo()
-      : renderer_(window_),
-        gui_ctx_(assets_, window_, renderer_),
-        editor_(assets_),
-        viewport_(pending_, assets_, renderer_, editor_.combined_code()) {}
+  Mewo();
 
   void run();
   const gfx::FrameContext prepare_new_frame();
 
  private:
+  std::filesystem::path executable_dir_;
+
   Pending pending_;
   Assets assets_;
 

@@ -7,15 +7,14 @@ namespace mewo {
 
 class Assets {
  public:
-  Assets();
+  explicit Assets(const std::filesystem::path& executable_dir);
 
   std::filesystem::path get(std::string_view relative_path) const {
-    return assets_directory_ / relative_path;
+    return directory_ / relative_path;
   }
 
  private:
-  std::filesystem::path executable_directory_;
-  std::filesystem::path assets_directory_;
+  std::filesystem::path directory_;
 };
 
 }  // namespace mewo
