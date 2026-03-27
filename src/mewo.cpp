@@ -61,16 +61,13 @@ Mewo::Mewo()
       viewport_(pending_, assets_dir_, gfx_, editor_.combined_code()) {}
 
 void Mewo::run() {
-  SDL_Event event = {};
+  const auto& device = gfx_.device();
+  const auto& queue = gfx_.queue();
 
-  const wgpu::Device& device = gfx_.device();
-  const wgpu::Queue& queue = gfx_.queue();
+  SDL_Event event = {};
 
   while (!pending_.quit()) {
     device.Tick();
-
-    const gfx::FrameContext frame_ctx = prepare_new_frame();
-    float current_time = static_cast<float>(SDL_GetTicksNS()) / 1'000'000'000.f;
 
     while (SDL_PollEvent(&event)) {
       ImGui_ImplSDL3_ProcessEvent(&event);
@@ -84,11 +81,14 @@ void Mewo::run() {
 
         case SDL_EVENT_WINDOW_RESIZED: {
           auto [new_width, new_height] = window_.size_in_pixels();
-          gfx_.resize(new_width, new_height);
+          gfx_.resize_surface(new_width, new_height);
           break;
         }
       }
     }
+
+    const gfx::FrameContext frame_ctx = prepare_new_frame();
+    float current_time = static_cast<float>(SDL_GetTicksNS()) / 1'000'000'000.f;
 
     gui_.build(pending_, window_, editor_, viewport_);
 

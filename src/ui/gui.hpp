@@ -44,9 +44,6 @@ class Gui {
     ImFont* geist_mono = nullptr;
   };
 
-  Fonts fonts_;
-  ImGuiViewport* viewport_ = nullptr;
-
   /// Sets up the overall docking layout. Only needs to be called once. Can only
   /// be called after a new frame is initiated, so it's not possible in the constructor.
   void set_up_initial_layout(ImGuiID dockspace_id) const;
@@ -54,6 +51,9 @@ class Gui {
   /// Needs to be cached every frame. Will be checked to see if the viewport texture
   /// needs to be resized. Only relevant when the viewport mode is `AspectRatio`.
   uint32_t prev_viewport_window_width_ = 0;
+
+  Fonts fonts_;
+  ImGuiViewport* viewport_ = nullptr;
 };
 
 }  // namespace mewo::ui
