@@ -2,7 +2,9 @@
 
 #include "exception.hpp"
 
+#include <SDL3/SDL_error.h>
 #include <SDL3/SDL_platform_defines.h>
+#include <SDL3/SDL_video.h>
 
 #if defined(SDL_PLATFORM_MACOS)
 #include <mach-o/dyld.h>
@@ -42,6 +44,34 @@ std::filesystem::path find_executable_dir() {
 #error "Unsupported platform. Supported platforms are macOS and Windows"
   throw Exception("Unsupported platform. Supported platforms are macOS and Windows");
 #endif
+}
+
+ImGui_ImplWGPU_CreateSurfaceInfo retrieve_surface_info(
+  const wgpu::Instance& instance,
+  const Window& window
+) {
+  SDL_PropertiesID window_props_id = SDL_GetWindowProperties(window.get());
+
+  if (window_props_id == 0)
+    throw Exception("Failed to get SDL window properties: {}", SDL_GetError());
+
+  return {
+    .Instance = instance.Get(),
+#if defined(SDL_PLATFORM_MACOS)
+    .System = "cocoa",
+    .RawWindow = static_cast<void*>(
+      SDL_GetPointerProperty(window_props_id, SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nullptr)
+    ),
+#elif defined(SDL_PLATFORM_WIN32)
+    .System = "win32",
+    .RawWindow = static_cast<void*>(
+      SDL_GetPointerProperty(window_props_id, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr)
+    ),
+    .RawInstance = static_cast<void*>(GetModuleHandle(nullptr)),
+#else
+#error "Unsupported platform. Supported platforms are macOS and Windows"
+#endif
+  };
 }
 
 }  // namespace mewo::os

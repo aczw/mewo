@@ -1,6 +1,7 @@
 #include "gfx.hpp"
 
 #include "exception.hpp"
+#include "os.hpp"
 #include "query.hpp"
 #include "utility.hpp"
 
@@ -10,14 +11,9 @@
 #include <webgpu/webgpu_cpp.h>
 
 #include <array>
-#include <functional>
 #include <optional>
 #include <print>
 #include <string_view>
-
-#if defined(SDL_PLATFORM_WIN32)
-#include <windows.h>
-#endif
 
 namespace mewo::gfx {
 
@@ -40,6 +36,7 @@ std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextureStatus
 
 Gfx::Gfx(const Window& window) {
   auto timed_wait_any = wgpu::InstanceFeatureName::TimedWaitAny;
+
   wgpu::InstanceDescriptor instance_desc = {
     .requiredFeatureCount = 1,
     .requiredFeatures = &timed_wait_any,
@@ -151,28 +148,7 @@ Gfx::Gfx(const Window& window) {
   if (!device_ || device_status != wgpu::WaitStatus::Success)
     throw Exception("Waiting on wgpu::Adapter::RequestDevice failed");
 
-  SDL_PropertiesID properties_id = SDL_GetWindowProperties(window.get());
-
-  if (properties_id == 0)
-    throw Exception("Failed to get SDL window properties: {}", SDL_GetError());
-
-  ImGui_ImplWGPU_CreateSurfaceInfo create_surface_info = {
-    .Instance = instance_.Get(),
-#if defined(SDL_PLATFORM_MACOS)
-    .System = "cocoa",
-    .RawWindow = static_cast<void*>(
-      SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nullptr)
-    ),
-#elif defined(SDL_PLATFORM_WIN32)
-    .System = "win32",
-    .RawWindow = static_cast<void*>(
-      SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr)
-    ),
-    .RawInstance = static_cast<void*>(GetModuleHandle(nullptr)),
-#else
-#error "Unsupported platform. Supported platforms are macOS and Windows"
-#endif
-  };
+  auto create_surface_info = os::retrieve_surface_info(instance_, window);
 
   if (WGPUSurface raw_surface = ImGui_ImplWGPU_CreateWGPUSurfaceHelper(&create_surface_info);
       !raw_surface) {
