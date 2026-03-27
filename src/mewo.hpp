@@ -5,7 +5,7 @@
 #include "gfx/gfx.hpp"
 #include "pending.hpp"
 #include "project.hpp"
-#include "ui/layout.hpp"
+#include "ui/gui.hpp"
 #include "viewport.hpp"
 #include "window.hpp"
 

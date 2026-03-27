@@ -127,8 +127,8 @@ add_executable(mewo
   ${MEWO_GFX_DIR}/gfx.cpp
   ${MEWO_GFX_DIR}/gfx.hpp
 
-  ${MEWO_UI_DIR}/layout.cpp
-  ${MEWO_UI_DIR}/layout.hpp
+  ${MEWO_UI_DIR}/gui.cpp
+  ${MEWO_UI_DIR}/gui.hpp
 
   ${MEWO_SRC_DIR}/aspect_ratio.hpp
   ${MEWO_SRC_DIR}/editor.cpp

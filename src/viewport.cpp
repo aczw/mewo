@@ -5,7 +5,7 @@
 #include "gfx/create.hpp"
 #include "gfx/gfx.hpp"
 #include "io.hpp"
-#include "ui/layout.hpp"
+#include "ui/gui.hpp"
 
 #include <webgpu/webgpu_cpp.h>
 

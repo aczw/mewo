@@ -1,4 +1,4 @@
-#include "layout.hpp"
+#include "gui.hpp"
 
 #include "aspect_ratio.hpp"
 #include "editor.hpp"
