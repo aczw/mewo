@@ -49,6 +49,11 @@ struct RunRequest {
   std::string fragment_code;  ///< Combined fragment shader.
 };
 
+struct WindowResized {
+  uint32_t new_width = 0;
+  uint32_t new_height = 0;
+};
+
 using Event = std::variant<
   const QuitRequest,
   const ChooseFolderRequest,
@@ -56,7 +61,8 @@ using Event = std::variant<
   const ProjectSaveAsRequest,
   const ProjectSaveRequest,
   const ViewportResizeRequest,
-  const RunRequest
+  const RunRequest,
+  const WindowResized
 >;
 
 }  // namespace mewo

@@ -186,6 +186,11 @@ void Mewo::process_queued_events() {
           }
         },
 
+        [this](const WindowResized& resize) {
+          auto [new_width, new_height] = resize;
+          gfx_.resize_surface(new_width, new_height);
+        },
+
         [](const auto&) { std::unreachable(); },
       },
       event
@@ -208,7 +213,7 @@ void Mewo::update(const gfx::FrameContext& frame_ctx) {
 
       case SDL_EVENT_WINDOW_RESIZED: {
         auto [new_width, new_height] = window_.size_in_pixels();
-        gfx_.resize_surface(new_width, new_height);
+        event_queue_.push(WindowResized{.new_width = new_width, .new_height = new_height});
         break;
       }
     }
