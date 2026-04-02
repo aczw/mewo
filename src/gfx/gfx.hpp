@@ -20,7 +20,6 @@ class Gfx {
   ~Gfx() { surface_.Unconfigure(); }
 
   Gfx(const Gfx&) = delete;
-
   Gfx& operator=(const Gfx&) = delete;
 
   const wgpu::Instance& instance() const { return instance_; }
@@ -35,7 +34,13 @@ class Gfx {
 
   /// Checks if any errors have occurred in the graphics context, and throws accordingly.
   /// Otherwise, it returns a texture view of the current surface and a new command encoder.
-  FrameContext prepare_new_frame();
+  FrameContext begin_frame();
+
+  void update(const wgpu::CommandBuffer& cmd_buf) const {
+    queue_.Submit(1, &cmd_buf);
+    surface_.Present();
+    device_.Tick();
+  }
 
   void resize_surface(uint32_t new_width, uint32_t new_height) {
     surface_config_.width = new_width;

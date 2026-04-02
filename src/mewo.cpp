@@ -65,64 +65,32 @@ Mewo::Mewo()
       viewport_(pending_, assets_dir_, gfx_, editor_.combined_code()) {}
 
 void Mewo::run() {
-  const auto& device = gfx_.device();
-  const auto& queue = gfx_.queue();
-
-  SDL_Event event = {};
-
   while (!should_quit_) {
-    device.Tick();
+    process_queued_events();
+    apply_pending_actions();
 
-    for ([[maybe_unused]] const auto& event : event_queue_.drain()) {
-      using namespace event;
+    const gfx::FrameContext frame_ctx = gfx_.begin_frame();
+    gui_.begin_frame();
 
-      std::visit(
-        util::Match{
-          [this](const QuitRequest&) { should_quit_ = true; },
-          [](const auto&) { std::unreachable(); }
-        },
-        event
-      );
-    }
-
-    while (SDL_PollEvent(&event)) {
-      ImGui_ImplSDL3_ProcessEvent(&event);
-
-      switch (event.type) {
-        case SDL_EVENT_QUIT:
-        case SDL_EVENT_WINDOW_CLOSE_REQUESTED: {
-          event_queue_.push(event::QuitRequest{});
-          break;
-        }
-
-        case SDL_EVENT_WINDOW_RESIZED: {
-          auto [new_width, new_height] = window_.size_in_pixels();
-          gfx_.resize_surface(new_width, new_height);
-          break;
-        }
-      }
-    }
-
-    const gfx::FrameContext frame_ctx = prepare_new_frame();
-
-    gui_.build(event_queue_, pending_, window_, editor_, viewport_);
-
-    float current_time = static_cast<float>(SDL_GetTicksNS()) * 1e-9f;
-
-    viewport_.record(queue, frame_ctx, current_time);
-    gui_.record(frame_ctx);
-
-    static constexpr wgpu::CommandBufferDescriptor CMD_BUF_DESC = {.label = "command-buffer"};
-    wgpu::CommandBuffer cmd_buf = frame_ctx.encoder.Finish(&CMD_BUF_DESC);
-
-    queue.Submit(1, &cmd_buf);
-    gfx_.surface().Present();
+    update(frame_ctx);
   }
 }
 
-const gfx::FrameContext Mewo::prepare_new_frame() {
-  const gfx::FrameContext frame_ctx = gfx_.prepare_new_frame();
+void Mewo::process_queued_events() {
+  for (const auto& event : event_queue_.drain()) {
+    using namespace event;
 
+    std::visit(
+      util::Match{
+        [this](const QuitRequest&) { should_quit_ = true; },
+        [](const auto&) { std::unreachable(); },
+      },
+      event
+    );
+  }
+}
+
+void Mewo::apply_pending_actions() {
   if (auto& requested_open = pending_.project_open(); requested_open) {
     try {
       const auto& project = project_.emplace(requested_open.value());
@@ -203,10 +171,38 @@ const gfx::FrameContext Mewo::prepare_new_frame() {
 
     requested_run.reset();
   }
+}
 
-  gui_.prepare_new_frame();
+void Mewo::update(const gfx::FrameContext& frame_ctx) {
+  SDL_Event event = {};
 
-  return frame_ctx;
+  while (SDL_PollEvent(&event)) {
+    ImGui_ImplSDL3_ProcessEvent(&event);
+
+    switch (event.type) {
+      case SDL_EVENT_QUIT:
+      case SDL_EVENT_WINDOW_CLOSE_REQUESTED: {
+        event_queue_.push(event::QuitRequest{});
+        break;
+      }
+
+      case SDL_EVENT_WINDOW_RESIZED: {
+        auto [new_width, new_height] = window_.size_in_pixels();
+        gfx_.resize_surface(new_width, new_height);
+        break;
+      }
+    }
+  }
+
+  gui_.build(event_queue_, pending_, window_, editor_, viewport_);
+
+  float current_time = static_cast<float>(SDL_GetTicks()) * 1e-3f;
+
+  viewport_.record(gfx_.queue(), frame_ctx, current_time);
+  gui_.record(frame_ctx);
+
+  static constexpr wgpu::CommandBufferDescriptor CMD_BUF_DESC = {.label = "command-buffer"};
+  gfx_.update(frame_ctx.encoder.Finish(&CMD_BUF_DESC));
 }
 
 }  // namespace mewo

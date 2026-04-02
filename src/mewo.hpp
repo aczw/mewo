@@ -22,7 +22,9 @@ class Mewo {
   void run();
 
  private:
-  const gfx::FrameContext prepare_new_frame();
+  void process_queued_events();
+  void apply_pending_actions();
+  void update(const gfx::FrameContext& frame_ctx);
 
   std::filesystem::path executable_dir_;
   std::filesystem::path assets_dir_;

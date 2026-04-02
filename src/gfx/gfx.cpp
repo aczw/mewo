@@ -185,7 +185,7 @@ Gfx::Gfx(const Window& window) {
   queue_ = device_.GetQueue();
 }
 
-FrameContext Gfx::prepare_new_frame() {
+FrameContext Gfx::begin_frame() {
   if (device_lost_error_.has_value()) {
     const Error& error = device_lost_error_.value();
     throw Exception(

@@ -28,7 +28,7 @@ class Gui {
     ImGui::DestroyContext();
   }
 
-  void prepare_new_frame() const {
+  void begin_frame() const {
     ImGui_ImplWGPU_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
