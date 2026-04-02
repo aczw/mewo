@@ -1,8 +1,8 @@
 #pragma once
 
-#include "assets.hpp"
 #include "gfx/compilation_diagnostic.hpp"
 
+#include <filesystem>
 #include <string>
 #include <string_view>
 
@@ -10,7 +10,7 @@ namespace mewo {
 
 class Editor {
  public:
-  Editor(const Assets& assets);
+  explicit Editor(const std::filesystem::path& assets_dir);
 
   std::string& visible_code() { return visible_code_; }
 

@@ -1,27 +1,25 @@
 #pragma once
 
-#include "error.hpp"
+#include "event/event_queue.hpp"
 #include "frame_context.hpp"
-#include "sdl/window.hpp"
+#include "window.hpp"
 
 #include <webgpu/webgpu_cpp.h>
 
 #include <limits>
-#include <optional>
 
 namespace mewo::gfx {
 
-class Renderer {
+class Gfx {
  public:
   static constexpr auto WAIT_TIMEOUT_MAX = std::numeric_limits<uint64_t>::max();
 
-  Renderer(const sdl::Window& window);
+  Gfx(EventQueue& event_queue, const Window& window);
 
-  ~Renderer() { surface_.Unconfigure(); }
+  ~Gfx() { surface_.Unconfigure(); }
 
-  Renderer(const Renderer&) = delete;
-
-  Renderer& operator=(const Renderer&) = delete;
+  Gfx(const Gfx&) = delete;
+  Gfx& operator=(const Gfx&) = delete;
 
   const wgpu::Instance& instance() const { return instance_; }
 
@@ -35,9 +33,15 @@ class Renderer {
 
   /// Checks if any errors have occurred in the graphics context, and throws accordingly.
   /// Otherwise, it returns a texture view of the current surface and a new command encoder.
-  FrameContext prepare_new_frame();
+  const FrameContext begin_frame();
 
-  void resize(uint32_t new_width, uint32_t new_height) {
+  void update(const wgpu::CommandBuffer& cmd_buf) const {
+    queue_.Submit(1, &cmd_buf);
+    surface_.Present();
+    device_.Tick();
+  }
+
+  void resize_surface(uint32_t new_width, uint32_t new_height) {
     surface_config_.width = new_width;
     surface_config_.height = new_height;
     surface_.Configure(&surface_config_);
@@ -50,10 +54,7 @@ class Renderer {
   wgpu::SurfaceConfiguration surface_config_;
   wgpu::Queue queue_;
 
-  // TODO: move these two fields to `Pending` struct? Would then have to deal with
-  // potential concurrent writes to the object as these errors can happen at any time
-  std::optional<Error> device_lost_error_;
-  std::optional<Error> uncaptured_error_;
+  uint64_t frame_count_ = 0;
 };
 
 }  // namespace mewo::gfx

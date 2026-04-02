@@ -2,8 +2,8 @@
 
 #include "exception.hpp"
 #include "gfx/compilation_diagnostic.hpp"
-#include "gfx/renderer.hpp"
-#include "utility.hpp"
+#include "gfx/gfx.hpp"
+#include "util/enum_unreachable.hpp"
 
 #include <webgpu/webgpu_cpp.h>
 
@@ -22,14 +22,14 @@ std::string_view get_compilation_mesage_type(wgpu::CompilationMessageType msg_ty
     case wgpu::CompilationMessageType::Warning: return "warning";
     case wgpu::CompilationMessageType::Info: return "info";
 
-    default: utility::enum_unreachable("wgpu::CompilationMessageType", msg_type);
+    default: util::enum_unreachable("wgpu::CompilationMessageType", msg_type);
   }
 }
 
 }  // namespace
 
 ShaderCompilationResult shader_module_from_wgsl(
-  const Renderer& renderer,
+  const Gfx& gfx,
   std::string_view code,
   std::string_view label
 ) {
@@ -40,11 +40,11 @@ ShaderCompilationResult shader_module_from_wgsl(
     .label = label,
   };
 
-  wgpu::ShaderModule shader = renderer.device().CreateShaderModule(&shader_module_desc);
+  wgpu::ShaderModule shader = gfx.device().CreateShaderModule(&shader_module_desc);
   gfx::CompilationDiagnostics diagnostics;
   bool did_error_occur = false;
 
-  wgpu::WaitStatus shader_status = renderer.instance().WaitAny(
+  wgpu::WaitStatus shader_status = gfx.instance().WaitAny(
     shader.GetCompilationInfo(
       wgpu::CallbackMode::WaitAnyOnly,
       [&diagnostics,
@@ -71,7 +71,7 @@ ShaderCompilationResult shader_module_from_wgsl(
         }
       }
     ),
-    Renderer::WAIT_TIMEOUT_MAX
+    Gfx::WAIT_TIMEOUT_MAX
   );
 
   if (shader_status != wgpu::WaitStatus::Success)

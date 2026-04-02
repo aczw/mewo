@@ -1,10 +1,12 @@
 #include "viewport.hpp"
 
 #include "aspect_ratio.hpp"
+#include "event/event.hpp"
+#include "event/event_queue.hpp"
 #include "exception.hpp"
 #include "gfx/create.hpp"
-#include "gfx/renderer.hpp"
-#include "gui/layout.hpp"
+#include "gfx/gfx.hpp"
+#include "gui/gui.hpp"
 #include "io.hpp"
 
 #include <webgpu/webgpu_cpp.h>
@@ -12,18 +14,17 @@
 #include <cassert>
 #include <cmath>
 #include <string_view>
-#include <utility>
 
 namespace mewo {
 
 Viewport::Viewport(
-  Pending& pending,
-  const Assets& assets,
-  const gfx::Renderer& renderer,
+  EventQueue& event_queue,
+  const std::filesystem::path& assets_dir,
+  const gfx::Gfx& gfx,
   std::string_view initial_code
 ) {
-  const wgpu::Device& device = renderer.device();
-  const wgpu::SurfaceConfiguration& surface_config = renderer.surface_config();
+  const wgpu::Device& device = gfx.device();
+  const wgpu::SurfaceConfiguration& surface_config = gfx.surface_config();
 
   wgpu::BufferDescriptor unif_buf_desc = {
     .label = "viewport-uniform-buffer",
@@ -33,14 +34,13 @@ Viewport::Viewport(
 
   unif_buf_ = device.CreateBuffer(&unif_buf_desc);
 
-  float width =
-    std::floor(static_cast<float>(surface_config.width) * gui::Layout::SPLIT_LEFT_RATIO);
+  float width = std::floor(static_cast<float>(surface_config.width) * Gui::SPLIT_LEFT_RATIO);
   float height = std::floor(width * AspectRatio::get_inverse_value(ratio_preset_));
   auto width_whole = static_cast<uint32_t>(width);
   auto height_whole = static_cast<uint32_t>(height);
 
   Uniforms unif = {.resolution = {width, height}};
-  renderer.queue().WriteBuffer(unif_buf_, 0, &unif, sizeof(Uniforms));
+  gfx.queue().WriteBuffer(unif_buf_, 0, &unif, sizeof(Uniforms));
 
   wgpu::BindGroupLayoutEntry render_pipeline_unif_bgl_entry = {
     .binding = 0,
@@ -82,7 +82,7 @@ Viewport::Viewport(
   };
 
   const auto& [vert_module_opt, vert_diagnostics] = gfx::create::shader_module_from_wgsl(
-    renderer, io::read_wgsl_shader(assets.get("shaders/viewport.vert.wgsl")), "viewport-vert-shader"
+    gfx, io::read_wgsl_shader(assets_dir / "shaders/viewport.vert.wgsl"), "viewport-vert-shader"
   );
 
   if (!vert_module_opt.has_value()) {
@@ -99,7 +99,7 @@ Viewport::Viewport(
 
   // Compile a default fragment shader to enable render pipeline creation in constructor
   const auto& [frag_module, frag_diagnostics] = gfx::create::shader_module_from_wgsl(
-    renderer, io::read_wgsl_shader(assets.get("shaders/viewport.frag.wgsl")), FRAGMENT_SHADER_LABEL
+    gfx, io::read_wgsl_shader(assets_dir / "shaders/viewport.frag.wgsl"), FRAGMENT_SHADER_LABEL
   );
 
   if (!frag_module.has_value()) {
@@ -109,8 +109,8 @@ Viewport::Viewport(
     );
   }
 
-  update(frag_module.value(), device);
-  pending.request_run(initial_code);
+  rebuild_render_pipeline(frag_module.value(), device);
+  event_queue.push(RunRequest{.fragment_code = std::string(initial_code)});
 
   texture_desc_ = {
     .label = "viewport-texture",
@@ -118,7 +118,7 @@ Viewport::Viewport(
     .format = surface_config.format,
   };
 
-  pending.request_viewport_resize(width_whole, height_whole);
+  event_queue.push(ViewportResizeRequest{.new_width = width_whole, .new_height = height_whole});
 
   // Use the width and height from the aspect ratio preset as initial values
   width_ = width_whole;
@@ -137,7 +137,7 @@ Viewport::Viewport(
   };
 }
 
-void Viewport::record(
+void Viewport::update(
   const wgpu::Queue& queue,
   const gfx::FrameContext& frame_ctx,
   float current_time
@@ -162,7 +162,10 @@ void Viewport::record(
   }
 }
 
-void Viewport::update(const wgpu::ShaderModule& fragment_module, const wgpu::Device& device) {
+void Viewport::rebuild_render_pipeline(
+  const wgpu::ShaderModule& fragment_module,
+  const wgpu::Device& device
+) {
   assert(fragment_module);
 
   fragment_state_ = {

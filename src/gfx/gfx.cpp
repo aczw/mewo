@@ -1,8 +1,11 @@
-#include "renderer.hpp"
+#include "gfx.hpp"
 
+#include "event/event.hpp"
+#include "event/event_queue.hpp"
 #include "exception.hpp"
+#include "os.hpp"
 #include "query.hpp"
-#include "utility.hpp"
+#include "util/enum_unreachable.hpp"
 
 #include <SDL3/SDL.h>
 #include <imgui_impl_wgpu.h>
@@ -10,14 +13,8 @@
 #include <webgpu/webgpu_cpp.h>
 
 #include <array>
-#include <functional>
-#include <optional>
 #include <print>
 #include <string_view>
-
-#if defined(SDL_PLATFORM_WIN32)
-#include <windows.h>
-#endif
 
 namespace mewo::gfx {
 
@@ -32,14 +29,15 @@ std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextureStatus
     case wgpu::SurfaceGetCurrentTextureStatus::Lost: return "Lost";
     case wgpu::SurfaceGetCurrentTextureStatus::Error: return "Error";
 
-    default: utility::enum_unreachable("wgpu::SurfaceGetCurrentTextureStatus", status);
+    default: util::enum_unreachable("wgpu::SurfaceGetCurrentTextureStatus", status);
   }
 }
 
 }  // namespace
 
-Renderer::Renderer(const sdl::Window& window) {
+Gfx::Gfx(EventQueue& event_queue, const Window& window) {
   auto timed_wait_any = wgpu::InstanceFeatureName::TimedWaitAny;
+
   wgpu::InstanceDescriptor instance_desc = {
     .requiredFeatureCount = 1,
     .requiredFeatures = &timed_wait_any,
@@ -102,33 +100,30 @@ Renderer::Renderer(const sdl::Window& window) {
       const wgpu::Device&,
       wgpu::DeviceLostReason type,
       wgpu::StringView message,
-      std::optional<Error>* device_lost_error
+      EventQueue* event_queue
     ) {
-      auto reason = static_cast<WGPUDeviceLostReason>(type);
-
-      *device_lost_error = {
-        .type_name = ImGui_ImplWGPU_GetDeviceLostReasonName(reason),
-        .message = std::string(message),
-      };
+      event_queue->push(
+        WGPUDeviceLost{
+          .reason = ImGui_ImplWGPU_GetDeviceLostReasonName(static_cast<WGPUDeviceLostReason>(type)),
+          .message = std::string(message),
+        }
+      );
     },
-    &device_lost_error_
+    &event_queue
   );
 
   device_desc.SetUncapturedErrorCallback(
     [](
-      const wgpu::Device&,
-      wgpu::ErrorType type,
-      wgpu::StringView message,
-      std::optional<Error>* uncaptured_error
+      const wgpu::Device&, wgpu::ErrorType type, wgpu::StringView message, EventQueue* event_queue
     ) {
-      auto error_type = static_cast<WGPUErrorType>(type);
-
-      *uncaptured_error = {
-        .type_name = ImGui_ImplWGPU_GetErrorTypeName(error_type),
-        .message = std::string(message),
-      };
+      event_queue->push(
+        WGPUUncapturedError{
+          .type_name = ImGui_ImplWGPU_GetErrorTypeName(static_cast<WGPUErrorType>(type)),
+          .message = std::string(message),
+        }
+      );
     },
-    &uncaptured_error_
+    &event_queue
   );
 
   wgpu::WaitStatus device_status = instance_.WaitAny(
@@ -151,31 +146,12 @@ Renderer::Renderer(const sdl::Window& window) {
   if (!device_ || device_status != wgpu::WaitStatus::Success)
     throw Exception("Waiting on wgpu::Adapter::RequestDevice failed");
 
-  SDL_PropertiesID properties_id = SDL_GetWindowProperties(window.get());
+  auto create_surface_info = os::retrieve_surface_info(instance_, window);
 
-  if (properties_id == 0)
-    throw Exception("Failed to get SDL window properties: {}", SDL_GetError());
-
-  ImGui_ImplWGPU_CreateSurfaceInfo create_surface_info = {
-    .Instance = instance_.Get(),
-#if defined(SDL_PLATFORM_MACOS)
-    .System = "cocoa",
-    .RawWindow = static_cast<void*>(
-      SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nullptr)
-    ),
-#elif defined(SDL_PLATFORM_WIN32)
-    .System = "win32",
-    .RawWindow = static_cast<void*>(
-      SDL_GetPointerProperty(properties_id, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr)
-    ),
-    .RawInstance = static_cast<void*>(GetModuleHandle(nullptr)),
-#else
-#error "Unsupported platform. Supported platforms are macOS and Windows"
-#endif
-  };
-
-  if (WGPUSurface raw_surface = ImGui_ImplWGPU_CreateWGPUSurfaceHelper(&create_surface_info);
-      !raw_surface) {
+  if (
+    WGPUSurface raw_surface = ImGui_ImplWGPU_CreateWGPUSurfaceHelper(&create_surface_info);
+    !raw_surface
+  ) {
     throw Exception("Failed to create WebGPU surface");
   } else {
     surface_ = wgpu::Surface(raw_surface);
@@ -207,28 +183,15 @@ Renderer::Renderer(const sdl::Window& window) {
   queue_ = device_.GetQueue();
 }
 
-FrameContext Renderer::prepare_new_frame() {
-  if (device_lost_error_.has_value()) {
-    const Error& error = device_lost_error_.value();
-    throw Exception(
-      "WebGPU device lost. Reason: {}. Message (below):\n{}", error.type_name, error.message
-    );
-  }
-
-  if (uncaptured_error_.has_value()) {
-    const Error& error = uncaptured_error_.value();
-    std::println(
-      "Uncaptured WebGPU error. Type: {}. Message (below):\n{}", error.type_name, error.message
-    );
-    uncaptured_error_.reset();
-  }
-
+const FrameContext Gfx::begin_frame() {
   wgpu::SurfaceTexture surface_texture;
   surface_.GetCurrentTexture(&surface_texture);
 
-  if (auto status = surface_texture.status;
-      status != wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal &&
-      status != wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal) {
+  if (
+    auto status = surface_texture.status;
+    status != wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal &&
+    status != wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal
+  ) {
     throw Exception("WebGPU surface texture status: {}", get_surface_texture_status(status));
   } else if (status == wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal) {
     std::println("warning: surface texture is suboptimal");
@@ -246,6 +209,7 @@ FrameContext Renderer::prepare_new_frame() {
   return {
     .surface_view = surface_texture.texture.CreateView(&SURFACE_VIEW_DESC),
     .encoder = device_.CreateCommandEncoder(&CMD_ENCODER_DESC),
+    .number = ++frame_count_,
   };
 }
 

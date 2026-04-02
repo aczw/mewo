@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gfx/compilation_diagnostic.hpp"
-#include "gfx/renderer.hpp"
+#include "gfx/gfx.hpp"
 
 #include <webgpu/webgpu_cpp.h>
 
@@ -15,7 +15,7 @@ using ShaderCompilationResult =
   std::pair<std::optional<wgpu::ShaderModule>, gfx::CompilationDiagnostics>;
 
 ShaderCompilationResult shader_module_from_wgsl(
-  const Renderer& renderer,
+  const Gfx& gfx,
   std::string_view code,
   std::string_view label
 );

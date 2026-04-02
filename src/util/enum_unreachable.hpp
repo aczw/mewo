@@ -7,7 +7,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace mewo::utility {
+namespace mewo::util {
 
 /// In debug builds, throws an exception about an unhandled enum case.
 /// Otherwise, it calls `std::unreachable()` which invokes UB.
@@ -21,4 +21,4 @@ inline void enum_unreachable(std::string_view enum_name, Enum value) {
   }
 }
 
-}  // namespace mewo::utility
+}  // namespace mewo::util

@@ -1,47 +1,45 @@
 #pragma once
 
-#include "assets.hpp"
 #include "editor.hpp"
+#include "event/event.hpp"
+#include "event/event_queue.hpp"
 #include "gfx/frame_context.hpp"
-#include "gfx/renderer.hpp"
-#include "gui/context.hpp"
-#include "gui/layout.hpp"
-#include "pending.hpp"
+#include "gfx/gfx.hpp"
+#include "gui/gui.hpp"
 #include "project.hpp"
-#include "sdl/context.hpp"
-#include "sdl/window.hpp"
 #include "viewport.hpp"
+#include "window.hpp"
 
+#include <SDL3/SDL_dialog.h>
+
+#include <filesystem>
 #include <optional>
 
 namespace mewo {
 
 class Mewo {
  public:
-  Mewo()
-      : renderer_(window_),
-        gui_ctx_(assets_, window_, renderer_),
-        editor_(assets_),
-        viewport_(pending_, assets_, renderer_, editor_.combined_code()) {}
+  Mewo();
 
   void run();
-  const gfx::FrameContext prepare_new_frame();
 
  private:
-  Pending pending_;
-  Assets assets_;
+  void process_queued_events();
+  void update(const gfx::FrameContext& frame_ctx);
 
-  sdl::Context sdl_ctx_;
-  sdl::Window window_;
+  void show_open_folder_dialog(ChooseFolderRequest::Reason reason);
 
-  gfx::Renderer renderer_;
+  std::filesystem::path executable_dir_;
+  std::filesystem::path assets_dir_;
+  bool should_quit_ = false;
 
-  gui::Context gui_ctx_;
-  gui::Layout layout_;
+  EventQueue event_queue_;
 
+  Window window_;
+  gfx::Gfx gfx_;
+  Gui gui_;
   Editor editor_;
   Viewport viewport_;
-
   std::optional<Project> project_;
 };
 

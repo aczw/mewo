@@ -1,129 +1,99 @@
-#include "layout.hpp"
+#include "gui.hpp"
 
 #include "aspect_ratio.hpp"
 #include "editor.hpp"
-#include "pending.hpp"
-#include "utility.hpp"
+#include "event/event.hpp"
+#include "util/enum_unreachable.hpp"
 
 #include <SDL3/SDL_dialog.h>
 #include <SDL3/SDL_error.h>
 #include <imgui.h>
+#include <imgui_impl_sdl3.h>
+#include <imgui_impl_wgpu.h>
 #include <imgui_internal.h>
 #include <imgui_stdlib.h>
 #include <webgpu/webgpu.h>
 
 #include <array>
 #include <functional>
-#include <print>
 #include <string_view>
 #include <utility>
 
-namespace mewo::gui {
+namespace mewo {
 
 static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
 static constexpr std::string_view DIAGNOSTICS_WINDOW_NAME = "Diagnostics";
 static constexpr std::string_view VIEWPORT_WINDOW_NAME = "Viewport";
 
-void Layout::build(
-  Pending& pending,
-  const sdl::Window& window,
-  const Context& gui_ctx,
+Gui::Gui(const std::filesystem::path& assets_dir, const Window& window, const gfx::Gfx& gfx) {
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+
+  ImGuiIO& io = ImGui::GetIO();
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+  io.IniFilename = nullptr;
+  io.ConfigDpiScaleFonts = true;
+  io.ConfigDpiScaleViewports = true;
+
+  auto inter_path = assets_dir / "fonts/inter_4.1/Inter-Regular.ttf";
+  auto geist_mono_path = assets_dir / "fonts/geist_mono_1.7/GeistMono-Regular.ttf";
+
+  fonts_ = {
+    .inter = io.Fonts->AddFontFromFileTTF(inter_path.string().c_str()),
+    .geist_mono = io.Fonts->AddFontFromFileTTF(geist_mono_path.string().c_str()),
+  };
+
+  ImGui::StyleColorsDark();
+  ImGuiStyle& style = ImGui::GetStyle();
+  style.FontSizeBase = 15.f;
+
+  ImGui_ImplWGPU_InitInfo wgpu_init_info;
+  wgpu_init_info.Device = gfx.device().Get();
+  wgpu_init_info.RenderTargetFormat = static_cast<WGPUTextureFormat>(gfx.surface_config().format);
+  ImGui_ImplWGPU_Init(&wgpu_init_info);
+
+  ImGui_ImplSDL3_InitForOther(window.get());
+
+  // Can be set once upfront because there's only one viewport
+  viewport_ = ImGui::GetMainViewport();
+}
+
+void Gui::build_layout(
+  EventQueue& event_queue,
+  const gfx::FrameContext& frame_ctx,
   Editor& editor,
   Viewport& viewport
 ) {
   // Once the layout is created, the ID remains constant.
-  if (const ImGuiID dockspace_id = ImGui::GetID("main-dockspace");
-      ImGui::DockBuilderGetNode(dockspace_id) == nullptr) {
-    set_up_initial_layout(gui_ctx, dockspace_id);
+  if (
+    const ImGuiID dockspace_id = ImGui::GetID("main-dockspace");
+    ImGui::DockBuilderGetNode(dockspace_id) == nullptr
+  ) {
+    set_up_initial_layout(dockspace_id);
   } else {
-    ImGui::DockSpaceOverViewport(
-      dockspace_id, gui_ctx.viewport(), ImGuiDockNodeFlags_PassthruCentralNode
-    );
+    ImGui::DockSpaceOverViewport(dockspace_id, viewport_, ImGuiDockNodeFlags_PassthruCentralNode);
   }
 
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
-      if (ImGui::MenuItem("Open...")) {
-        // TODO: probably can't use this for macOS because it doesn't let you create a
-        // folder from within the dialog by default
-        // TODO: move this function call to `Mewo::prepare_new_frame`, and somehow block
-        // on callback finishing?
-        SDL_ShowOpenFolderDialog(
-          [](void* userdata, const char* const* filelist, int) -> void {
-            if (filelist == nullptr) {
-              std::println("error: {}", SDL_GetError());
-              return;
-            }
+      using CFR = ChooseFolderRequest;
 
-            if (*filelist == nullptr)
-              return;
-
-            const char* folder_path = nullptr;
-            int count = 0;
-
-            while (*filelist) {
-              folder_path = *filelist;
-              filelist += 1;
-              count += 1;
-            }
-
-            if (count > 1)
-              std::println("warning: more than one folder selected, using last one");
-
-            static_cast<Pending*>(userdata)->request_project_open(folder_path);
-          },
-          static_cast<void*>(&pending),
-          window.get(),
-          nullptr,
-          false
-        );
-      }
+      if (ImGui::MenuItem("Open..."))
+        event_queue.push(CFR{.reason = CFR::Reason::ProjectOpen});
 
       ImGui::Separator();
 
       if (ImGui::MenuItem("Save"))
-        pending.request_project_save();
+        event_queue.push(ProjectSaveRequest{});
 
-      if (ImGui::MenuItem("Save As...")) {
-        // TODO: probably can't use this for macOS because it doesn't let you create a
-        // folder from within the dialog by default
-        // TODO: move this function call to `Mewo::prepare_new_frame`, and somehow block
-        // on callback finishing?
-        SDL_ShowOpenFolderDialog(
-          [](void* userdata, const char* const* filelist, int) -> void {
-            if (filelist == nullptr) {
-              std::println("error: {}", SDL_GetError());
-              return;
-            }
-
-            if (*filelist == nullptr)
-              return;
-
-            const char* folder_path = nullptr;
-            int count = 0;
-
-            while (*filelist) {
-              folder_path = *filelist;
-              filelist += 1;
-              count += 1;
-            }
-
-            if (count > 1)
-              std::println("warning: more than one folder selected, using last one");
-
-            static_cast<Pending*>(userdata)->request_project_save_as(folder_path);
-          },
-          static_cast<void*>(&pending),
-          window.get(),
-          nullptr,
-          false
-        );
-      }
+      if (ImGui::MenuItem("Save As..."))
+        event_queue.push(CFR{.reason = CFR::Reason::ProjectSaveAs});
 
       ImGui::Separator();
 
       if (ImGui::MenuItem("Quit"))
-        pending.request_quit();
+        event_queue.push(QuitRequest{});
 
       ImGui::EndMenu();
     }
@@ -134,7 +104,7 @@ void Layout::build(
   {
     ImGui::Begin(EDITOR_WINDOW_NAME.data());
 
-    ImGui::PushFont(gui_ctx.fonts().geist_mono, 0.f);
+    ImGui::PushFont(fonts_.geist_mono, 0.f);
     ImVec2 window_size = ImGui::GetContentRegionAvail();
     ImGui::InputTextMultiline("##editor", &editor.visible_code(), window_size);
     ImGui::PopFont();
@@ -145,7 +115,7 @@ void Layout::build(
   {
     ImGui::Begin(DIAGNOSTICS_WINDOW_NAME.data());
 
-    ImGui::PushFont(gui_ctx.fonts().geist_mono, 0.f);
+    ImGui::PushFont(fonts_.geist_mono, 0.f);
     if (const auto& diagnostics = editor.diagnostics(); diagnostics.size() > 0) {
       for (const auto& diag : diagnostics) {
         ImGui::Text(
@@ -188,10 +158,19 @@ void Layout::build(
     // If the window containing the viewport has changed width, we resize the texture.
     // This only applies if the viewport mode is based on the aspect ratio.
     //
+    // Also, skip resizing if we're on the first few frames because Dear ImGui seems to not have
+    // finished calculating layout widths.
+    //
     // TODO: don't submit if user is actively dragging the window to be bigger/smaller
-    if (prev_mode == Viewport::Mode::AspectRatio &&
-        curr_viewport_window_width != prev_viewport_window_width_) {
-      pending.request_viewport_resize(curr_viewport_window_width, viewport.ratio_preset());
+    if (
+      frame_ctx.number > 3 && prev_mode == Viewport::Mode::AspectRatio &&
+      curr_viewport_window_width != prev_viewport_window_width_
+    ) {
+      event_queue.push(
+        ViewportResizeRequest::from_width_and_ratio(
+          curr_viewport_window_width, viewport.ratio_preset()
+        )
+      );
     }
 
     {
@@ -206,7 +185,7 @@ void Layout::build(
             // TODO: division by zero possible
             return static_cast<float>(prev_height) / static_cast<float>(prev_width);
 
-          default: utility::enum_unreachable("Viewport::Mode", prev_mode);
+          default: util::enum_unreachable("Viewport::Mode", prev_mode);
         }
       });
 
@@ -215,7 +194,7 @@ void Layout::build(
     }
 
     if (ImGui::Button("Run"))
-      pending.request_run(editor.combined_code());
+      event_queue.push(RunRequest{.fragment_code = editor.combined_code()});
 
     {
       using Mode = Viewport::Mode;
@@ -230,15 +209,23 @@ void Layout::build(
         viewport.set_mode(curr_mode);
 
         switch (curr_mode) {
-          case Viewport::Mode::AspectRatio:
-            pending.request_viewport_resize(curr_viewport_window_width, viewport.ratio_preset());
+          case Viewport::Mode::AspectRatio: {
+            event_queue.push(
+              ViewportResizeRequest::from_width_and_ratio(
+                curr_viewport_window_width, viewport.ratio_preset()
+              )
+            );
             break;
+          }
 
-          case Viewport::Mode::Resolution:
-            pending.request_viewport_resize(prev_width, prev_height);
+          case Viewport::Mode::Resolution: {
+            event_queue.push(
+              ViewportResizeRequest{.new_width = prev_width, .new_height = prev_height}
+            );
             break;
+          }
 
-          default: utility::enum_unreachable("Viewport::Mode", curr_mode);
+          default: util::enum_unreachable("Viewport::Mode", curr_mode);
         }
       }
     }
@@ -258,7 +245,9 @@ void Layout::build(
         ImGui::RadioButton("16:9", &prev_preset_value, std::to_underlying(Preset::e16_9));
 
         if (auto curr_preset = static_cast<Preset>(prev_preset_value); curr_preset != prev_preset) {
-          pending.request_viewport_resize(curr_viewport_window_width, curr_preset);
+          event_queue.push(
+            ViewportResizeRequest::from_width_and_ratio(curr_viewport_window_width, curr_preset)
+          );
           viewport.set_ratio_preset(curr_preset);
         }
 
@@ -288,14 +277,16 @@ void Layout::build(
         // TODO: don't submit if user is currently selecting/dragging the slider, or has the
         // box active and is still entering values
         if (curr_width != prev_width || curr_height != prev_height) {
-          pending.request_viewport_resize(curr_width, curr_height);
+          event_queue.push(
+            ViewportResizeRequest{.new_width = curr_width, .new_height = curr_height}
+          );
           viewport.set_resolution(curr_width, curr_height);
         }
 
         break;
       }
 
-      default: utility::enum_unreachable("Viewport::Mode", prev_mode);
+      default: util::enum_unreachable("Viewport::Mode", prev_mode);
     }
 
     prev_viewport_window_width_ = curr_viewport_window_width;
@@ -304,9 +295,29 @@ void Layout::build(
   }
 }
 
-void Layout::set_up_initial_layout(const Context& gui_ctx, ImGuiID dockspace_id) const {
+void Gui::update(const gfx::FrameContext& frame_ctx) const {
+  ImGui::Render();
+
+  wgpu::RenderPassColorAttachment color_attachment = {
+    .view = frame_ctx.surface_view,
+    .loadOp = wgpu::LoadOp::Load,
+    .storeOp = wgpu::StoreOp::Store,
+  };
+
+  wgpu::RenderPassDescriptor render_pass_desc = {
+    .label = "imgui-render-pass",
+    .colorAttachmentCount = 1,
+    .colorAttachments = &color_attachment,
+  };
+
+  wgpu::RenderPassEncoder render_pass = frame_ctx.encoder.BeginRenderPass(&render_pass_desc);
+  ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), render_pass.Get());
+  render_pass.End();
+}
+
+void Gui::set_up_initial_layout(ImGuiID dockspace_id) const {
   ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
-  ImGui::DockBuilderSetNodeSize(dockspace_id, gui_ctx.viewport()->Size);
+  ImGui::DockBuilderSetNodeSize(dockspace_id, viewport_->Size);
 
   ImGuiID left_id = {};
   ImGuiID right_id = {};
@@ -323,4 +334,4 @@ void Layout::set_up_initial_layout(const Context& gui_ctx, ImGuiID dockspace_id)
   ImGui::DockBuilderFinish(dockspace_id);
 }
 
-}  // namespace mewo::gui
+}  // namespace mewo

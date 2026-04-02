@@ -112,31 +112,31 @@ set(JSON_Install OFF CACHE INTERNAL "")
 add_subdirectory(${MEWO_THIRD_PARTY_DIR}/nlohmann_json EXCLUDE_FROM_ALL)
 
 set(MEWO_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(MEWO_EVENT_DIR ${MEWO_SRC_DIR}/event)
 set(MEWO_GFX_DIR ${MEWO_SRC_DIR}/gfx)
 set(MEWO_GUI_DIR ${MEWO_SRC_DIR}/gui)
-set(MEWO_SDL_DIR ${MEWO_SRC_DIR}/sdl)
+set(MEWO_UTIL_DIR ${MEWO_SRC_DIR}/util)
 
 add_executable(mewo
-  ${MEWO_SDL_DIR}/context.hpp
-  ${MEWO_SDL_DIR}/window.cpp
-  ${MEWO_SDL_DIR}/window.hpp
+  ${MEWO_EVENT_DIR}/event_queue.cpp
+  ${MEWO_EVENT_DIR}/event_queue.hpp
+  ${MEWO_EVENT_DIR}/event.hpp
 
   ${MEWO_GFX_DIR}/compilation_diagnostic.hpp
   ${MEWO_GFX_DIR}/create.cpp
   ${MEWO_GFX_DIR}/create.hpp
-  ${MEWO_GFX_DIR}/error.hpp
   ${MEWO_GFX_DIR}/frame_context.hpp
-  ${MEWO_GFX_DIR}/renderer.cpp
-  ${MEWO_GFX_DIR}/renderer.hpp
+  ${MEWO_GFX_DIR}/gfx.cpp
+  ${MEWO_GFX_DIR}/gfx.hpp
 
-  ${MEWO_GUI_DIR}/context.cpp
-  ${MEWO_GUI_DIR}/context.hpp
-  ${MEWO_GUI_DIR}/layout.cpp
-  ${MEWO_GUI_DIR}/layout.hpp
+  ${MEWO_GUI_DIR}/gui.cpp
+  ${MEWO_GUI_DIR}/gui.hpp
 
+  ${MEWO_UTIL_DIR}/enum_unreachable.hpp
+  ${MEWO_UTIL_DIR}/match.hpp
+
+  ${MEWO_SRC_DIR}/aspect_ratio.cpp
   ${MEWO_SRC_DIR}/aspect_ratio.hpp
-  ${MEWO_SRC_DIR}/assets.cpp
-  ${MEWO_SRC_DIR}/assets.hpp
   ${MEWO_SRC_DIR}/editor.cpp
   ${MEWO_SRC_DIR}/editor.hpp
   ${MEWO_SRC_DIR}/exception.hpp
@@ -145,13 +145,15 @@ add_executable(mewo
   ${MEWO_SRC_DIR}/main.cpp
   ${MEWO_SRC_DIR}/mewo.cpp
   ${MEWO_SRC_DIR}/mewo.hpp
-  ${MEWO_SRC_DIR}/pending.hpp
+  ${MEWO_SRC_DIR}/os.cpp
+  ${MEWO_SRC_DIR}/os.hpp
   ${MEWO_SRC_DIR}/project.cpp
   ${MEWO_SRC_DIR}/project.hpp
   ${MEWO_SRC_DIR}/query.hpp
-  ${MEWO_SRC_DIR}/utility.hpp
   ${MEWO_SRC_DIR}/viewport.cpp
   ${MEWO_SRC_DIR}/viewport.hpp
+  ${MEWO_SRC_DIR}/window.cpp
+  ${MEWO_SRC_DIR}/window.hpp
 )
 
 # So I can always include files starting from `src` instead of ugly relative paths

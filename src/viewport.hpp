@@ -1,15 +1,15 @@
 #pragma once
 
 #include "aspect_ratio.hpp"
-#include "assets.hpp"
+#include "event/event_queue.hpp"
 #include "gfx/frame_context.hpp"
-#include "gfx/renderer.hpp"
-#include "pending.hpp"
+#include "gfx/gfx.hpp"
 
 #include <webgpu/webgpu_cpp.h>
 
 #include <array>
 #include <cstdint>
+#include <filesystem>
 #include <string_view>
 
 namespace mewo {
@@ -33,9 +33,9 @@ class Viewport {
   static constexpr std::string_view FRAGMENT_SHADER_LABEL = "viewport-frag-shader";
 
   Viewport(
-    Pending& pending,
-    const Assets& assets,
-    const gfx::Renderer& renderer,
+    EventQueue& event_queue,
+    const std::filesystem::path& assets_dir,
+    const gfx::Gfx& gfx,
     std::string_view initial_code
   );
 
@@ -58,13 +58,16 @@ class Viewport {
     height_ = height;
   }
 
-  void record(
+  void update(
     const wgpu::Queue& queue,
     const gfx::FrameContext& frame_ctx,
     float current_time
   ) const;
 
-  void update(const wgpu::ShaderModule& fragment_module, const wgpu::Device& device);
+  void rebuild_render_pipeline(
+    const wgpu::ShaderModule& fragment_module,
+    const wgpu::Device& device
+  );
 
   void resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height);
 
