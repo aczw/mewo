@@ -42,7 +42,7 @@ class Gui {
     Viewport& viewport
   );
 
-  void record(const gfx::FrameContext& frame_ctx) const;
+  void update(const gfx::FrameContext& frame_ctx) const;
 
  private:
   struct Fonts {

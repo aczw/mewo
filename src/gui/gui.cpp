@@ -295,7 +295,7 @@ void Gui::build_layout(
   }
 }
 
-void Gui::record(const gfx::FrameContext& frame_ctx) const {
+void Gui::update(const gfx::FrameContext& frame_ctx) const {
   ImGui::Render();
 
   wgpu::RenderPassColorAttachment color_attachment = {

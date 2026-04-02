@@ -172,7 +172,7 @@ void Mewo::process_queued_events() {
             );
 
           if (const auto& fragment_module = compilation_result.first; fragment_module) {
-            viewport_.update(fragment_module.value(), gfx_.device());
+            viewport_.rebuild_render_pipeline(fragment_module.value(), gfx_.device());
 
             if constexpr (query::is_debug())
               std::println("Updated viewport render pipeline");
@@ -233,12 +233,10 @@ void Mewo::update(const gfx::FrameContext& frame_ctx) {
 
   gui_.build_layout(event_queue_, frame_ctx, editor_, viewport_);
 
-  float current_time = static_cast<float>(SDL_GetTicks()) * 1e-3f;
-
-  viewport_.record(gfx_.queue(), frame_ctx, current_time);
-  gui_.record(frame_ctx);
-
   static constexpr wgpu::CommandBufferDescriptor CMD_BUF_DESC = {.label = "command-buffer"};
+
+  viewport_.update(gfx_.queue(), frame_ctx, static_cast<float>(SDL_GetTicks()) * 1e-3f);
+  gui_.update(frame_ctx);
   gfx_.update(frame_ctx.encoder.Finish(&CMD_BUF_DESC));
 }
 

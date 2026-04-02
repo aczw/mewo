@@ -58,13 +58,16 @@ class Viewport {
     height_ = height;
   }
 
-  void record(
+  void update(
     const wgpu::Queue& queue,
     const gfx::FrameContext& frame_ctx,
     float current_time
   ) const;
 
-  void update(const wgpu::ShaderModule& fragment_module, const wgpu::Device& device);
+  void rebuild_render_pipeline(
+    const wgpu::ShaderModule& fragment_module,
+    const wgpu::Device& device
+  );
 
   void resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height);
 

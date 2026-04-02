@@ -109,7 +109,7 @@ Viewport::Viewport(
     );
   }
 
-  update(frag_module.value(), device);
+  rebuild_render_pipeline(frag_module.value(), device);
   event_queue.push(RunRequest{.fragment_code = std::string(initial_code)});
 
   texture_desc_ = {
@@ -137,7 +137,7 @@ Viewport::Viewport(
   };
 }
 
-void Viewport::record(
+void Viewport::update(
   const wgpu::Queue& queue,
   const gfx::FrameContext& frame_ctx,
   float current_time
@@ -162,7 +162,10 @@ void Viewport::record(
   }
 }
 
-void Viewport::update(const wgpu::ShaderModule& fragment_module, const wgpu::Device& device) {
+void Viewport::rebuild_render_pipeline(
+  const wgpu::ShaderModule& fragment_module,
+  const wgpu::Device& device
+) {
   assert(fragment_module);
 
   fragment_state_ = {
