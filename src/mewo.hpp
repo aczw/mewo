@@ -38,10 +38,8 @@ class Mewo {
   Window window_;
   gfx::Gfx gfx_;
   Gui gui_;
-
   Editor editor_;
   Viewport viewport_;
-
   std::optional<Project> project_;
 };
 

@@ -34,7 +34,7 @@ class Gfx {
 
   /// Checks if any errors have occurred in the graphics context, and throws accordingly.
   /// Otherwise, it returns a texture view of the current surface and a new command encoder.
-  FrameContext begin_frame();
+  const FrameContext begin_frame();
 
   void update(const wgpu::CommandBuffer& cmd_buf) const {
     queue_.Submit(1, &cmd_buf);
@@ -54,6 +54,8 @@ class Gfx {
   wgpu::Surface surface_;
   wgpu::SurfaceConfiguration surface_config_;
   wgpu::Queue queue_;
+
+  uint64_t frame_count_ = 0;
 
   // TODO: move these two fields to `Pending` struct? Would then have to deal with
   // potential concurrent writes to the object as these errors can happen at any time

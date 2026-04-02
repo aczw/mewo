@@ -219,7 +219,7 @@ void Mewo::update(const gfx::FrameContext& frame_ctx) {
     }
   }
 
-  gui_.build_layout(event_queue_, editor_, viewport_);
+  gui_.build_layout(event_queue_, frame_ctx, editor_, viewport_);
 
   float current_time = static_cast<float>(SDL_GetTicks()) * 1e-3f;
 

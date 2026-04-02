@@ -59,7 +59,12 @@ Gui::Gui(const std::filesystem::path& assets_dir, const Window& window, const gf
   viewport_ = ImGui::GetMainViewport();
 }
 
-void Gui::build_layout(EventQueue& event_queue, Editor& editor, Viewport& viewport) {
+void Gui::build_layout(
+  EventQueue& event_queue,
+  const gfx::FrameContext& frame_ctx,
+  Editor& editor,
+  Viewport& viewport
+) {
   // Once the layout is created, the ID remains constant.
   if (
     const ImGuiID dockspace_id = ImGui::GetID("main-dockspace");
@@ -153,9 +158,12 @@ void Gui::build_layout(EventQueue& event_queue, Editor& editor, Viewport& viewpo
     // If the window containing the viewport has changed width, we resize the texture.
     // This only applies if the viewport mode is based on the aspect ratio.
     //
+    // Also, skip resizing if we're on the first few frames because Dear ImGui seems to not have
+    // finished calculating layout widths.
+    //
     // TODO: don't submit if user is actively dragging the window to be bigger/smaller
     if (
-      prev_mode == Viewport::Mode::AspectRatio &&
+      frame_ctx.number > 3 && prev_mode == Viewport::Mode::AspectRatio &&
       curr_viewport_window_width != prev_viewport_window_width_
     ) {
       event_queue.push(
@@ -290,10 +298,8 @@ void Gui::build_layout(EventQueue& event_queue, Editor& editor, Viewport& viewpo
 void Gui::record(const gfx::FrameContext& frame_ctx) const {
   ImGui::Render();
 
-  auto& [surface_view, encoder] = frame_ctx;
-
   wgpu::RenderPassColorAttachment color_attachment = {
-    .view = surface_view,
+    .view = frame_ctx.surface_view,
     .loadOp = wgpu::LoadOp::Load,
     .storeOp = wgpu::StoreOp::Store,
   };
@@ -304,7 +310,7 @@ void Gui::record(const gfx::FrameContext& frame_ctx) const {
     .colorAttachments = &color_attachment,
   };
 
-  wgpu::RenderPassEncoder render_pass = encoder.BeginRenderPass(&render_pass_desc);
+  wgpu::RenderPassEncoder render_pass = frame_ctx.encoder.BeginRenderPass(&render_pass_desc);
   ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), render_pass.Get());
   render_pass.End();
 }

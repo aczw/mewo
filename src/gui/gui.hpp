@@ -2,6 +2,7 @@
 
 #include "editor.hpp"
 #include "event/event_queue.hpp"
+#include "gfx/frame_context.hpp"
 #include "gfx/gfx.hpp"
 #include "viewport.hpp"
 #include "window.hpp"
@@ -34,7 +35,12 @@ class Gui {
   }
 
   /// Builds the GUI and records additional data into respective classes. Called every frame.
-  void build_layout(EventQueue& event_queue, Editor& editor, Viewport& viewport);
+  void build_layout(
+    EventQueue& event_queue,
+    const gfx::FrameContext& frame_ctx,
+    Editor& editor,
+    Viewport& viewport
+  );
 
   void record(const gfx::FrameContext& frame_ctx) const;
 
@@ -51,7 +57,6 @@ class Gui {
   /// Needs to be cached every frame. Will be checked to see if the viewport texture
   /// needs to be resized. Only relevant when the viewport mode is `AspectRatio`.
   uint32_t prev_viewport_window_width_ = 0;
-
   Fonts fonts_;
   ImGuiViewport* viewport_ = nullptr;
 };

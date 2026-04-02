@@ -185,7 +185,7 @@ Gfx::Gfx(const Window& window) {
   queue_ = device_.GetQueue();
 }
 
-FrameContext Gfx::begin_frame() {
+const FrameContext Gfx::begin_frame() {
   if (device_lost_error_.has_value()) {
     const Error& error = device_lost_error_.value();
     throw Exception(
@@ -226,6 +226,7 @@ FrameContext Gfx::begin_frame() {
   return {
     .surface_view = surface_texture.texture.CreateView(&SURFACE_VIEW_DESC),
     .encoder = device_.CreateCommandEncoder(&CMD_ENCODER_DESC),
+    .number = ++frame_count_,
   };
 }
 
