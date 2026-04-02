@@ -25,7 +25,6 @@ class Mewo {
 
  private:
   void process_queued_events();
-  void apply_pending_actions();
   void update(const gfx::FrameContext& frame_ctx);
 
   void show_open_folder_dialog(ChooseFolderRequest::Reason reason);

@@ -94,7 +94,6 @@ Mewo::Mewo()
 void Mewo::run() {
   while (!should_quit_) {
     process_queued_events();
-    apply_pending_actions();
 
     const gfx::FrameContext frame_ctx = gfx_.begin_frame();
     gui_.begin_frame();
@@ -193,8 +192,6 @@ void Mewo::process_queued_events() {
     );
   }  // namespace mewo
 }
-
-void Mewo::apply_pending_actions() {}
 
 void Mewo::update(const gfx::FrameContext& frame_ctx) {
   SDL_Event event = {};
