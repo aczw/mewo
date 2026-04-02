@@ -1,13 +1,12 @@
 #pragma once
 
-#include "error.hpp"
+#include "event/event_queue.hpp"
 #include "frame_context.hpp"
 #include "window.hpp"
 
 #include <webgpu/webgpu_cpp.h>
 
 #include <limits>
-#include <optional>
 
 namespace mewo::gfx {
 
@@ -15,7 +14,7 @@ class Gfx {
  public:
   static constexpr auto WAIT_TIMEOUT_MAX = std::numeric_limits<uint64_t>::max();
 
-  Gfx(const Window& window);
+  Gfx(EventQueue& event_queue, const Window& window);
 
   ~Gfx() { surface_.Unconfigure(); }
 
@@ -56,11 +55,6 @@ class Gfx {
   wgpu::Queue queue_;
 
   uint64_t frame_count_ = 0;
-
-  // TODO: move these two fields to `Pending` struct? Would then have to deal with
-  // potential concurrent writes to the object as these errors can happen at any time
-  std::optional<Error> device_lost_error_;
-  std::optional<Error> uncaptured_error_;
 };
 
 }  // namespace mewo::gfx

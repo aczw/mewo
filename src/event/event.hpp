@@ -5,6 +5,8 @@
 #include <cmath>
 #include <cstdint>
 #include <filesystem>
+#include <string>
+#include <string_view>
 #include <variant>
 
 namespace mewo {
@@ -54,6 +56,16 @@ struct WindowResized {
   uint32_t new_height = 0;
 };
 
+struct WGPUDeviceLost {
+  std::string_view reason;
+  std::string message;
+};
+
+struct WGPUUncapturedError {
+  std::string_view type_name;
+  std::string message;
+};
+
 using Event = std::variant<
   const QuitRequest,
   const ChooseFolderRequest,
@@ -62,7 +74,9 @@ using Event = std::variant<
   const ProjectSaveRequest,
   const ViewportResizeRequest,
   const RunRequest,
-  const WindowResized
+  const WindowResized,
+  const WGPUDeviceLost,
+  const WGPUUncapturedError
 >;
 
 }  // namespace mewo

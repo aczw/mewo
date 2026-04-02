@@ -1,5 +1,7 @@
 #include "gfx.hpp"
 
+#include "event/event.hpp"
+#include "event/event_queue.hpp"
 #include "exception.hpp"
 #include "os.hpp"
 #include "query.hpp"
@@ -11,7 +13,6 @@
 #include <webgpu/webgpu_cpp.h>
 
 #include <array>
-#include <optional>
 #include <print>
 #include <string_view>
 
@@ -34,7 +35,7 @@ std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextureStatus
 
 }  // namespace
 
-Gfx::Gfx(const Window& window) {
+Gfx::Gfx(EventQueue& event_queue, const Window& window) {
   auto timed_wait_any = wgpu::InstanceFeatureName::TimedWaitAny;
 
   wgpu::InstanceDescriptor instance_desc = {
@@ -99,33 +100,30 @@ Gfx::Gfx(const Window& window) {
       const wgpu::Device&,
       wgpu::DeviceLostReason type,
       wgpu::StringView message,
-      std::optional<Error>* device_lost_error
+      EventQueue* event_queue
     ) {
-      auto reason = static_cast<WGPUDeviceLostReason>(type);
-
-      *device_lost_error = {
-        .type_name = ImGui_ImplWGPU_GetDeviceLostReasonName(reason),
-        .message = std::string(message),
-      };
+      event_queue->push(
+        WGPUDeviceLost{
+          .reason = ImGui_ImplWGPU_GetDeviceLostReasonName(static_cast<WGPUDeviceLostReason>(type)),
+          .message = std::string(message),
+        }
+      );
     },
-    &device_lost_error_
+    &event_queue
   );
 
   device_desc.SetUncapturedErrorCallback(
     [](
-      const wgpu::Device&,
-      wgpu::ErrorType type,
-      wgpu::StringView message,
-      std::optional<Error>* uncaptured_error
+      const wgpu::Device&, wgpu::ErrorType type, wgpu::StringView message, EventQueue* event_queue
     ) {
-      auto error_type = static_cast<WGPUErrorType>(type);
-
-      *uncaptured_error = {
-        .type_name = ImGui_ImplWGPU_GetErrorTypeName(error_type),
-        .message = std::string(message),
-      };
+      event_queue->push(
+        WGPUUncapturedError{
+          .type_name = ImGui_ImplWGPU_GetErrorTypeName(static_cast<WGPUErrorType>(type)),
+          .message = std::string(message),
+        }
+      );
     },
-    &uncaptured_error_
+    &event_queue
   );
 
   wgpu::WaitStatus device_status = instance_.WaitAny(
@@ -186,21 +184,6 @@ Gfx::Gfx(const Window& window) {
 }
 
 const FrameContext Gfx::begin_frame() {
-  if (device_lost_error_.has_value()) {
-    const Error& error = device_lost_error_.value();
-    throw Exception(
-      "WebGPU device lost. Reason: {}. Message (below):\n{}", error.type_name, error.message
-    );
-  }
-
-  if (uncaptured_error_.has_value()) {
-    const Error& error = uncaptured_error_.value();
-    std::println(
-      "Uncaptured WebGPU error. Type: {}. Message (below):\n{}", error.type_name, error.message
-    );
-    uncaptured_error_.reset();
-  }
-
   wgpu::SurfaceTexture surface_texture;
   surface_.GetCurrentTexture(&surface_texture);
 

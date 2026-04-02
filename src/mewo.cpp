@@ -86,7 +86,7 @@ std::optional<const char*> parse_dir_from_filelist(const char* const* filelist) 
 Mewo::Mewo()
     : executable_dir_(os::find_executable_dir()),
       assets_dir_(find_assets_dir(executable_dir_)),
-      gfx_(window_),
+      gfx_(event_queue_, window_),
       gui_(assets_dir_, window_, gfx_),
       editor_(assets_dir_),
       viewport_(event_queue_, assets_dir_, gfx_, editor_.combined_code()) {}
@@ -102,8 +102,6 @@ void Mewo::run() {
   }
 }
 
-// TODO: some events may have been queued multiple times in the same frame. Check which ones
-// do that and decide whether that's the behavior we want
 void Mewo::process_queued_events() {
   for (const auto& event : event_queue_.drain()) {
     std::visit(
@@ -189,6 +187,20 @@ void Mewo::process_queued_events() {
         [this](const WindowResized& resize) {
           auto [new_width, new_height] = resize;
           gfx_.resize_surface(new_width, new_height);
+        },
+
+        [](const WGPUDeviceLost& error) {
+          throw Exception(
+            "WebGPU device lost. Reason: {}. Message (below):\n{}", error.reason, error.message
+          );
+        },
+
+        [](const WGPUUncapturedError& error) {
+          std::println(
+            "Uncaptured WebGPU error. Type: {}. Message (below):\n{}",
+            error.type_name,
+            error.message
+          );
         },
 
         [](const auto&) { std::unreachable(); },

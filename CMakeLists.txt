@@ -125,7 +125,6 @@ add_executable(mewo
   ${MEWO_GFX_DIR}/compilation_diagnostic.hpp
   ${MEWO_GFX_DIR}/create.cpp
   ${MEWO_GFX_DIR}/create.hpp
-  ${MEWO_GFX_DIR}/error.hpp
   ${MEWO_GFX_DIR}/frame_context.hpp
   ${MEWO_GFX_DIR}/gfx.cpp
   ${MEWO_GFX_DIR}/gfx.hpp
