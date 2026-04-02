@@ -18,6 +18,7 @@
 #include <webgpu/webgpu_cpp.h>
 
 #include <filesystem>
+#include <functional>
 #include <optional>
 #include <print>
 #include <utility>
@@ -56,6 +57,30 @@ std::filesystem::path find_assets_dir(const std::filesystem::path& executable_di
   return assets_dir;
 }
 
+std::optional<const char*> parse_dir_from_filelist(const char* const* filelist) {
+  if (filelist == nullptr) {
+    std::println("Error while showing folder dialog: {}", SDL_GetError());
+    return {};
+  }
+
+  if (*filelist == nullptr)
+    return {};
+
+  const char* dir_path = nullptr;
+  int count = 0;
+
+  while (*filelist) {
+    dir_path = *filelist;
+    filelist += 1;
+    count += 1;
+  }
+
+  if (count > 1)
+    std::println("warning: more than one folder selected, using last one");
+
+  return dir_path;
+}
+
 }  // namespace
 
 Mewo::Mewo()
@@ -86,23 +111,7 @@ void Mewo::process_queued_events() {
       util::Match{
         [this](const QuitRequest&) { should_quit_ = true; },
 
-        [this](const ChooseFolderRequest& cfr) {
-          using CFR = ChooseFolderRequest;
-
-          switch (cfr.reason) {
-            case CFR::Reason::ProjectOpen: {
-              show_open_folder_dialog<CFR::Reason::ProjectOpen>();
-              break;
-            }
-
-            case CFR::Reason::ProjectSaveAs: {
-              show_open_folder_dialog<CFR::Reason::ProjectSaveAs>();
-              break;
-            }
-
-            default: util::enum_unreachable("event::ChooseFolderRequest::Reason", cfr.reason);
-          }
-        },
+        [this](const ChooseFolderRequest& cfr) { show_open_folder_dialog(cfr.reason); },
 
         [this](const ProjectOpenRequest& open_req) {
           try {
@@ -216,6 +225,38 @@ void Mewo::update(const gfx::FrameContext& frame_ctx) {
 
   static constexpr wgpu::CommandBufferDescriptor CMD_BUF_DESC = {.label = "command-buffer"};
   gfx_.update(frame_ctx.encoder.Finish(&CMD_BUF_DESC));
+}
+
+void Mewo::show_open_folder_dialog(event::ChooseFolderRequest::Reason reason) {
+  auto callback_fn = std::invoke([reason]() -> SDL_DialogFileCallback {
+    using CFR = event::ChooseFolderRequest;
+
+    switch (reason) {
+      case CFR::Reason::ProjectOpen:
+        return [](void* userdata, const char* const* filelist, int) -> void {
+          if (auto dir_opt = parse_dir_from_filelist(filelist); dir_opt) {
+            static_cast<Mewo*>(userdata)->event_queue_.push(
+              event::ProjectOpenRequest{.directory = dir_opt.value()}
+            );
+          }
+        };
+
+      case CFR::Reason::ProjectSaveAs:
+        return [](void* userdata, const char* const* filelist, int) -> void {
+          if (auto dir_opt = parse_dir_from_filelist(filelist); dir_opt) {
+            static_cast<Mewo*>(userdata)->event_queue_.push(
+              event::ProjectSaveAsRequest{.directory = dir_opt.value()}
+            );
+          }
+        };
+
+      default: util::enum_unreachable("event::ChooseFolderRequest::Reason", reason);
+    }
+  });
+
+  // TODO: probably can't use this for macOS because it doesn't let you create a
+  // folder from within the dialog by default
+  SDL_ShowOpenFolderDialog(callback_fn, this, window_.get(), nullptr, false);
 }
 
 }  // namespace mewo
