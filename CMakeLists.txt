@@ -118,6 +118,8 @@ set(MEWO_GUI_DIR ${MEWO_SRC_DIR}/gui)
 
 add_executable(mewo
   ${MEWO_EVENT_DIR}/event.hpp
+  ${MEWO_EVENT_DIR}/queue.cpp
+  ${MEWO_EVENT_DIR}/queue.hpp
 
   ${MEWO_GFX_DIR}/compilation_diagnostic.hpp
   ${MEWO_GFX_DIR}/create.cpp
