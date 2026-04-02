@@ -1,7 +1,7 @@
 #pragma once
 
 #include "editor.hpp"
-#include "event/queue.hpp"
+#include "event/event_queue.hpp"
 #include "gfx/gfx.hpp"
 #include "pending.hpp"
 #include "viewport.hpp"
@@ -35,12 +35,7 @@ class Gui {
   }
 
   /// Builds the GUI and records additional data into respective classes. Called every frame.
-  void build_layout(
-    event::Queue& event_queue,
-    Pending& pending,
-    Editor& editor,
-    Viewport& viewport
-  );
+  void build_layout(EventQueue& event_queue, Pending& pending, Editor& editor, Viewport& viewport);
 
   void record(const gfx::FrameContext& frame_ctx) const;
 

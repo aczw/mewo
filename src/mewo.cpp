@@ -107,8 +107,6 @@ void Mewo::run() {
 // do that and decide whether that's the behavior we want
 void Mewo::process_queued_events() {
   for (const auto& event : event_queue_.drain()) {
-    using namespace event;
-
     std::visit(
       util::Match{
         [this](const QuitRequest&) { should_quit_ = true; },
@@ -205,7 +203,7 @@ void Mewo::update(const gfx::FrameContext& frame_ctx) {
     switch (event.type) {
       case SDL_EVENT_QUIT:
       case SDL_EVENT_WINDOW_CLOSE_REQUESTED: {
-        event_queue_.push(event::QuitRequest{});
+        event_queue_.push(QuitRequest{});
         break;
       }
 
@@ -228,25 +226,23 @@ void Mewo::update(const gfx::FrameContext& frame_ctx) {
   gfx_.update(frame_ctx.encoder.Finish(&CMD_BUF_DESC));
 }
 
-void Mewo::show_open_folder_dialog(event::ChooseFolderRequest::Reason reason) {
+void Mewo::show_open_folder_dialog(ChooseFolderRequest::Reason reason) {
   auto callback_fn = std::invoke([reason]() -> SDL_DialogFileCallback {
-    using CFR = event::ChooseFolderRequest;
-
     switch (reason) {
-      case CFR::Reason::ProjectOpen:
+      case ChooseFolderRequest::Reason::ProjectOpen:
         return [](void* userdata, const char* const* filelist, int) -> void {
           if (auto dir_opt = parse_dir_from_filelist(filelist); dir_opt) {
             static_cast<Mewo*>(userdata)->event_queue_.push(
-              event::ProjectOpenRequest{.directory = dir_opt.value()}
+              ProjectOpenRequest{.directory = dir_opt.value()}
             );
           }
         };
 
-      case CFR::Reason::ProjectSaveAs:
+      case ChooseFolderRequest::Reason::ProjectSaveAs:
         return [](void* userdata, const char* const* filelist, int) -> void {
           if (auto dir_opt = parse_dir_from_filelist(filelist); dir_opt) {
             static_cast<Mewo*>(userdata)->event_queue_.push(
-              event::ProjectSaveAsRequest{.directory = dir_opt.value()}
+              ProjectSaveAsRequest{.directory = dir_opt.value()}
             );
           }
         };

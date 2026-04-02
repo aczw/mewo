@@ -7,7 +7,7 @@
 #include <filesystem>
 #include <variant>
 
-namespace mewo::event {
+namespace mewo {
 
 struct QuitRequest {};
 
@@ -54,4 +54,4 @@ using Event = std::variant<
   const ViewportResizeRequest
 >;
 
-}  // namespace mewo::event
+}  // namespace mewo

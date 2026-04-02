@@ -5,9 +5,9 @@
 #include <deque>
 #include <mutex>
 
-namespace mewo::event {
+namespace mewo {
 
-class Queue {
+class EventQueue {
  public:
   void push(Event event) {
     std::scoped_lock lock(mutex_);
@@ -21,4 +21,4 @@ class Queue {
   std::deque<Event> queue_;
 };
 
-}  // namespace mewo::event
+}  // namespace mewo

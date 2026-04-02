@@ -61,7 +61,7 @@ Gui::Gui(const std::filesystem::path& assets_dir, const Window& window, const gf
 }
 
 void Gui::build_layout(
-  event::Queue& event_queue,
+  EventQueue& event_queue,
   Pending& pending,
   Editor& editor,
   Viewport& viewport
@@ -78,7 +78,7 @@ void Gui::build_layout(
 
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
-      using CFR = event::ChooseFolderRequest;
+      using CFR = ChooseFolderRequest;
 
       if (ImGui::MenuItem("Open..."))
         event_queue.push(CFR{.reason = CFR::Reason::ProjectOpen});
@@ -86,7 +86,7 @@ void Gui::build_layout(
       ImGui::Separator();
 
       if (ImGui::MenuItem("Save"))
-        event_queue.push(event::ProjectSaveRequest{});
+        event_queue.push(ProjectSaveRequest{});
 
       if (ImGui::MenuItem("Save As..."))
         event_queue.push(CFR{.reason = CFR::Reason::ProjectSaveAs});
@@ -94,7 +94,7 @@ void Gui::build_layout(
       ImGui::Separator();
 
       if (ImGui::MenuItem("Quit"))
-        event_queue.push(event::QuitRequest{});
+        event_queue.push(QuitRequest{});
 
       ImGui::EndMenu();
     }
@@ -165,7 +165,7 @@ void Gui::build_layout(
       curr_viewport_window_width != prev_viewport_window_width_
     ) {
       event_queue.push(
-        event::ViewportResizeRequest::from_width_and_ratio(
+        ViewportResizeRequest::from_width_and_ratio(
           curr_viewport_window_width, viewport.ratio_preset()
         )
       );
@@ -209,7 +209,7 @@ void Gui::build_layout(
         switch (curr_mode) {
           case Viewport::Mode::AspectRatio: {
             event_queue.push(
-              event::ViewportResizeRequest::from_width_and_ratio(
+              ViewportResizeRequest::from_width_and_ratio(
                 curr_viewport_window_width, viewport.ratio_preset()
               )
             );
@@ -218,7 +218,7 @@ void Gui::build_layout(
 
           case Viewport::Mode::Resolution: {
             event_queue.push(
-              event::ViewportResizeRequest{.new_width = prev_width, .new_height = prev_height}
+              ViewportResizeRequest{.new_width = prev_width, .new_height = prev_height}
             );
             break;
           }
@@ -244,9 +244,7 @@ void Gui::build_layout(
 
         if (auto curr_preset = static_cast<Preset>(prev_preset_value); curr_preset != prev_preset) {
           event_queue.push(
-            event::ViewportResizeRequest::from_width_and_ratio(
-              curr_viewport_window_width, curr_preset
-            )
+            ViewportResizeRequest::from_width_and_ratio(curr_viewport_window_width, curr_preset)
           );
           viewport.set_ratio_preset(curr_preset);
         }
@@ -278,7 +276,7 @@ void Gui::build_layout(
         // box active and is still entering values
         if (curr_width != prev_width || curr_height != prev_height) {
           event_queue.push(
-            event::ViewportResizeRequest{.new_width = curr_width, .new_height = curr_height}
+            ViewportResizeRequest{.new_width = curr_width, .new_height = curr_height}
           );
           viewport.set_resolution(curr_width, curr_height);
         }

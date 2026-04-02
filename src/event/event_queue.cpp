@@ -1,8 +1,8 @@
-#include "queue.hpp"
+#include "event_queue.hpp"
 
-namespace mewo::event {
+namespace mewo {
 
-std::deque<Event> Queue::drain() {
+std::deque<Event> EventQueue::drain() {
   std::scoped_lock lock(mutex_);
 
   std::deque<Event> drained_queue;
@@ -11,4 +11,4 @@ std::deque<Event> Queue::drain() {
   return drained_queue;
 }
 
-}  // namespace mewo::event
+}  // namespace mewo

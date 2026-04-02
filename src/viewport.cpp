@@ -2,6 +2,7 @@
 
 #include "aspect_ratio.hpp"
 #include "event/event.hpp"
+#include "event/event_queue.hpp"
 #include "exception.hpp"
 #include "gfx/create.hpp"
 #include "gfx/gfx.hpp"
@@ -17,7 +18,7 @@
 namespace mewo {
 
 Viewport::Viewport(
-  event::Queue& event_queue,
+  EventQueue& event_queue,
   Pending& pending,
   const std::filesystem::path& assets_dir,
   const gfx::Gfx& gfx,
@@ -118,9 +119,7 @@ Viewport::Viewport(
     .format = surface_config.format,
   };
 
-  event_queue.push(
-    event::ViewportResizeRequest{.new_width = width_whole, .new_height = height_whole}
-  );
+  event_queue.push(ViewportResizeRequest{.new_width = width_whole, .new_height = height_whole});
 
   // Use the width and height from the aspect ratio preset as initial values
   width_ = width_whole;

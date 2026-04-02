@@ -2,7 +2,7 @@
 
 #include "editor.hpp"
 #include "event/event.hpp"
-#include "event/queue.hpp"
+#include "event/event_queue.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/gfx.hpp"
 #include "gui/gui.hpp"
@@ -29,13 +29,13 @@ class Mewo {
   void apply_pending_actions();
   void update(const gfx::FrameContext& frame_ctx);
 
-  void show_open_folder_dialog(event::ChooseFolderRequest::Reason reason);
+  void show_open_folder_dialog(ChooseFolderRequest::Reason reason);
 
   std::filesystem::path executable_dir_;
   std::filesystem::path assets_dir_;
   bool should_quit_ = false;
 
-  event::Queue event_queue_;
+  EventQueue event_queue_;
 
   Pending pending_;
 
