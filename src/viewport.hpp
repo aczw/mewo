@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aspect_ratio.hpp"
+#include "event/queue.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/gfx.hpp"
 #include "pending.hpp"
@@ -33,6 +34,7 @@ class Viewport {
   static constexpr std::string_view FRAGMENT_SHADER_LABEL = "viewport-frag-shader";
 
   Viewport(
+    event::Queue& event_queue,
     Pending& pending,
     const std::filesystem::path& assets_dir,
     const gfx::Gfx& gfx,

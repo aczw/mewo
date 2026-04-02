@@ -164,7 +164,11 @@ void Gui::build_layout(
       prev_mode == Viewport::Mode::AspectRatio &&
       curr_viewport_window_width != prev_viewport_window_width_
     ) {
-      pending.request_viewport_resize(curr_viewport_window_width, viewport.ratio_preset());
+      event_queue.push(
+        event::ViewportResizeRequest::from_width_and_ratio(
+          curr_viewport_window_width, viewport.ratio_preset()
+        )
+      );
     }
 
     {
@@ -203,13 +207,21 @@ void Gui::build_layout(
         viewport.set_mode(curr_mode);
 
         switch (curr_mode) {
-          case Viewport::Mode::AspectRatio:
-            pending.request_viewport_resize(curr_viewport_window_width, viewport.ratio_preset());
+          case Viewport::Mode::AspectRatio: {
+            event_queue.push(
+              event::ViewportResizeRequest::from_width_and_ratio(
+                curr_viewport_window_width, viewport.ratio_preset()
+              )
+            );
             break;
+          }
 
-          case Viewport::Mode::Resolution:
-            pending.request_viewport_resize(prev_width, prev_height);
+          case Viewport::Mode::Resolution: {
+            event_queue.push(
+              event::ViewportResizeRequest{.new_width = prev_width, .new_height = prev_height}
+            );
             break;
+          }
 
           default: util::enum_unreachable("Viewport::Mode", curr_mode);
         }
@@ -231,7 +243,11 @@ void Gui::build_layout(
         ImGui::RadioButton("16:9", &prev_preset_value, std::to_underlying(Preset::e16_9));
 
         if (auto curr_preset = static_cast<Preset>(prev_preset_value); curr_preset != prev_preset) {
-          pending.request_viewport_resize(curr_viewport_window_width, curr_preset);
+          event_queue.push(
+            event::ViewportResizeRequest::from_width_and_ratio(
+              curr_viewport_window_width, curr_preset
+            )
+          );
           viewport.set_ratio_preset(curr_preset);
         }
 
@@ -261,7 +277,9 @@ void Gui::build_layout(
         // TODO: don't submit if user is currently selecting/dragging the slider, or has the
         // box active and is still entering values
         if (curr_width != prev_width || curr_height != prev_height) {
-          pending.request_viewport_resize(curr_width, curr_height);
+          event_queue.push(
+            event::ViewportResizeRequest{.new_width = curr_width, .new_height = curr_height}
+          );
           viewport.set_resolution(curr_width, curr_height);
         }
 

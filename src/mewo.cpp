@@ -89,7 +89,7 @@ Mewo::Mewo()
       gfx_(window_),
       gui_(assets_dir_, window_, gfx_),
       editor_(assets_dir_),
-      viewport_(pending_, assets_dir_, gfx_, editor_.combined_code()) {}
+      viewport_(event_queue_, pending_, assets_dir_, gfx_, editor_.combined_code()) {}
 
 void Mewo::run() {
   while (!should_quit_) {
@@ -103,6 +103,8 @@ void Mewo::run() {
   }
 }
 
+// TODO: some events may have been queued multiple times in the same frame. Check which ones
+// do that and decide whether that's the behavior we want
 void Mewo::process_queued_events() {
   for (const auto& event : event_queue_.drain()) {
     using namespace event;
@@ -151,24 +153,23 @@ void Mewo::process_queued_events() {
           }
         },
 
+        [this](const ViewportResizeRequest& resize_req) {
+          auto [new_width, new_height] = resize_req;
+
+          if constexpr (query::is_debug())
+            std::println("Viewport texture resized to {}×{}", new_width, new_height);
+
+          viewport_.resize(gfx_.device(), new_width, new_height);
+        },
+
         [](const auto&) { std::unreachable(); },
       },
       event
     );
-  }
+  }  // namespace mewo
 }
 
 void Mewo::apply_pending_actions() {
-  if (auto& requested_resize = pending_.viewport_resize(); requested_resize) {
-    auto [new_width, new_height] = requested_resize.value();
-
-    if constexpr (query::is_debug())
-      std::println("Viewport texture resized to {}×{}", new_width, new_height);
-
-    viewport_.resize(gfx_.device(), new_width, new_height);
-    requested_resize.reset();
-  }
-
   if (auto& requested_run = pending_.run(); requested_run) {
     // TODO: check if the code is the same before creating new fragment shader module
     // (how expensive is this anyway?)
