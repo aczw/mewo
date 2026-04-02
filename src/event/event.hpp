@@ -23,11 +23,14 @@ struct ProjectSaveAsRequest {
   std::filesystem::path directory;
 };
 
+struct ProjectSaveRequest {};
+
 using Event = std::variant<
   const QuitRequest,
   const ChooseFolderRequest,
   const ProjectOpenRequest,
-  const ProjectSaveAsRequest
+  const ProjectSaveAsRequest,
+  const ProjectSaveRequest
 >;
 
 }  // namespace mewo::event

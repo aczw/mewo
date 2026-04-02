@@ -127,6 +127,21 @@ void Mewo::process_queued_events() {
           }
         },
 
+        [this](const ProjectSaveRequest&) {
+          if (project_) {
+            try {
+              project_->save(editor_.visible_code());
+              if constexpr (query::is_debug())
+                std::println("Saved project \"{}\"", project_->name());
+            } catch (const Exception& ex) {
+              std::println("Project save failed: {}", ex.what());
+            }
+          } else {
+            using CFR = ChooseFolderRequest;
+            event_queue_.push(CFR{.reason = CFR::Reason::ProjectSaveAs});
+          }
+        },
+
         [](const auto&) { std::unreachable(); },
       },
       event
@@ -135,25 +150,6 @@ void Mewo::process_queued_events() {
 }
 
 void Mewo::apply_pending_actions() {
-  if (bool& requested_save = pending_.project_save(); requested_save) {
-    if (project_) {
-      try {
-        project_->save(editor_.visible_code());
-        if constexpr (query::is_debug())
-          std::println("Saved project \"{}\"", project_->name());
-      } catch (const Exception& ex) {
-        std::println("Project save failed: {}", ex.what());
-      }
-    } else {
-      // TODO: a requested save with no currently active project should invoke a save as. This
-      // requires first requesting the user for a directory to save in. That logic is currently
-      // in `Layout::build`, so fix that first.
-      std::println("No active project to save!");
-    }
-
-    requested_save = false;
-  }
-
   if (auto& requested_resize = pending_.viewport_resize(); requested_resize) {
     auto [new_width, new_height] = requested_resize.value();
 

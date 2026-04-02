@@ -86,7 +86,7 @@ void Gui::build_layout(
       ImGui::Separator();
 
       if (ImGui::MenuItem("Save"))
-        pending.request_project_save();
+        event_queue.push(event::ProjectSaveRequest{});
 
       if (ImGui::MenuItem("Save As..."))
         event_queue.push(CFR{.reason = CFR::Reason::ProjectSaveAs});
