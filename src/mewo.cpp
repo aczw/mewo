@@ -1,6 +1,7 @@
 #include "mewo.hpp"
 
 #include "editor.hpp"
+#include "event/event.hpp"
 #include "exception.hpp"
 #include "gfx/create.hpp"
 #include "gfx/frame_context.hpp"
@@ -8,6 +9,7 @@
 #include "os.hpp"
 #include "project.hpp"
 #include "query.hpp"
+#include "util/match.hpp"
 
 #include <SDL3/SDL_timer.h>
 #include <imgui_impl_sdl3.h>
@@ -16,6 +18,8 @@
 #include <filesystem>
 #include <optional>
 #include <print>
+#include <utility>
+#include <variant>
 
 namespace mewo {
 
@@ -66,8 +70,20 @@ void Mewo::run() {
 
   SDL_Event event = {};
 
-  while (!pending_.quit()) {
+  while (!should_quit_) {
     device.Tick();
+
+    for ([[maybe_unused]] const auto& event : event_queue_.drain()) {
+      using namespace event;
+
+      std::visit(
+        util::Match{
+          [this](const QuitRequest&) { should_quit_ = true; },
+          [](const auto&) { std::unreachable(); }
+        },
+        event
+      );
+    }
 
     while (SDL_PollEvent(&event)) {
       ImGui_ImplSDL3_ProcessEvent(&event);
@@ -75,7 +91,7 @@ void Mewo::run() {
       switch (event.type) {
         case SDL_EVENT_QUIT:
         case SDL_EVENT_WINDOW_CLOSE_REQUESTED: {
-          pending_.request_quit();
+          event_queue_.push(event::QuitRequest{});
           break;
         }
 
@@ -88,9 +104,10 @@ void Mewo::run() {
     }
 
     const gfx::FrameContext frame_ctx = prepare_new_frame();
-    float current_time = static_cast<float>(SDL_GetTicksNS()) / 1'000'000'000.f;
 
-    gui_.build(pending_, window_, editor_, viewport_);
+    gui_.build(event_queue_, pending_, window_, editor_, viewport_);
+
+    float current_time = static_cast<float>(SDL_GetTicksNS()) * 1e-9f;
 
     viewport_.record(queue, frame_ctx, current_time);
     gui_.record(frame_ctx);

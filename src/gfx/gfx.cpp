@@ -3,7 +3,7 @@
 #include "exception.hpp"
 #include "os.hpp"
 #include "query.hpp"
-#include "utility.hpp"
+#include "util/enum_unreachable.hpp"
 
 #include <SDL3/SDL.h>
 #include <imgui_impl_wgpu.h>
@@ -28,7 +28,7 @@ std::string_view get_surface_texture_status(wgpu::SurfaceGetCurrentTextureStatus
     case wgpu::SurfaceGetCurrentTextureStatus::Lost: return "Lost";
     case wgpu::SurfaceGetCurrentTextureStatus::Error: return "Error";
 
-    default: utility::enum_unreachable("wgpu::SurfaceGetCurrentTextureStatus", status);
+    default: util::enum_unreachable("wgpu::SurfaceGetCurrentTextureStatus", status);
   }
 }
 
@@ -150,8 +150,10 @@ Gfx::Gfx(const Window& window) {
 
   auto create_surface_info = os::retrieve_surface_info(instance_, window);
 
-  if (WGPUSurface raw_surface = ImGui_ImplWGPU_CreateWGPUSurfaceHelper(&create_surface_info);
-      !raw_surface) {
+  if (
+    WGPUSurface raw_surface = ImGui_ImplWGPU_CreateWGPUSurfaceHelper(&create_surface_info);
+    !raw_surface
+  ) {
     throw Exception("Failed to create WebGPU surface");
   } else {
     surface_ = wgpu::Surface(raw_surface);
@@ -202,9 +204,11 @@ FrameContext Gfx::prepare_new_frame() {
   wgpu::SurfaceTexture surface_texture;
   surface_.GetCurrentTexture(&surface_texture);
 
-  if (auto status = surface_texture.status;
-      status != wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal &&
-      status != wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal) {
+  if (
+    auto status = surface_texture.status;
+    status != wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal &&
+    status != wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal
+  ) {
     throw Exception("WebGPU surface texture status: {}", get_surface_texture_status(status));
   } else if (status == wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal) {
     std::println("warning: surface texture is suboptimal");

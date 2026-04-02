@@ -115,6 +115,7 @@ set(MEWO_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(MEWO_EVENT_DIR ${MEWO_SRC_DIR}/event)
 set(MEWO_GFX_DIR ${MEWO_SRC_DIR}/gfx)
 set(MEWO_GUI_DIR ${MEWO_SRC_DIR}/gui)
+set(MEWO_UTIL_DIR ${MEWO_SRC_DIR}/util)
 
 add_executable(mewo
   ${MEWO_EVENT_DIR}/event.hpp
@@ -132,6 +133,9 @@ add_executable(mewo
   ${MEWO_GUI_DIR}/gui.cpp
   ${MEWO_GUI_DIR}/gui.hpp
 
+  ${MEWO_UTIL_DIR}/enum_unreachable.hpp
+  ${MEWO_UTIL_DIR}/match.hpp
+
   ${MEWO_SRC_DIR}/aspect_ratio.hpp
   ${MEWO_SRC_DIR}/editor.cpp
   ${MEWO_SRC_DIR}/editor.hpp
@@ -147,7 +151,6 @@ add_executable(mewo
   ${MEWO_SRC_DIR}/project.cpp
   ${MEWO_SRC_DIR}/project.hpp
   ${MEWO_SRC_DIR}/query.hpp
-  ${MEWO_SRC_DIR}/utility.hpp
   ${MEWO_SRC_DIR}/viewport.cpp
   ${MEWO_SRC_DIR}/viewport.hpp
   ${MEWO_SRC_DIR}/window.cpp

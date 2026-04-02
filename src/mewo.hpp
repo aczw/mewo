@@ -1,6 +1,7 @@
 #pragma once
 
 #include "editor.hpp"
+#include "event/queue.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/gfx.hpp"
 #include "gui/gui.hpp"
@@ -19,11 +20,15 @@ class Mewo {
   Mewo();
 
   void run();
-  const gfx::FrameContext prepare_new_frame();
 
  private:
+  const gfx::FrameContext prepare_new_frame();
+
   std::filesystem::path executable_dir_;
   std::filesystem::path assets_dir_;
+  bool should_quit_ = false;
+
+  event::Queue event_queue_;
 
   Pending pending_;
 

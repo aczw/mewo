@@ -14,8 +14,6 @@ namespace mewo {
 /// Collects pending operations to be applied and processed in the next frame.
 class Pending {
  public:
-  bool& quit() { return quit_; }
-
   std::optional<std::filesystem::path>& project_open() { return project_open_; }
 
   std::optional<std::filesystem::path>& project_save_as() { return project_save_as_; }
@@ -25,8 +23,6 @@ class Pending {
   std::optional<std::pair<uint32_t, uint32_t>>& viewport_resize() { return viewport_resize_; }
 
   std::optional<std::string>& run() { return run_; }
-
-  void request_quit() { quit_ = true; }
 
   void request_project_open(const std::filesystem::path& project_directory) {
     project_open_ = project_directory;
@@ -53,7 +49,6 @@ class Pending {
   void request_run(std::string_view new_combined_code) { run_ = std::string(new_combined_code); }
 
  private:
-  bool quit_ = false;
   std::optional<std::filesystem::path> project_open_;
   std::optional<std::filesystem::path> project_save_as_;
   bool project_save_ = false;

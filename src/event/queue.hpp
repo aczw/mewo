@@ -9,7 +9,7 @@ namespace mewo::event {
 
 class Queue {
  public:
-  void enqueue(Event event) {
+  void push(Event event) {
     std::scoped_lock lock(mutex_);
     queue_.push_back(std::move(event));
   }

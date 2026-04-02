@@ -2,8 +2,9 @@
 
 #include "aspect_ratio.hpp"
 #include "editor.hpp"
+#include "event/event.hpp"
 #include "pending.hpp"
-#include "utility.hpp"
+#include "util/enum_unreachable.hpp"
 
 #include <SDL3/SDL_dialog.h>
 #include <SDL3/SDL_error.h>
@@ -60,7 +61,13 @@ Gui::Gui(const std::filesystem::path& assets_dir, const Window& window, const gf
   viewport_ = ImGui::GetMainViewport();
 }
 
-void Gui::build(Pending& pending, const Window& window, Editor& editor, Viewport& viewport) {
+void Gui::build(
+  event::Queue& event_queue,
+  Pending& pending,
+  const Window& window,
+  Editor& editor,
+  Viewport& viewport
+) {
   // Once the layout is created, the ID remains constant.
   if (
     const ImGuiID dockspace_id = ImGui::GetID("main-dockspace");
@@ -153,7 +160,7 @@ void Gui::build(Pending& pending, const Window& window, Editor& editor, Viewport
       ImGui::Separator();
 
       if (ImGui::MenuItem("Quit"))
-        pending.request_quit();
+        event_queue.push(event::QuitRequest{});
 
       ImGui::EndMenu();
     }
@@ -238,7 +245,7 @@ void Gui::build(Pending& pending, const Window& window, Editor& editor, Viewport
             // TODO: division by zero possible
             return static_cast<float>(prev_height) / static_cast<float>(prev_width);
 
-          default: utility::enum_unreachable("Viewport::Mode", prev_mode);
+          default: util::enum_unreachable("Viewport::Mode", prev_mode);
         }
       });
 
@@ -270,7 +277,7 @@ void Gui::build(Pending& pending, const Window& window, Editor& editor, Viewport
             pending.request_viewport_resize(prev_width, prev_height);
             break;
 
-          default: utility::enum_unreachable("Viewport::Mode", curr_mode);
+          default: util::enum_unreachable("Viewport::Mode", curr_mode);
         }
       }
     }
@@ -327,7 +334,7 @@ void Gui::build(Pending& pending, const Window& window, Editor& editor, Viewport
         break;
       }
 
-      default: utility::enum_unreachable("Viewport::Mode", prev_mode);
+      default: util::enum_unreachable("Viewport::Mode", prev_mode);
     }
 
     prev_viewport_window_width_ = curr_viewport_window_width;

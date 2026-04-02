@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utility.hpp"
+#include "util/enum_unreachable.hpp"
 
 namespace mewo {
 
@@ -15,7 +15,7 @@ class AspectRatio {
       case Preset::e3_2: return 2.f / 3.f;
       case Preset::e16_9: return 9.f / 16.f;
 
-      default: utility::enum_unreachable("AspectRatio::Preset", preset);
+      default: util::enum_unreachable("AspectRatio::Preset", preset);
     }
   }
 };

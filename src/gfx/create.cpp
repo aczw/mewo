@@ -3,7 +3,7 @@
 #include "exception.hpp"
 #include "gfx/compilation_diagnostic.hpp"
 #include "gfx/gfx.hpp"
-#include "utility.hpp"
+#include "util/enum_unreachable.hpp"
 
 #include <webgpu/webgpu_cpp.h>
 
@@ -22,7 +22,7 @@ std::string_view get_compilation_mesage_type(wgpu::CompilationMessageType msg_ty
     case wgpu::CompilationMessageType::Warning: return "warning";
     case wgpu::CompilationMessageType::Info: return "info";
 
-    default: utility::enum_unreachable("wgpu::CompilationMessageType", msg_type);
+    default: util::enum_unreachable("wgpu::CompilationMessageType", msg_type);
   }
 }
 
