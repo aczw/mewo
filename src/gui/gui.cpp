@@ -17,7 +17,6 @@
 
 #include <array>
 #include <functional>
-#include <print>
 #include <string_view>
 #include <utility>
 
@@ -61,10 +60,9 @@ Gui::Gui(const std::filesystem::path& assets_dir, const Window& window, const gf
   viewport_ = ImGui::GetMainViewport();
 }
 
-void Gui::build(
+void Gui::build_layout(
   event::Queue& event_queue,
   Pending& pending,
-  const Window& window,
   Editor& editor,
   Viewport& viewport
 ) {
@@ -80,82 +78,18 @@ void Gui::build(
 
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
-      if (ImGui::MenuItem("Open...")) {
-        // TODO: probably can't use this for macOS because it doesn't let you create a
-        // folder from within the dialog by default
-        // TODO: move this function call to `Mewo::prepare_new_frame`, and somehow block
-        // on callback finishing?
-        SDL_ShowOpenFolderDialog(
-          [](void* userdata, const char* const* filelist, int) -> void {
-            if (filelist == nullptr) {
-              std::println("error: {}", SDL_GetError());
-              return;
-            }
+      using CFR = event::ChooseFolderRequest;
 
-            if (*filelist == nullptr)
-              return;
-
-            const char* folder_path = nullptr;
-            int count = 0;
-
-            while (*filelist) {
-              folder_path = *filelist;
-              filelist += 1;
-              count += 1;
-            }
-
-            if (count > 1)
-              std::println("warning: more than one folder selected, using last one");
-
-            static_cast<Pending*>(userdata)->request_project_open(folder_path);
-          },
-          static_cast<void*>(&pending),
-          window.get(),
-          nullptr,
-          false
-        );
-      }
+      if (ImGui::MenuItem("Open..."))
+        event_queue.push(CFR{.reason = CFR::Reason::ProjectOpen});
 
       ImGui::Separator();
 
       if (ImGui::MenuItem("Save"))
         pending.request_project_save();
 
-      if (ImGui::MenuItem("Save As...")) {
-        // TODO: probably can't use this for macOS because it doesn't let you create a
-        // folder from within the dialog by default
-        // TODO: move this function call to `Mewo::prepare_new_frame`, and somehow block
-        // on callback finishing?
-        SDL_ShowOpenFolderDialog(
-          [](void* userdata, const char* const* filelist, int) -> void {
-            if (filelist == nullptr) {
-              std::println("error: {}", SDL_GetError());
-              return;
-            }
-
-            if (*filelist == nullptr)
-              return;
-
-            const char* folder_path = nullptr;
-            int count = 0;
-
-            while (*filelist) {
-              folder_path = *filelist;
-              filelist += 1;
-              count += 1;
-            }
-
-            if (count > 1)
-              std::println("warning: more than one folder selected, using last one");
-
-            static_cast<Pending*>(userdata)->request_project_save_as(folder_path);
-          },
-          static_cast<void*>(&pending),
-          window.get(),
-          nullptr,
-          false
-        );
-      }
+      if (ImGui::MenuItem("Save As..."))
+        event_queue.push(CFR{.reason = CFR::Reason::ProjectSaveAs});
 
       ImGui::Separator();
 

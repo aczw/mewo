@@ -8,23 +8,26 @@ namespace mewo::event {
 
 struct QuitRequest {};
 
-struct ProjectOpen {
-  std::filesystem::path root_dir;
+struct ChooseFolderRequest {
+  enum class Reason : uint8_t {
+    ProjectOpen,
+    ProjectSaveAs,
+  } reason = Reason::ProjectOpen;
 };
 
-struct ProjectSaveAs {
-  std::filesystem::path root_dir;
+struct ProjectOpenRequest {
+  std::filesystem::path directory;
 };
 
-struct ProjectSave {};
-
-struct ViewportResize {
-  uint32_t new_width = 0;
-  uint32_t new_height = 0;
+struct ProjectSaveAsRequest {
+  std::filesystem::path directory;
 };
 
-struct Run {};
-
-using Event = std::variant<const QuitRequest>;
+using Event = std::variant<
+  const QuitRequest,
+  const ChooseFolderRequest,
+  const ProjectOpenRequest,
+  const ProjectSaveAsRequest
+>;
 
 }  // namespace mewo::event

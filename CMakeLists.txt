@@ -136,6 +136,7 @@ add_executable(mewo
   ${MEWO_UTIL_DIR}/enum_unreachable.hpp
   ${MEWO_UTIL_DIR}/match.hpp
 
+  ${MEWO_SRC_DIR}/aspect_ratio.cpp
   ${MEWO_SRC_DIR}/aspect_ratio.hpp
   ${MEWO_SRC_DIR}/editor.cpp
   ${MEWO_SRC_DIR}/editor.hpp

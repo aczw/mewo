@@ -15,6 +15,7 @@ BinPackArguments: false
 BinPackParameters: OnePerLine
 AlignAfterOpenBracket: BlockIndent
 BreakAfterReturnType: Automatic
+BreakBeforeTemplateCloser: true
 PenaltyReturnTypeOnItsOwnLine: 1000
 AllowShortFunctionsOnASingleLine: All
 AllowShortCaseLabelsOnASingleLine: true

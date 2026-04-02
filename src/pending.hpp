@@ -2,8 +2,8 @@
 
 #include "aspect_ratio.hpp"
 
+#include <cmath>
 #include <cstdint>
-#include <filesystem>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -14,23 +14,11 @@ namespace mewo {
 /// Collects pending operations to be applied and processed in the next frame.
 class Pending {
  public:
-  std::optional<std::filesystem::path>& project_open() { return project_open_; }
-
-  std::optional<std::filesystem::path>& project_save_as() { return project_save_as_; }
-
   bool& project_save() { return project_save_; }
 
   std::optional<std::pair<uint32_t, uint32_t>>& viewport_resize() { return viewport_resize_; }
 
   std::optional<std::string>& run() { return run_; }
-
-  void request_project_open(const std::filesystem::path& project_directory) {
-    project_open_ = project_directory;
-  }
-
-  void request_project_save_as(const std::filesystem::path& project_directory) {
-    project_save_as_ = project_directory;
-  }
 
   void request_project_save() { project_save_ = true; }
 
@@ -49,8 +37,6 @@ class Pending {
   void request_run(std::string_view new_combined_code) { run_ = std::string(new_combined_code); }
 
  private:
-  std::optional<std::filesystem::path> project_open_;
-  std::optional<std::filesystem::path> project_save_as_;
   bool project_save_ = false;
   /// Can't resize the same frame because the viewport texture might already
   /// be submitted for display in the GUI.

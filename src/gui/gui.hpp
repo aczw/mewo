@@ -35,10 +35,9 @@ class Gui {
   }
 
   /// Builds the GUI and records additional data into respective classes. Called every frame.
-  void build(
+  void build_layout(
     event::Queue& event_queue,
     Pending& pending,
-    const Window& window,
     Editor& editor,
     Viewport& viewport
   );

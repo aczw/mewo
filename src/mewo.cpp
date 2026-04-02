@@ -9,8 +9,10 @@
 #include "os.hpp"
 #include "project.hpp"
 #include "query.hpp"
+#include "util/enum_unreachable.hpp"
 #include "util/match.hpp"
 
+#include <SDL3/SDL_dialog.h>
 #include <SDL3/SDL_timer.h>
 #include <imgui_impl_sdl3.h>
 #include <webgpu/webgpu_cpp.h>
@@ -83,6 +85,48 @@ void Mewo::process_queued_events() {
     std::visit(
       util::Match{
         [this](const QuitRequest&) { should_quit_ = true; },
+
+        [this](const ChooseFolderRequest& cfr) {
+          using CFR = ChooseFolderRequest;
+
+          switch (cfr.reason) {
+            case CFR::Reason::ProjectOpen: {
+              show_open_folder_dialog<CFR::Reason::ProjectOpen>();
+              break;
+            }
+
+            case CFR::Reason::ProjectSaveAs: {
+              show_open_folder_dialog<CFR::Reason::ProjectSaveAs>();
+              break;
+            }
+
+            default: util::enum_unreachable("event::ChooseFolderRequest::Reason", cfr.reason);
+          }
+        },
+
+        [this](const ProjectOpenRequest& open_req) {
+          try {
+            const auto& project = project_.emplace(open_req.directory);
+
+            editor_.set_visible_code(io::read_wgsl_shader(project.shader_file_location()));
+            pending_.request_run(editor_.combined_code());
+            window_.update_project_in_title(project);
+          } catch (const Exception& ex) {
+            std::println("Failed to open project: {}", ex.what());
+          }
+        },
+
+        // Since we're only making a copy of the current state, there's no need
+        // to update the editor or request a new run.
+        [this](const ProjectSaveAsRequest& save_as_req) {
+          try {
+            project_ = Project::save_as(save_as_req.directory, editor_.visible_code());
+            window_.update_project_in_title(project_.value());
+          } catch (const Exception& ex) {
+            std::println("Project save as failed: {}", ex.what());
+          }
+        },
+
         [](const auto&) { std::unreachable(); },
       },
       event
@@ -91,33 +135,6 @@ void Mewo::process_queued_events() {
 }
 
 void Mewo::apply_pending_actions() {
-  if (auto& requested_open = pending_.project_open(); requested_open) {
-    try {
-      const auto& project = project_.emplace(requested_open.value());
-
-      editor_.set_visible_code(io::read_wgsl_shader(project.shader_file_location()));
-      pending_.request_run(editor_.combined_code());
-      window_.update_project_in_title(project);
-    } catch (const Exception& ex) {
-      std::println("Failed to open project: {}", ex.what());
-    }
-
-    requested_open.reset();
-  }
-
-  // Since we're only making a copy of the current state, there's no need
-  // to update the editor or request a new run.
-  if (auto& requested_save_as = pending_.project_save_as(); requested_save_as) {
-    try {
-      project_ = Project::save_as(requested_save_as.value(), editor_.visible_code());
-      window_.update_project_in_title(project_.value());
-    } catch (const Exception& ex) {
-      std::println("Project save as failed: {}", ex.what());
-    }
-
-    requested_save_as.reset();
-  }
-
   if (bool& requested_save = pending_.project_save(); requested_save) {
     if (project_) {
       try {
@@ -194,7 +211,7 @@ void Mewo::update(const gfx::FrameContext& frame_ctx) {
     }
   }
 
-  gui_.build(event_queue_, pending_, window_, editor_, viewport_);
+  gui_.build_layout(event_queue_, pending_, editor_, viewport_);
 
   float current_time = static_cast<float>(SDL_GetTicks()) * 1e-3f;
 
