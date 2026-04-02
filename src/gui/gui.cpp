@@ -20,7 +20,7 @@
 #include <string_view>
 #include <utility>
 
-namespace mewo::ui {
+namespace mewo {
 
 static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
 static constexpr std::string_view DIAGNOSTICS_WINDOW_NAME = "Diagnostics";
@@ -62,8 +62,10 @@ Gui::Gui(const std::filesystem::path& assets_dir, const Window& window, const gf
 
 void Gui::build(Pending& pending, const Window& window, Editor& editor, Viewport& viewport) {
   // Once the layout is created, the ID remains constant.
-  if (const ImGuiID dockspace_id = ImGui::GetID("main-dockspace");
-      ImGui::DockBuilderGetNode(dockspace_id) == nullptr) {
+  if (
+    const ImGuiID dockspace_id = ImGui::GetID("main-dockspace");
+    ImGui::DockBuilderGetNode(dockspace_id) == nullptr
+  ) {
     set_up_initial_layout(dockspace_id);
   } else {
     ImGui::DockSpaceOverViewport(dockspace_id, viewport_, ImGuiDockNodeFlags_PassthruCentralNode);
@@ -217,8 +219,10 @@ void Gui::build(Pending& pending, const Window& window, Editor& editor, Viewport
     // This only applies if the viewport mode is based on the aspect ratio.
     //
     // TODO: don't submit if user is actively dragging the window to be bigger/smaller
-    if (prev_mode == Viewport::Mode::AspectRatio &&
-        curr_viewport_window_width != prev_viewport_window_width_) {
+    if (
+      prev_mode == Viewport::Mode::AspectRatio &&
+      curr_viewport_window_width != prev_viewport_window_width_
+    ) {
       pending.request_viewport_resize(curr_viewport_window_width, viewport.ratio_preset());
     }
 
@@ -373,4 +377,4 @@ void Gui::set_up_initial_layout(ImGuiID dockspace_id) const {
   ImGui::DockBuilderFinish(dockspace_id);
 }
 
-}  // namespace mewo::ui
+}  // namespace mewo

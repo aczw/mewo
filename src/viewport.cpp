@@ -4,8 +4,8 @@
 #include "exception.hpp"
 #include "gfx/create.hpp"
 #include "gfx/gfx.hpp"
+#include "gui/gui.hpp"
 #include "io.hpp"
-#include "ui/gui.hpp"
 
 #include <webgpu/webgpu_cpp.h>
 
@@ -32,7 +32,7 @@ Viewport::Viewport(
 
   unif_buf_ = device.CreateBuffer(&unif_buf_desc);
 
-  float width = std::floor(static_cast<float>(surface_config.width) * ui::Gui::SPLIT_LEFT_RATIO);
+  float width = std::floor(static_cast<float>(surface_config.width) * Gui::SPLIT_LEFT_RATIO);
   float height = std::floor(width * AspectRatio::get_inverse_value(ratio_preset_));
   auto width_whole = static_cast<uint32_t>(width);
   auto height_whole = static_cast<uint32_t>(height);

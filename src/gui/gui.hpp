@@ -13,7 +13,7 @@
 
 #include <filesystem>
 
-namespace mewo::ui {
+namespace mewo {
 
 class Gui {
  public:
@@ -56,4 +56,4 @@ class Gui {
   ImGuiViewport* viewport_ = nullptr;
 };
 
-}  // namespace mewo::ui
+}  // namespace mewo

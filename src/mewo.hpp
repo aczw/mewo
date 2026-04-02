@@ -3,9 +3,9 @@
 #include "editor.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/gfx.hpp"
+#include "gui/gui.hpp"
 #include "pending.hpp"
 #include "project.hpp"
-#include "ui/gui.hpp"
 #include "viewport.hpp"
 #include "window.hpp"
 
@@ -29,7 +29,7 @@ class Mewo {
 
   Window window_;
   gfx::Gfx gfx_;
-  ui::Gui gui_;
+  Gui gui_;
 
   Editor editor_;
   Viewport viewport_;
