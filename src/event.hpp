@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <variant>
 
-namespace mewo::engine {
+namespace mewo {
 
 struct Quit {};
 
@@ -27,4 +27,4 @@ struct Run {};
 
 using Event = std::variant<Quit, ProjectOpen, ProjectSaveAs, ProjectSave, ViewportResize, Run>;
 
-}  // namespace mewo::engine
+}  // namespace mewo
