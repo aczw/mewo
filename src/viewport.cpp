@@ -19,7 +19,6 @@ namespace mewo {
 
 Viewport::Viewport(
   EventQueue& event_queue,
-  Pending& pending,
   const std::filesystem::path& assets_dir,
   const gfx::Gfx& gfx,
   std::string_view initial_code
@@ -111,7 +110,7 @@ Viewport::Viewport(
   }
 
   update(frag_module.value(), device);
-  pending.request_run(initial_code);
+  event_queue.push(RunRequest{.fragment_code = std::string(initial_code)});
 
   texture_desc_ = {
     .label = "viewport-texture",

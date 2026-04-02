@@ -3,7 +3,6 @@
 #include "editor.hpp"
 #include "event/event_queue.hpp"
 #include "gfx/gfx.hpp"
-#include "pending.hpp"
 #include "viewport.hpp"
 #include "window.hpp"
 
@@ -35,7 +34,7 @@ class Gui {
   }
 
   /// Builds the GUI and records additional data into respective classes. Called every frame.
-  void build_layout(EventQueue& event_queue, Pending& pending, Editor& editor, Viewport& viewport);
+  void build_layout(EventQueue& event_queue, Editor& editor, Viewport& viewport);
 
   void record(const gfx::FrameContext& frame_ctx) const;
 

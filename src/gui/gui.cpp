@@ -3,7 +3,6 @@
 #include "aspect_ratio.hpp"
 #include "editor.hpp"
 #include "event/event.hpp"
-#include "pending.hpp"
 #include "util/enum_unreachable.hpp"
 
 #include <SDL3/SDL_dialog.h>
@@ -60,12 +59,7 @@ Gui::Gui(const std::filesystem::path& assets_dir, const Window& window, const gf
   viewport_ = ImGui::GetMainViewport();
 }
 
-void Gui::build_layout(
-  EventQueue& event_queue,
-  Pending& pending,
-  Editor& editor,
-  Viewport& viewport
-) {
+void Gui::build_layout(EventQueue& event_queue, Editor& editor, Viewport& viewport) {
   // Once the layout is created, the ID remains constant.
   if (
     const ImGuiID dockspace_id = ImGui::GetID("main-dockspace");
@@ -192,7 +186,7 @@ void Gui::build_layout(
     }
 
     if (ImGui::Button("Run"))
-      pending.request_run(editor.combined_code());
+      event_queue.push(RunRequest{.fragment_code = editor.combined_code()});
 
     {
       using Mode = Viewport::Mode;

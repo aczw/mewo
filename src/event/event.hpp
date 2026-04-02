@@ -45,13 +45,18 @@ struct ViewportResizeRequest {
   }
 };
 
+struct RunRequest {
+  std::string fragment_code;  ///< Combined fragment shader.
+};
+
 using Event = std::variant<
   const QuitRequest,
   const ChooseFolderRequest,
   const ProjectOpenRequest,
   const ProjectSaveAsRequest,
   const ProjectSaveRequest,
-  const ViewportResizeRequest
+  const ViewportResizeRequest,
+  const RunRequest
 >;
 
 }  // namespace mewo

@@ -4,7 +4,6 @@
 #include "event/event_queue.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/gfx.hpp"
-#include "pending.hpp"
 
 #include <webgpu/webgpu_cpp.h>
 
@@ -35,7 +34,6 @@ class Viewport {
 
   Viewport(
     EventQueue& event_queue,
-    Pending& pending,
     const std::filesystem::path& assets_dir,
     const gfx::Gfx& gfx,
     std::string_view initial_code

@@ -89,7 +89,7 @@ Mewo::Mewo()
       gfx_(window_),
       gui_(assets_dir_, window_, gfx_),
       editor_(assets_dir_),
-      viewport_(event_queue_, pending_, assets_dir_, gfx_, editor_.combined_code()) {}
+      viewport_(event_queue_, assets_dir_, gfx_, editor_.combined_code()) {}
 
 void Mewo::run() {
   while (!should_quit_) {
@@ -118,7 +118,7 @@ void Mewo::process_queued_events() {
             const auto& project = project_.emplace(open_req.directory);
 
             editor_.set_visible_code(io::read_wgsl_shader(project.shader_file_location()));
-            pending_.request_run(editor_.combined_code());
+            event_queue_.push(RunRequest{.fragment_code = editor_.combined_code()});
             window_.update_project_in_title(project);
           } catch (const Exception& ex) {
             std::println("Failed to open project: {}", ex.what());
@@ -160,6 +160,33 @@ void Mewo::process_queued_events() {
           viewport_.resize(gfx_.device(), new_width, new_height);
         },
 
+        [this](const RunRequest& run_req) {
+          // TODO: check if the code is the same before creating new fragment shader module
+          // (how expensive is this anyway?)
+          auto compilation_result = gfx::create::shader_module_from_wgsl(
+            gfx_, run_req.fragment_code, Viewport::FRAGMENT_SHADER_LABEL
+          );
+
+          editor_.set_diagnostics(std::move(compilation_result.second));
+
+          if constexpr (query::is_debug())
+            std::println(
+              "Shader compilation generated {} diagnostic(s)", editor_.diagnostics().size()
+            );
+
+          if (const auto& fragment_module = compilation_result.first; fragment_module) {
+            viewport_.update(fragment_module.value(), gfx_.device());
+
+            if constexpr (query::is_debug())
+              std::println("Updated viewport render pipeline");
+          } else {
+            if constexpr (query::is_debug())
+              std::println(
+                "Shader compilation errors occurred, viewport render pipeline not updated"
+              );
+          }
+        },
+
         [](const auto&) { std::unreachable(); },
       },
       event
@@ -167,32 +194,7 @@ void Mewo::process_queued_events() {
   }  // namespace mewo
 }
 
-void Mewo::apply_pending_actions() {
-  if (auto& requested_run = pending_.run(); requested_run) {
-    // TODO: check if the code is the same before creating new fragment shader module
-    // (how expensive is this anyway?)
-    auto compilation_result = gfx::create::shader_module_from_wgsl(
-      gfx_, requested_run.value(), Viewport::FRAGMENT_SHADER_LABEL
-    );
-
-    editor_.set_diagnostics(std::move(compilation_result.second));
-
-    if constexpr (query::is_debug())
-      std::println("Shader compilation generated {} diagnostic(s)", editor_.diagnostics().size());
-
-    if (const auto& fragment_module = compilation_result.first; fragment_module) {
-      viewport_.update(fragment_module.value(), gfx_.device());
-
-      if constexpr (query::is_debug())
-        std::println("Updated viewport render pipeline");
-    } else {
-      if constexpr (query::is_debug())
-        std::println("Shader compilation errors occurred, viewport render pipeline not updated");
-    }
-
-    requested_run.reset();
-  }
-}
+void Mewo::apply_pending_actions() {}
 
 void Mewo::update(const gfx::FrameContext& frame_ctx) {
   SDL_Event event = {};
@@ -215,7 +217,7 @@ void Mewo::update(const gfx::FrameContext& frame_ctx) {
     }
   }
 
-  gui_.build_layout(event_queue_, pending_, editor_, viewport_);
+  gui_.build_layout(event_queue_, editor_, viewport_);
 
   float current_time = static_cast<float>(SDL_GetTicks()) * 1e-3f;
 

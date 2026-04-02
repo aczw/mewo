@@ -6,7 +6,6 @@
 #include "gfx/frame_context.hpp"
 #include "gfx/gfx.hpp"
 #include "gui/gui.hpp"
-#include "pending.hpp"
 #include "project.hpp"
 #include "viewport.hpp"
 #include "window.hpp"
@@ -36,8 +35,6 @@ class Mewo {
   bool should_quit_ = false;
 
   EventQueue event_queue_;
-
-  Pending pending_;
 
   Window window_;
   gfx::Gfx gfx_;
