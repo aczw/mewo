@@ -4,9 +4,9 @@
 #include <filesystem>
 #include <variant>
 
-namespace mewo {
+namespace mewo::event {
 
-struct Quit {};
+struct QuitRequest {};
 
 struct ProjectOpen {
   std::filesystem::path root_dir;
@@ -25,6 +25,6 @@ struct ViewportResize {
 
 struct Run {};
 
-using Event = std::variant<Quit, ProjectOpen, ProjectSaveAs, ProjectSave, ViewportResize, Run>;
+using Event = std::variant<const QuitRequest>;
 
-}  // namespace mewo
+}  // namespace mewo::event

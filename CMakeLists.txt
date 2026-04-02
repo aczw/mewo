@@ -112,10 +112,13 @@ set(JSON_Install OFF CACHE INTERNAL "")
 add_subdirectory(${MEWO_THIRD_PARTY_DIR}/nlohmann_json EXCLUDE_FROM_ALL)
 
 set(MEWO_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(MEWO_EVENT_DIR ${MEWO_SRC_DIR}/event)
 set(MEWO_GFX_DIR ${MEWO_SRC_DIR}/gfx)
 set(MEWO_GUI_DIR ${MEWO_SRC_DIR}/gui)
 
 add_executable(mewo
+  ${MEWO_EVENT_DIR}/event.hpp
+
   ${MEWO_GFX_DIR}/compilation_diagnostic.hpp
   ${MEWO_GFX_DIR}/create.cpp
   ${MEWO_GFX_DIR}/create.hpp
@@ -130,7 +133,6 @@ add_executable(mewo
   ${MEWO_SRC_DIR}/aspect_ratio.hpp
   ${MEWO_SRC_DIR}/editor.cpp
   ${MEWO_SRC_DIR}/editor.hpp
-  ${MEWO_SRC_DIR}/event.hpp
   ${MEWO_SRC_DIR}/exception.hpp
   ${MEWO_SRC_DIR}/io.cpp
   ${MEWO_SRC_DIR}/io.hpp
