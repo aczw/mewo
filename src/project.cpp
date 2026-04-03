@@ -3,6 +3,10 @@
 #include "exception.hpp"
 #include "query.hpp"
 
+#include <nlohmann/json.hpp>
+
+#include <chrono>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <print>
@@ -23,10 +27,30 @@ Project::Project(const std::filesystem::path& folder_to_open) {
   if (!fs::is_directory(absolute))
     throw Exception("\"{}\" is not a folder", path_str);
 
-  auto mewo_folder = absolute / MEWO_FOLDER_NAME;
+  auto mewo_dir = absolute / MEWO_FOLDER_NAME;
+  if (!fs::exists(mewo_dir) || !fs::is_directory(mewo_dir))
+    throw Exception("\"{}\" either does not exist or is not a folder", mewo_dir.string());
 
-  if (!fs::exists(mewo_folder) || !fs::is_directory(mewo_folder))
-    throw Exception("\"{}\" either does not exist or is not a folder", mewo_folder.string());
+  std::ifstream project_json_file(mewo_dir / PROJECT_JSON_FILE_NAME);
+
+  if (!project_json_file || !project_json_file.is_open())
+    throw Exception("Failed to open \"{}/{}\"", mewo_dir.string(), PROJECT_JSON_FILE_NAME);
+
+  using json = nlohmann::json;
+  json data = json::parse(project_json_file);
+
+  if (
+    auto schema_version = data[SCHEMA_VERSION_KEY].get<decltype(SCHEMA_VERSION_VALUE)>();
+    schema_version != SCHEMA_VERSION_VALUE
+  ) {
+    throw Exception(
+      "Unexpected schema version found: {} (found) != {} (expected)",
+      schema_version,
+      SCHEMA_VERSION_VALUE
+    );
+  } else {
+    std::println("Schema version: {}", schema_version);
+  }
 
   root_directory_ = absolute;
   name_ = root_directory_.filename().string();
@@ -49,18 +73,35 @@ Project Project::save_as(const std::filesystem::path& directory, std::string_vie
   if (!fs::is_empty(absolute_path))
     throw Exception("\"{}\" is not empty, abandoning", path_str);
 
-  // Create Mewo folder
-  if (!fs::create_directory(absolute_path / Project::MEWO_FOLDER_NAME)) {
+  auto mewo_dir = absolute_path / MEWO_FOLDER_NAME;
+  if (!fs::create_directory(mewo_dir))
+    throw Exception("Failed to create {1} folder at \"{0}/{1}\"", path_str, MEWO_FOLDER_NAME);
+
+  auto new_project = Project(absolute_path, SkipPathValidationTag{});
+  new_project.save(code);
+
+  if (
+    std::ofstream project_json_file(mewo_dir / PROJECT_JSON_FILE_NAME);
+    !project_json_file || !project_json_file.is_open()
+  ) {
     throw Exception(
-      "Failed to create {1} folder at \"{0}/{1}\"", path_str, Project::MEWO_FOLDER_NAME
+      "Failed to access {}/{} for writing", mewo_dir.string(), PROJECT_JSON_FILE_NAME
     );
+  } else {
+    namespace ch = std::chrono;
+    auto now = ch::system_clock::now();
+    int64_t created_at_timestamp = ch::duration_cast<ch::seconds>(now.time_since_epoch()).count();
+
+    nlohmann::ordered_json data = {
+      {SCHEMA_VERSION_KEY, SCHEMA_VERSION_VALUE},
+      {"created_at", created_at_timestamp},
+    };
+
+    project_json_file << data.dump(4);
   }
 
   if constexpr (query::is_debug())
     std::println("Saved as project \"{}\"", path_str);
-
-  auto new_project = Project(absolute_path, SkipPathValidationTag{});
-  new_project.save(code);
 
   return new_project;
 }
