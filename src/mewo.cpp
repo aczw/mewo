@@ -108,7 +108,35 @@ void Mewo::process_queued_events() {
       util::Match{
         [this](const QuitRequest&) { should_quit_ = true; },
 
-        [this](const ChooseFolderRequest& cfr) { show_open_folder_dialog(cfr.reason); },
+        [this](const ChooseFolderRequest& cfr) {
+          auto callback_fn = std::invoke([reason = cfr.reason]() -> SDL_DialogFileCallback {
+            switch (reason) {
+              case ChooseFolderRequest::Reason::ProjectOpen:
+                return [](void* userdata, const char* const* filelist, int) -> void {
+                  if (auto dir_opt = parse_dir_from_filelist(filelist); dir_opt) {
+                    static_cast<Mewo*>(userdata)->event_queue_.push(
+                      ProjectOpenRequest{.directory = dir_opt.value()}
+                    );
+                  }
+                };
+
+              case ChooseFolderRequest::Reason::ProjectSaveAs:
+                return [](void* userdata, const char* const* filelist, int) -> void {
+                  if (auto dir_opt = parse_dir_from_filelist(filelist); dir_opt) {
+                    static_cast<Mewo*>(userdata)->event_queue_.push(
+                      ProjectSaveAsRequest{.directory = dir_opt.value()}
+                    );
+                  }
+                };
+
+              default: util::enum_unreachable("event::ChooseFolderRequest::Reason", reason);
+            }
+          });
+
+          // TODO: probably can't use this for macOS because it doesn't let you create a
+          // folder from within the dialog by default
+          SDL_ShowOpenFolderDialog(callback_fn, this, window_.get(), nullptr, false);
+        },
 
         [this](const ProjectOpenRequest& open_req) {
           try {
@@ -238,36 +266,6 @@ void Mewo::update(const gfx::FrameContext& frame_ctx) {
   viewport_.update(gfx_.queue(), frame_ctx, static_cast<float>(SDL_GetTicks()) * 1e-3f);
   gui_.update(frame_ctx);
   gfx_.update(frame_ctx.encoder.Finish(&CMD_BUF_DESC));
-}
-
-void Mewo::show_open_folder_dialog(ChooseFolderRequest::Reason reason) {
-  auto callback_fn = std::invoke([reason]() -> SDL_DialogFileCallback {
-    switch (reason) {
-      case ChooseFolderRequest::Reason::ProjectOpen:
-        return [](void* userdata, const char* const* filelist, int) -> void {
-          if (auto dir_opt = parse_dir_from_filelist(filelist); dir_opt) {
-            static_cast<Mewo*>(userdata)->event_queue_.push(
-              ProjectOpenRequest{.directory = dir_opt.value()}
-            );
-          }
-        };
-
-      case ChooseFolderRequest::Reason::ProjectSaveAs:
-        return [](void* userdata, const char* const* filelist, int) -> void {
-          if (auto dir_opt = parse_dir_from_filelist(filelist); dir_opt) {
-            static_cast<Mewo*>(userdata)->event_queue_.push(
-              ProjectSaveAsRequest{.directory = dir_opt.value()}
-            );
-          }
-        };
-
-      default: util::enum_unreachable("event::ChooseFolderRequest::Reason", reason);
-    }
-  });
-
-  // TODO: probably can't use this for macOS because it doesn't let you create a
-  // folder from within the dialog by default
-  SDL_ShowOpenFolderDialog(callback_fn, this, window_.get(), nullptr, false);
 }
 
 }  // namespace mewo

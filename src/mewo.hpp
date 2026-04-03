@@ -1,7 +1,6 @@
 #pragma once
 
 #include "editor.hpp"
-#include "event/event.hpp"
 #include "event/event_queue.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/gfx.hpp"
@@ -26,8 +25,6 @@ class Mewo {
  private:
   void process_queued_events();
   void update(const gfx::FrameContext& frame_ctx);
-
-  void show_open_folder_dialog(ChooseFolderRequest::Reason reason);
 
   std::filesystem::path executable_dir_;
   std::filesystem::path assets_dir_;
