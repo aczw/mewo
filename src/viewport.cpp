@@ -180,8 +180,7 @@ void Viewport::rebuild_render_pipeline(
 }
 
 void Viewport::resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height) {
-  // TODO: on initialization a couple of intermediary resizes occur, including
-  // a strange one to a resolution of 16×9 (yes, 16 pixels by 9 pixels)
+  // TODO: multiply by display scale to get actual pixel resolution
   texture_desc_.size.width = new_width;
   texture_desc_.size.height = new_height;
   texture_ = device.CreateTexture(&texture_desc_);

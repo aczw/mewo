@@ -72,9 +72,9 @@ class Viewport {
   void resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height);
 
  private:
-  struct alignas(8) Uniforms {
+  struct Uniforms {
     float time = 0;
-    std::array<float, 2> resolution = {};
+    alignas(8) std::array<float, 2> resolution = {};
   };
 
   wgpu::Buffer unif_buf_;
