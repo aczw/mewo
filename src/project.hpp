@@ -9,6 +9,9 @@ namespace mewo {
 class Project {
  public:
   static constexpr std::string_view MEWO_FOLDER_NAME = ".mewo";
+  static constexpr std::string_view PROJECT_JSON_FILE_NAME = "project.json";
+  static constexpr std::string_view SCHEMA_VERSION_KEY = "schema_version";
+  static constexpr int SCHEMA_VERSION_VALUE = 1;
 
   Project(const std::filesystem::path& folder_to_open);
 
