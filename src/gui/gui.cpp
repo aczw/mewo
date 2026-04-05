@@ -130,14 +130,20 @@ void Gui::build_main_menu_bar(EventQueue& event_queue) const {
 }
 
 void Gui::build_editor(Editor& editor) const {
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
   ImGui::Begin(EDITOR_WINDOW_NAME.data());
 
+  ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.f, 10.f));
   ImGui::PushFont(fonts_.geist_mono, 0.f);
-  ImVec2 window_size = ImGui::GetContentRegionAvail();
-  ImGui::InputTextMultiline("##editor", &editor.visible_code(), window_size);
+  {
+    ImVec2 window_size = ImGui::GetContentRegionAvail();
+    ImGui::InputTextMultiline("##editor", &editor.visible_code(), window_size);
+  }
   ImGui::PopFont();
+  ImGui::PopStyleVar();
 
   ImGui::End();
+  ImGui::PopStyleVar();
 }
 
 void Gui::build_diagnostics(Editor& editor) const {
