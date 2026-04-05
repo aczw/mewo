@@ -50,6 +50,16 @@ class Gui {
     ImFont* geist_mono = nullptr;
   };
 
+  void build_main_menu_bar(EventQueue& event_queue) const;
+  void build_editor(Editor& editor) const;
+  void build_diagnostics(Editor& editor) const;
+  void build_viewport(
+    EventQueue& event_queue,
+    const gfx::FrameContext& frame_ctx,
+    Viewport& viewport,
+    Editor& editor
+  );
+
   /// Sets up the overall docking layout. Only needs to be called once. Can only
   /// be called after a new frame is initiated, so it's not possible in the constructor.
   void set_up_initial_layout(ImGuiID dockspace_id) const;
