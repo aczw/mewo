@@ -11,7 +11,6 @@
 
 #include <webgpu/webgpu_cpp.h>
 
-#include <cassert>
 #include <cmath>
 #include <string_view>
 
@@ -166,8 +165,6 @@ void Viewport::rebuild_render_pipeline(
   const wgpu::ShaderModule& fragment_module,
   const wgpu::Device& device
 ) {
-  assert(fragment_module);
-
   fragment_state_ = {
     .module = fragment_module,
     .entryPoint = "main",
