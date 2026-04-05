@@ -150,6 +150,8 @@ add_executable(mewo
   ${MEWO_GFX_DIR}/gfx.cpp
   ${MEWO_GFX_DIR}/gfx.hpp
 
+  ${MEWO_GUI_DIR}/editor.cpp
+  ${MEWO_GUI_DIR}/editor.hpp
   ${MEWO_GUI_DIR}/gui.cpp
   ${MEWO_GUI_DIR}/gui.hpp
 
@@ -158,8 +160,6 @@ add_executable(mewo
 
   ${MEWO_SRC_DIR}/aspect_ratio.cpp
   ${MEWO_SRC_DIR}/aspect_ratio.hpp
-  ${MEWO_SRC_DIR}/editor.cpp
-  ${MEWO_SRC_DIR}/editor.hpp
   ${MEWO_SRC_DIR}/exception.hpp
   ${MEWO_SRC_DIR}/io.cpp
   ${MEWO_SRC_DIR}/io.hpp

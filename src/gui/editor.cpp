@@ -1,4 +1,4 @@
-#include "editor.hpp"
+#include "gui/editor.hpp"
 
 #include "io.hpp"
 

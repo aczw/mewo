@@ -1,9 +1,9 @@
 #pragma once
 
-#include "editor.hpp"
 #include "event/event_queue.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/gfx.hpp"
+#include "gui/editor.hpp"
 #include "gui/gui.hpp"
 #include "project.hpp"
 #include "viewport.hpp"

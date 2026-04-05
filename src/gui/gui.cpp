@@ -1,8 +1,8 @@
 #include "gui.hpp"
 
 #include "aspect_ratio.hpp"
-#include "editor.hpp"
 #include "event/event.hpp"
+#include "gui/editor.hpp"
 #include "util/enum_unreachable.hpp"
 
 #include <SDL3/SDL_dialog.h>

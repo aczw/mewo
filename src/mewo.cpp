@@ -1,10 +1,10 @@
 #include "mewo.hpp"
 
-#include "editor.hpp"
 #include "event/event.hpp"
 #include "exception.hpp"
 #include "gfx/create.hpp"
 #include "gfx/frame_context.hpp"
+#include "gui/editor.hpp"
 #include "io.hpp"
 #include "os.hpp"
 #include "project.hpp"
