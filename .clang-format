@@ -24,7 +24,7 @@ IncludeBlocks: Regroup
 IncludeCategories:
   - Regex: '^".*"'
     Priority: 1
-  - Regex: '^<(imgui|SDL3|webgpu|nlohmann)/?.*>'
+  - Regex: '^<(imgui|SDL3|webgpu|nlohmann|TextEditor)/?.*>'
     Priority: 2
   - Regex: '^<.*>'
     Priority: 3

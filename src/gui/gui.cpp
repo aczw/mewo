@@ -136,8 +136,7 @@ void Gui::build_editor(Editor& editor) const {
   ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.f, 10.f));
   ImGui::PushFont(fonts_.geist_mono, 0.f);
   {
-    ImVec2 window_size = ImGui::GetContentRegionAvail();
-    ImGui::InputTextMultiline("##editor", &editor.visible_code(), window_size);
+    editor.build_layout(ImGui::GetContentRegionAvail());
   }
   ImGui::PopFont();
   ImGui::PopStyleVar();
@@ -150,28 +149,35 @@ void Gui::build_diagnostics(Editor& editor) const {
   ImGui::Begin(DIAGNOSTICS_WINDOW_NAME.data());
 
   ImGui::PushFont(fonts_.geist_mono, 0.f);
-  if (const auto& diagnostics = editor.diagnostics(); diagnostics.size() > 0) {
-    for (const auto& diag : diagnostics) {
-      ImGui::Text(
-        "(%llu:%llu) %s: %s",
-        diag.line_num,
-        diag.line_pos,
-        diag.type_name.data(),
-        diag.message.c_str()
-      );
-      ImGui::Text("%s", diag.highlight.c_str());
+  {
+    if (const auto& diagnostics = editor.diagnostics(); diagnostics.size() > 0) {
+      auto prefix_line_count = static_cast<uint64_t>(editor.prefix_line_count());
 
-      std::string indicators;
-      for (size_t i = 0; i < diag.highlight.size(); ++i)
-        indicators += '^';
-      ImGui::Text("%s", indicators.c_str());
+      for (const auto& diag : diagnostics) {
+        // Subtract away the number of lines the fragment prefix takes up as it's not visible
+        uint64_t line_number = diag.line_number - prefix_line_count;
 
-      // TODO: don't include spacing if it's the last diagnostic
-      ImGui::Spacing();
-      ImGui::Spacing();
+        ImGui::Text(
+          "(Ln %llu, Col %llu) %s: %s",
+          line_number,
+          diag.line_column,
+          diag.type_name.data(),
+          diag.message.c_str()
+        );
+        ImGui::Text("%s", diag.highlight.c_str());
+
+        std::string indicators;
+        for (size_t i = 0; i < diag.highlight.size(); ++i)
+          indicators += '^';
+        ImGui::Text("%s", indicators.c_str());
+
+        // TODO: don't include spacing if it's the last diagnostic
+        ImGui::Spacing();
+        ImGui::Spacing();
+      }
+    } else {
+      ImGui::Text("Compilation succeeded with no issues.");
     }
-  } else {
-    ImGui::Text("Compilation succeeded with no issues.");
   }
   ImGui::PopFont();
 

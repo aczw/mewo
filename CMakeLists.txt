@@ -120,11 +120,9 @@ add_library(ImGuiColorTextEdit OBJECT
 )
 target_compile_features(ImGuiColorTextEdit PRIVATE ${MEWO_COMPILE_FEATURES})
 set_target_properties(ImGuiColorTextEdit PROPERTIES ${MEWO_TARGET_PROPERTIES})
-# Set to PUBLIC to propagate to Mewo
-target_include_directories(ImGuiColorTextEdit PUBLIC
-  ${MEWO_IMGUICOLORTEXTEDIT_DIR}
-  ${MEWO_IMGUI_DIR}
-)
+# Set to PUBLIC to propagate to Mewo, and SYSTEM to suppress compiler warnings
+target_include_directories(ImGuiColorTextEdit SYSTEM PUBLIC ${MEWO_IMGUICOLORTEXTEDIT_DIR})
+target_include_directories(ImGuiColorTextEdit PRIVATE ${MEWO_IMGUI_DIR})
 target_link_libraries(ImGuiColorTextEdit PRIVATE imgui)
 
 # Set up nlohmann/json
