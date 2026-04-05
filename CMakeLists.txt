@@ -30,6 +30,11 @@ else()
   message(FATAL_ERROR "Unsupported CMAKE_BUILD_TYPE. Supported values are Debug and Release")
 endif()
 
+# Common compile features to be shared across libraries.
+set(MEWO_COMPILE_FEATURES cxx_std_23)
+# Common target properties to be shared across libraries.
+set(MEWO_TARGET_PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
+
 set(MEWO_THIRD_PARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
 
 # Set up Dawn
@@ -81,6 +86,8 @@ add_library(imgui OBJECT
   ${MEWO_IMGUI_DIR}/misc/freetype/imgui_freetype.cpp
   ${MEWO_IMGUI_DIR}/misc/freetype/imgui_freetype.h
 )
+target_compile_features(imgui PRIVATE ${MEWO_COMPILE_FEATURES})
+set_target_properties(imgui PROPERTIES ${MEWO_TARGET_PROPERTIES})
 # imgui_impl_wgpu.cpp conditionally includes macOS-specific headers, so we need to
 # treat it as a Obj-C file on macOS. On other OSes it's a regular C++ file.
 if(MEWO_PLATFORM_MACOS)
@@ -105,6 +112,20 @@ target_include_directories(imgui PUBLIC
   ${MEWO_IMGUI_DIR}/misc/cpp
 )
 target_link_libraries(imgui PRIVATE dawn::webgpu_dawn SDL3::SDL3 freetype)
+
+set(MEWO_IMGUICOLORTEXTEDIT_DIR ${MEWO_THIRD_PARTY_DIR}/ImGuiColorTextEdit)
+add_library(ImGuiColorTextEdit OBJECT
+  ${MEWO_IMGUICOLORTEXTEDIT_DIR}/TextEditor.cpp
+  ${MEWO_IMGUICOLORTEXTEDIT_DIR}/TextEditor.h
+)
+target_compile_features(ImGuiColorTextEdit PRIVATE ${MEWO_COMPILE_FEATURES})
+set_target_properties(ImGuiColorTextEdit PROPERTIES ${MEWO_TARGET_PROPERTIES})
+# Set to PUBLIC to propagate to Mewo
+target_include_directories(ImGuiColorTextEdit PUBLIC
+  ${MEWO_IMGUICOLORTEXTEDIT_DIR}
+  ${MEWO_IMGUI_DIR}
+)
+target_link_libraries(ImGuiColorTextEdit PRIVATE imgui)
 
 # Set up nlohmann/json
 set(JSON_BuildTests OFF CACHE INTERNAL "")
@@ -160,8 +181,8 @@ add_executable(mewo
 target_include_directories(mewo PRIVATE ${MEWO_SRC_DIR})
 
 # Common C++ compiler options
-target_compile_features(mewo PRIVATE cxx_std_23)
-set_target_properties(mewo PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
+target_compile_features(mewo PRIVATE ${MEWO_COMPILE_FEATURES})
+set_target_properties(mewo PROPERTIES ${MEWO_TARGET_PROPERTIES})
 target_compile_options(mewo PRIVATE 
   -Wall -Wextra -Werror -Wpedantic -Wconversion
   # Skipped fields are zero-initialized or default constructed, which I want
@@ -210,6 +231,7 @@ target_link_libraries(mewo PRIVATE
   SDL3::SDL3
   imgui
   nlohmann_json::nlohmann_json
+  ImGuiColorTextEdit
 )
 
 set(MEWO_DIST_README_FILE_PATH ${CMAKE_CURRENT_BINARY_DIR}/packaging/README.txt)
