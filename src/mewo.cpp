@@ -154,7 +154,7 @@ void Mewo::process_queued_events() {
         // to update the editor or request a new run.
         [this](const ProjectSaveAsRequest& save_as_req) {
           try {
-            project_ = Project::save_as(save_as_req.directory, editor_.visible_code());
+            project_ = Project::save_as(save_as_req.directory, editor_);
             window_.update_project_in_title(project_.value());
           } catch (const Exception& ex) {
             std::println("Project save as failed: {}", ex.what());
@@ -164,7 +164,7 @@ void Mewo::process_queued_events() {
         [this](const ProjectSaveRequest&) {
           if (project_) {
             try {
-              project_->save(editor_.visible_code());
+              project_->save(editor_);
               if constexpr (query::is_debug())
                 std::println("Saved project \"{}\"", project_->name());
             } catch (const Exception& ex) {

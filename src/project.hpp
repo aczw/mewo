@@ -1,5 +1,7 @@
 #pragma once
 
+#include "gui/editor.hpp"
+
 #include <filesystem>
 #include <string>
 #include <string_view>
@@ -16,7 +18,7 @@ class Project {
   Project(const std::filesystem::path& folder_to_open);
 
   /// Creates a new project directory and saves the newly-created project.
-  static Project save_as(const std::filesystem::path& directory, std::string_view code);
+  static Project save_as(const std::filesystem::path& directory, Editor& editor);
 
   const std::filesystem::path& root_directory() const { return root_directory_; }
 
@@ -24,7 +26,7 @@ class Project {
 
   std::filesystem::path shader_file_location() const { return root_directory_ / "shader.wgsl"; }
 
-  void save(std::string_view code) const;
+  void save(Editor& editor) const;
 
  private:
   struct SkipPathValidationTag {};

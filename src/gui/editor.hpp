@@ -5,6 +5,7 @@
 #include <TextEditor.h>
 #include <imgui.h>
 
+#include <cstddef>
 #include <filesystem>
 #include <string>
 #include <string_view>
@@ -37,8 +38,16 @@ class Editor {
     return prefix_ + "\n" + visible_code();
   }
 
+  bool dirty() const { return undo_index_ != impl_.GetUndoIndex(); }
+
+  void save() {
+    impl_.StripTrailingWhitespaces();
+    undo_index_ = impl_.GetUndoIndex();
+  }
+
  private:
   TextEditor impl_;
+  size_t undo_index_ = 0;
 
   std::string prefix_;
   int prefix_line_count_ = 0;

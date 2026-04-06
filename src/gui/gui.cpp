@@ -134,7 +134,11 @@ void Gui::build_editor(Editor& editor) const {
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 6.f));
   ImGui::PushStyleColor(ImGuiCol_WindowBg, editor.palette().get(TextEditor::Color::background));
 
-  ImGui::Begin(EDITOR_WINDOW_NAME.data());
+  ImGui::Begin(
+    EDITOR_WINDOW_NAME.data(),
+    nullptr,
+    editor.dirty() ? ImGuiWindowFlags_UnsavedDocument : ImGuiWindowFlags_None
+  );
 
   {
     ImGui::PushFont(fonts_.geist_mono, 0.f);

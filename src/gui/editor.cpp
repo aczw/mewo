@@ -7,7 +7,8 @@
 namespace mewo {
 
 Editor::Editor(const std::filesystem::path& assets_dir)
-    : prefix_(io::read_file(assets_dir / "shaders/snippets/default_frag_prefix.txt")),
+    : undo_index_(impl_.GetUndoIndex()),
+      prefix_(io::read_file(assets_dir / "shaders/snippets/default_frag_prefix.txt")),
       // There is no newline at the end of the file so we manually increment by 1
       prefix_line_count_(static_cast<int>(std::count(prefix_.begin(), prefix_.end(), '\n')) + 1) {
   impl_.SetShowWhitespacesEnabled(false);

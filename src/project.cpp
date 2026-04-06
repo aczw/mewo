@@ -56,7 +56,7 @@ Project::Project(const std::filesystem::path& folder_to_open) {
   name_ = root_directory_.filename().string();
 }
 
-Project Project::save_as(const std::filesystem::path& directory, std::string_view code) {
+Project Project::save_as(const std::filesystem::path& directory, Editor& editor) {
   namespace fs = std::filesystem;
 
   auto path_str = directory.string();
@@ -78,7 +78,7 @@ Project Project::save_as(const std::filesystem::path& directory, std::string_vie
     throw Exception("Failed to create {1} folder at \"{0}/{1}\"", path_str, MEWO_FOLDER_NAME);
 
   auto new_project = Project(absolute_path, SkipPathValidationTag{});
-  new_project.save(code);
+  new_project.save(editor);
 
   if (
     std::ofstream project_json_file(mewo_dir / PROJECT_JSON_FILE_NAME);
@@ -106,13 +106,14 @@ Project Project::save_as(const std::filesystem::path& directory, std::string_vie
   return new_project;
 }
 
-void Project::save(std::string_view code) const {
+void Project::save(Editor& editor) const {
   auto file_location = shader_file_location();
 
   if (std::ofstream shader_file(file_location); !shader_file || !shader_file.is_open()) {
     throw Exception("Failed to access \"{}\" for writing", file_location.string());
   } else {
-    shader_file << code;
+    editor.save();
+    shader_file << editor.visible_code();
   }
 }
 
