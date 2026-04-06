@@ -1,5 +1,6 @@
 #include "gui/editor.hpp"
 
+#include "imgui.h"
 #include "io.hpp"
 #include "query.hpp"
 
@@ -14,33 +15,22 @@ namespace mewo {
 
 namespace {
 
-bool is_c_style_punctuation(ImWchar character) {
-  static constexpr auto PUNCTUATION = std::to_array<bool>({
+bool is_wgsl_punctuation(ImWchar character) {
+  // https://www.w3.org/TR/WGSL/#syntactic-tokens
+  static constexpr auto ASCII_LUT = std::to_array({
     false, false, false, false, false, false, false, false, false, false, false, false, false,
     false, false, false, false, false, false, false, false, false, false, false, false, false,
     false, false, false, false, false, false, false, true,  false, false, false, true,  true,
     false, true,  true,  true,  true,  true,  true,  true,  true,  false, false, false, false,
-    false, false, false, false, false, false, true,  true,  true,  true,  true,  true,  false,
+    false, false, false, false, false, false, true,  true,  true,  true,  true,  false, true,
     false, false, false, false, false, false, false, false, false, false, false, false, false,
     false, false, false, false, false, false, false, false, false, false, false, false, false,
-    true,  false, true,  true,  false, false, false, false, false, false, false, false, false,
+    true,  false, true,  true,  true,  false, false, false, false, false, false, false, false,
     false, false, false, false, false, false, false, false, false, false, false, false, false,
     false, false, false, false, false, false, true,  true,  true,  true,  false,
   });
 
-  return character < 127 ? PUNCTUATION[character] : false;
-}
-
-TextEditor::Iterator get_c_style_identifier(TextEditor::Iterator start, TextEditor::Iterator end) {
-  if (start < end && TextEditor::CodePoint::isXidStart(*start)) {
-    start++;
-
-    while (start < end && TextEditor::CodePoint::isXidContinue(*start)) {
-      start++;
-    }
-  }
-
-  return start;
+  return character < 127 ? ASCII_LUT[character] : false;
 }
 
 TextEditor::Iterator get_c_style_number(TextEditor::Iterator start, TextEditor::Iterator end) {
@@ -928,8 +918,19 @@ const TextEditor::Language* get_wgsl_language() {
     .singleLineComment = "//",
     .commentStart = "/*",
     .commentEnd = "*/",
-    .isPunctuation = is_c_style_punctuation,
-    .getIdentifier = get_c_style_identifier,
+    .isPunctuation = is_wgsl_punctuation,
+    .getIdentifier =
+      [](TextEditor::Iterator start, TextEditor::Iterator end) {
+        if (start < end && TextEditor::CodePoint::isXidStart(*start)) {
+          start++;
+
+          while (start < end && TextEditor::CodePoint::isXidContinue(*start)) {
+            start++;
+          }
+        }
+
+        return start;
+      },
     .getNumber = get_c_style_number,
   };
 
