@@ -15,8 +15,8 @@ namespace mewo {
 
 namespace {
 
+/// From // https://www.w3.org/TR/WGSL/#syntactic-tokens.
 bool is_wgsl_punctuation(ImWchar character) {
-  // https://www.w3.org/TR/WGSL/#syntactic-tokens
   static constexpr auto ASCII_LUT = std::to_array({
     false, false, false, false, false, false, false, false, false, false, false, false, false,
     false, false, false, false, false, false, false, false, false, false, false, false, false,
@@ -31,6 +31,22 @@ bool is_wgsl_punctuation(ImWchar character) {
   });
 
   return character < 127 ? ASCII_LUT[character] : false;
+}
+
+/// Note that this is the exact same as C-style identifiers. This is technically ignoring
+/// some exceptions in the standard (identifiers cannot simply be "_" or begin with "__")
+/// but it should match everything else.
+///
+/// From https://www.w3.org/TR/WGSL/#identifiers.
+TextEditor::Iterator get_wgsl_identifier(TextEditor::Iterator start, TextEditor::Iterator end) {
+  if (start < end && TextEditor::CodePoint::isXidStart(*start)) {
+    start++;
+
+    while (start < end && TextEditor::CodePoint::isXidContinue(*start))
+      start++;
+  }
+
+  return start;
 }
 
 TextEditor::Iterator get_c_style_number(TextEditor::Iterator start, TextEditor::Iterator end) {
@@ -919,22 +935,11 @@ const TextEditor::Language* get_wgsl_language() {
     .commentStart = "/*",
     .commentEnd = "*/",
     .isPunctuation = is_wgsl_punctuation,
-    .getIdentifier =
-      [](TextEditor::Iterator start, TextEditor::Iterator end) {
-        if (start < end && TextEditor::CodePoint::isXidStart(*start)) {
-          start++;
-
-          while (start < end && TextEditor::CodePoint::isXidContinue(*start)) {
-            start++;
-          }
-        }
-
-        return start;
-      },
+    .getIdentifier = get_wgsl_identifier,
     .getNumber = get_c_style_number,
   };
 
-  // https://www.w3.org/TR/WGSL/#keyword-summary
+  // From https://www.w3.org/TR/WGSL/#keyword-summary
   static constexpr auto WGSL_KEYWORDS = std::to_array<std::string_view>({
     "alias",   "break",      "case",    "const", "const_assert", "continue", "continuing",
     "default", "diagnostic", "discard", "else",  "enable",       "false",    "fn",
