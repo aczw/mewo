@@ -73,7 +73,11 @@ void Gui::build_layout(
   ) {
     set_up_initial_layout(dockspace_id);
   } else {
-    ImGui::DockSpaceOverViewport(dockspace_id, viewport_, ImGuiDockNodeFlags_PassthruCentralNode);
+    ImGui::DockSpaceOverViewport(
+      dockspace_id,
+      viewport_,
+      ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_NoUndocking
+    );
   }
 
   build_main_menu_bar(event_queue);
@@ -361,6 +365,10 @@ void Gui::set_up_initial_layout(ImGuiID dockspace_id) const {
   ImGui::DockBuilderDockWindow(EDITOR_WINDOW_NAME.data(), left_up_id);
   ImGui::DockBuilderDockWindow(DIAGNOSTICS_WINDOW_NAME.data(), left_down_id);
   ImGui::DockBuilderDockWindow(VIEWPORT_WINDOW_NAME.data(), right_id);
+
+  ImGui::DockBuilderGetNode(right_id)->SetLocalFlags(ImGuiDockNodeFlags_NoTabBar);
+  ImGui::DockBuilderGetNode(left_up_id)->SetLocalFlags(ImGuiDockNodeFlags_NoTabBar);
+  ImGui::DockBuilderGetNode(left_down_id)->SetLocalFlags(ImGuiDockNodeFlags_NoTabBar);
 
   ImGui::DockBuilderFinish(dockspace_id);
 }
