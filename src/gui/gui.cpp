@@ -7,6 +7,7 @@
 
 #include <SDL3/SDL_dialog.h>
 #include <SDL3/SDL_error.h>
+#include <TextEditor.h>
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_wgpu.h>
@@ -130,18 +131,22 @@ void Gui::build_main_menu_bar(EventQueue& event_queue) const {
 }
 
 void Gui::build_editor(Editor& editor) const {
-  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 6.f));
+  ImGui::PushStyleColor(ImGuiCol_WindowBg, editor.palette().get(TextEditor::Color::background));
+
   ImGui::Begin(EDITOR_WINDOW_NAME.data());
 
-  ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.f, 10.f));
-  ImGui::PushFont(fonts_.geist_mono, 0.f);
   {
-    editor.build_layout(ImGui::GetContentRegionAvail());
+    ImGui::PushFont(fonts_.geist_mono, 0.f);
+    {
+      editor.build_layout(ImGui::GetContentRegionAvail());
+    }
+    ImGui::PopFont();
   }
-  ImGui::PopFont();
-  ImGui::PopStyleVar();
 
   ImGui::End();
+
+  ImGui::PopStyleColor();
   ImGui::PopStyleVar();
 }
 

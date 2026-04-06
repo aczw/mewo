@@ -17,6 +17,8 @@ class Editor {
 
   std::string visible_code() const { return impl_.GetText(); }
 
+  const TextEditor::Palette& palette() const { return impl_.GetPalette(); }
+
   int prefix_line_count() const { return prefix_line_count_; }
 
   const gfx::CompilationDiagnostics& diagnostics() const { return diagnostics_; }
