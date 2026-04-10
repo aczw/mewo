@@ -4,6 +4,7 @@
 #include "gfx/frame_context.hpp"
 #include "gfx/gfx.hpp"
 #include "gui/editor/editor.hpp"
+#include "gui/theme.hpp"
 #include "viewport.hpp"
 #include "window.hpp"
 
@@ -28,6 +29,8 @@ class Gui {
     ImGui::DestroyContext();
   }
 
+  Theme theme() const { return theme_; }
+
   void begin_frame() const {
     ImGui_ImplWGPU_NewFrame();
     ImGui_ImplSDL3_NewFrame();
@@ -50,7 +53,7 @@ class Gui {
     ImFont* geist_mono = nullptr;
   };
 
-  void build_main_menu_bar(EventQueue& event_queue) const;
+  void build_main_menu_bar(EventQueue& event_queue, Editor& editor);
   void build_editor(Editor& editor) const;
   void build_diagnostics(Editor& editor) const;
   void build_viewport(
@@ -67,8 +70,10 @@ class Gui {
   /// Needs to be cached every frame. Will be checked to see if the viewport texture
   /// needs to be resized. Only relevant when the viewport mode is `AspectRatio`.
   uint32_t prev_viewport_window_width_ = 0;
-  Fonts fonts_;
   ImGuiViewport* viewport_ = nullptr;
+
+  Fonts fonts_;
+  Theme theme_ = Theme::RosePine;
 };
 
 }  // namespace mewo

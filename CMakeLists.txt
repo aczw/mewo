@@ -154,6 +154,8 @@ add_executable(mewo
   ${MEWO_GUI_DIR}/editor/wgsl_language.hpp
   ${MEWO_GUI_DIR}/gui.cpp
   ${MEWO_GUI_DIR}/gui.hpp
+  ${MEWO_GUI_DIR}/theme.cpp
+  ${MEWO_GUI_DIR}/theme.hpp
 
   ${MEWO_UTIL_DIR}/enum_unreachable.hpp
   ${MEWO_UTIL_DIR}/match.hpp

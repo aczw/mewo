@@ -9,7 +9,7 @@
 
 namespace mewo {
 
-Editor::Editor(const std::filesystem::path& assets_dir)
+Editor::Editor(const std::filesystem::path& assets_dir, Theme theme)
     : undo_index_(impl_.GetUndoIndex()),
       prefix_(io::read_file(assets_dir / "shaders/snippets/default_frag_prefix.txt")),
       // There is no newline at the end of the file so we manually increment by 1
@@ -17,6 +17,8 @@ Editor::Editor(const std::filesystem::path& assets_dir)
   impl_.SetShowWhitespacesEnabled(false);
   impl_.SetShowScrollbarMiniMapEnabled(false);
   impl_.SetLanguage(get_wgsl_language());
+  impl_.SetDefaultPalette(get_palette(theme));
+  impl_.SetPalette(impl_.GetDefaultPalette());
 
   set_visible_code(io::read_wgsl_shader(assets_dir / "shaders/viewport.frag.wgsl"));
 }

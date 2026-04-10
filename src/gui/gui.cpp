@@ -80,7 +80,7 @@ void Gui::build_layout(
     );
   }
 
-  build_main_menu_bar(event_queue);
+  build_main_menu_bar(event_queue, editor);
   build_editor(editor);
   build_diagnostics(editor);
   build_viewport(event_queue, frame_ctx, viewport, editor);
@@ -106,7 +106,7 @@ void Gui::update(const gfx::FrameContext& frame_ctx) const {
   render_pass.End();
 }
 
-void Gui::build_main_menu_bar(EventQueue& event_queue) const {
+void Gui::build_main_menu_bar(EventQueue& event_queue, Editor& editor) {
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
       using CFR = ChooseFolderRequest;
@@ -130,12 +130,36 @@ void Gui::build_main_menu_bar(EventQueue& event_queue) const {
       ImGui::EndMenu();
     }
 
+    if (ImGui::BeginMenu("View")) {
+      ImGui::SeparatorText("Theme");
+
+      {
+        Theme curr_theme = theme_;
+
+        if (ImGui::MenuItem("Default Dark", nullptr, curr_theme == Theme::DefaultDark))
+          curr_theme = Theme::DefaultDark;
+        if (ImGui::MenuItem("Default Light", nullptr, curr_theme == Theme::DefaultLight))
+          curr_theme = Theme::DefaultLight;
+        if (ImGui::MenuItem("Rosé Pine", nullptr, curr_theme == Theme::RosePine))
+          curr_theme = Theme::RosePine;
+
+        if (curr_theme != theme_) {
+          theme_ = curr_theme;
+          editor.update_theme(theme_);
+        }
+      }
+
+      ImGui::EndMenu();
+    }
+
     ImGui::EndMainMenuBar();
   }
 }
 
 void Gui::build_editor(Editor& editor) const {
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 6.f));
+  // TODO: while this lets the padding blend in with the background, when scrolling you
+  // can clearly see the padding because the text is truncated early
   ImGui::PushStyleColor(ImGuiCol_WindowBg, editor.palette().get(TextEditor::Color::background));
 
   ImGui::Begin(

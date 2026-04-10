@@ -88,7 +88,7 @@ Mewo::Mewo()
       assets_dir_(find_assets_dir(executable_dir_)),
       gfx_(event_queue_, window_),
       gui_(assets_dir_, window_, gfx_),
-      editor_(assets_dir_),
+      editor_(assets_dir_, gui_.theme()),
       viewport_(event_queue_, assets_dir_, gfx_, editor_.combined_code()) {}
 
 void Mewo::run() {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gfx/compilation_diagnostic.hpp"
+#include "gui/theme.hpp"
 
 #include <TextEditor.h>
 #include <imgui.h>
@@ -14,7 +15,7 @@ namespace mewo {
 
 class Editor {
  public:
-  explicit Editor(const std::filesystem::path& assets_dir);
+  Editor(const std::filesystem::path& assets_dir, Theme theme);
 
   std::string visible_code() const { return impl_.GetText(); }
 
@@ -45,8 +46,11 @@ class Editor {
     undo_index_ = impl_.GetUndoIndex();
   }
 
+  void update_theme(Theme theme) { impl_.SetPalette(get_palette(theme)); }
+
  private:
   TextEditor impl_;
+
   size_t undo_index_ = 0;
 
   std::string prefix_;
