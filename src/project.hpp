@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gui/editor.hpp"
+#include "gui/editor/editor.hpp"
 
 #include <filesystem>
 #include <string>
