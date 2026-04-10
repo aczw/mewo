@@ -1,0 +1,8 @@
+Style:
+  QuotedHeaders: "src/.*"
+  AngledHeaders: "third_party/.*"
+---
+If:
+  PathMatch: .*\.re
+Diagnostics:
+  Suppress: "*"
