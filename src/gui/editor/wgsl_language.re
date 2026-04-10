@@ -59,20 +59,18 @@ TextEditor::Iterator get_wgsl_number(TextEditor::Iterator start, TextEditor::Ite
     hex_exp    = [pP] [+-]? digit+;
 
     dec_int    = "0" | [1-9] digit*;
-    dec_float  =
-          digit+ "." digit* dec_exp? [fh]?
-        | "." digit+ dec_exp? [fh]?
-        | digit+ dec_exp [fh]?
-        | digit+ [fh];
+    dec_float  = digit+ "." digit* dec_exp? [fh]?
+                 | "." digit+ dec_exp? [fh]?
+                 | digit+ dec_exp [fh]?
+                 | digit+ [fh];
 
     hex_prefix = "0" [xX];
     hex_int    = hex_prefix hexdigit+ [iu]?;
-    hex_float  =
-          hex_prefix (
-                hexdigit+ "." hexdigit* hex_exp? [fh]?
-              | "." hexdigit+ hex_exp? [fh]?
-              | hexdigit+ hex_exp [fh]?
-          );
+    hex_float  = hex_prefix (
+                     hexdigit+ "." hexdigit* hex_exp? [fh]?
+                     | "." hexdigit+ hex_exp? [fh]?
+                     | hexdigit+ hex_exp [fh]?
+                 );
 
     wgsl_number = hex_float | hex_int | dec_float | dec_int [iu]?;
 
