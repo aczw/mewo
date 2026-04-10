@@ -148,12 +148,10 @@ add_executable(mewo
   ${MEWO_GFX_DIR}/gfx.cpp
   ${MEWO_GFX_DIR}/gfx.hpp
 
-  ${MEWO_GUI_DIR}/wgsl/get_wgsl_number.cpp
-  ${MEWO_GUI_DIR}/wgsl/get_wgsl_number.hpp
-  ${MEWO_GUI_DIR}/wgsl/wgsl.cpp
-  ${MEWO_GUI_DIR}/wgsl/wgsl.hpp
-  ${MEWO_GUI_DIR}/editor.cpp
-  ${MEWO_GUI_DIR}/editor.hpp
+  ${MEWO_GUI_DIR}/editor/editor.cpp
+  ${MEWO_GUI_DIR}/editor/editor.hpp
+  ${MEWO_GUI_DIR}/editor/wgsl_language.cpp
+  ${MEWO_GUI_DIR}/editor/wgsl_language.hpp
   ${MEWO_GUI_DIR}/gui.cpp
   ${MEWO_GUI_DIR}/gui.hpp
 

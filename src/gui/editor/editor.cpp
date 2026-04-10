@@ -1,7 +1,7 @@
-#include "gui/editor.hpp"
+#include "gui/editor/editor.hpp"
 
+#include "gui/editor/wgsl_language.hpp"
 #include "io.hpp"
-#include "wgsl/wgsl.hpp"
 
 #include <TextEditor.h>
 
@@ -16,7 +16,7 @@ Editor::Editor(const std::filesystem::path& assets_dir)
       prefix_line_count_(static_cast<int>(std::count(prefix_.begin(), prefix_.end(), '\n')) + 1) {
   impl_.SetShowWhitespacesEnabled(false);
   impl_.SetShowScrollbarMiniMapEnabled(false);
-  impl_.SetLanguage(language::wgsl());
+  impl_.SetLanguage(get_wgsl_language());
 
   set_visible_code(io::read_wgsl_shader(assets_dir / "shaders/viewport.frag.wgsl"));
 }
