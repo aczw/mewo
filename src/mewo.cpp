@@ -17,6 +17,7 @@
 #include <imgui_impl_sdl3.h>
 #include <webgpu/webgpu_cpp.h>
 
+#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <optional>
@@ -88,8 +89,9 @@ Mewo::Mewo()
       assets_dir_(find_assets_dir(executable_dir_)),
       gfx_(event_queue_, window_),
       gui_(assets_dir_, window_, gfx_),
-      editor_(assets_dir_, gui_.theme()),
-      viewport_(event_queue_, assets_dir_, gfx_, editor_.combined_code()) {}
+      editor_(event_queue_, assets_dir_, gui_.theme()),
+      viewport_(event_queue_, assets_dir_, gfx_, editor_.combined_code()),
+      current_time_(SDL_GetTicks()) {}
 
 void Mewo::run() {
   while (!should_quit_) {
@@ -98,7 +100,9 @@ void Mewo::run() {
     const gfx::FrameContext frame_ctx = gfx_.begin_frame();
     gui_.begin_frame();
 
-    update(frame_ctx);
+    uint64_t now = SDL_GetTicks();
+    update(frame_ctx, now - current_time_);
+    current_time_ = now;
   }
 }
 
@@ -231,14 +235,26 @@ void Mewo::process_queued_events() {
           );
         },
 
-        [](const auto&) { std::unreachable(); },
+        [this](const EditorTextChanged) {
+          if (auto_compiler_.is_running()) {
+            auto_compiler_.reset();
+          } else {
+            auto_compiler_.start();
+          }
+        },
+
+        [this](const AutoCompilerElapsed) {
+          event_queue_.push(RunRequest{.fragment_code = editor_.combined_code()});
+        },
+
+        [](auto&&) { std::unreachable(); },
       },
       event
     );
   }  // namespace mewo
 }
 
-void Mewo::update(const gfx::FrameContext& frame_ctx) {
+void Mewo::update(const gfx::FrameContext& frame_ctx, uint64_t delta_time) {
   SDL_Event event = {};
 
   while (SDL_PollEvent(&event)) {
@@ -261,10 +277,11 @@ void Mewo::update(const gfx::FrameContext& frame_ctx) {
 
   gui_.build_layout(event_queue_, frame_ctx, editor_, viewport_);
 
-  static constexpr wgpu::CommandBufferDescriptor CMD_BUF_DESC = {.label = "command-buffer"};
-
-  viewport_.update(gfx_.queue(), frame_ctx, static_cast<float>(SDL_GetTicks()) * 1e-3f);
+  auto_compiler_.update(event_queue_, delta_time);
+  viewport_.update(gfx_.queue(), frame_ctx, static_cast<float>(current_time_) * 1e-3f);
   gui_.update(frame_ctx);
+
+  static constexpr wgpu::CommandBufferDescriptor CMD_BUF_DESC = {.label = "command-buffer"};
   gfx_.update(frame_ctx.encoder.Finish(&CMD_BUF_DESC));
 }
 

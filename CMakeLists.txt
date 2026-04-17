@@ -148,6 +148,8 @@ add_executable(mewo
   ${MEWO_GFX_DIR}/gfx.cpp
   ${MEWO_GFX_DIR}/gfx.hpp
 
+  ${MEWO_GUI_DIR}/editor/auto_compiler.cpp
+  ${MEWO_GUI_DIR}/editor/auto_compiler.hpp
   ${MEWO_GUI_DIR}/editor/editor.cpp
   ${MEWO_GUI_DIR}/editor/editor.hpp
   ${MEWO_GUI_DIR}/editor/wgsl_language.cpp

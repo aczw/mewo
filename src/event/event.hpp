@@ -66,6 +66,10 @@ struct WGPUUncapturedError {
   std::string message;
 };
 
+struct EditorTextChanged {};
+
+struct AutoCompilerElapsed {};
+
 using Event = std::variant<
   const QuitRequest,
   const ChooseFolderRequest,
@@ -76,7 +80,9 @@ using Event = std::variant<
   const RunRequest,
   const WindowResized,
   const WGPUDeviceLost,
-  const WGPUUncapturedError
+  const WGPUUncapturedError,
+  const EditorTextChanged,
+  const AutoCompilerElapsed
 >;
 
 }  // namespace mewo

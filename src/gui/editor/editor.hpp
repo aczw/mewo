@@ -1,5 +1,6 @@
 #pragma once
 
+#include "event/event_queue.hpp"
 #include "gfx/compilation_diagnostic.hpp"
 #include "gui/theme.hpp"
 
@@ -15,7 +16,7 @@ namespace mewo {
 
 class Editor {
  public:
-  Editor(const std::filesystem::path& assets_dir, Theme theme);
+  Editor(EventQueue& event_queue, const std::filesystem::path& assets_dir, Theme theme);
 
   std::string visible_code() const { return impl_.GetText(); }
 
