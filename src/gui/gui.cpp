@@ -16,6 +16,7 @@
 #include <webgpu/webgpu.h>
 
 #include <array>
+#include <format>
 #include <functional>
 #include <string_view>
 #include <utility>
@@ -271,8 +272,18 @@ void Gui::build_viewport(
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, window_padding);
   ImGui::BeginChild("##Viewport Controls", ImVec2(), ImGuiChildFlags_AlwaysUseWindowPadding);
   {
-    if (ImGui::Button("Run"))
-      event_queue.push(RunRequest{.fragment_code = editor.combined_code()});
+    {
+      if (ImGui::Button("Run"))
+        event_queue.push(RunRequest{.fragment_code = editor.combined_code()});
+
+      std::string framerate_text = std::format("{:.1f} FPS", ImGui::GetIO().Framerate);
+      float framerate_text_width = ImGui::CalcTextSize(framerate_text.c_str()).x;
+      float x = ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - framerate_text_width;
+
+      ImGui::SameLine();
+      ImGui::SetCursorPosX(x);
+      ImGui::Text("%s", framerate_text.c_str());
+    }
 
     {
       using Mode = Viewport::Mode;
