@@ -40,8 +40,6 @@ class Editor {
     return prefix_ + "\n" + visible_code();
   }
 
-  bool dirty() const { return undo_index_ != impl_.GetUndoIndex(); }
-
   void save() {
     impl_.StripTrailingWhitespaces();
     undo_index_ = impl_.GetUndoIndex();

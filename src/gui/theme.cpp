@@ -23,7 +23,7 @@ const TextEditor::Palette& get_rose_pine_palette() {
     IM_COL32(144, 140, 170, 255),  // cursor
     IM_COL32(31, 29, 46, 255),     // selection
     IM_COL32(110, 106, 134, 255),  // whitespace
-    IM_COL32(31, 29, 46, 255),     // matchingBracketBackground
+    IM_COL32(64, 61, 82, 255),     // matchingBracketBackground
     IM_COL32(144, 140, 170, 255),  // matchingBracketActive
     IM_COL32(144, 140, 170, 255),  // matchingBracketLevel1
     IM_COL32(144, 140, 170, 255),  // matchingBracketLevel2

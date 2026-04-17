@@ -57,7 +57,7 @@ Gui::Gui(const std::filesystem::path& assets_dir, const Window& window, const gf
   ImGui_ImplSDL3_InitForOther(window.get());
 
   // Can be set once upfront because there's only one viewport
-  viewport_ = ImGui::GetMainViewport();
+  imgui_viewport_ = ImGui::GetMainViewport();
 }
 
 void Gui::build_layout(
@@ -75,7 +75,7 @@ void Gui::build_layout(
   } else {
     ImGui::DockSpaceOverViewport(
       dockspace_id,
-      viewport_,
+      imgui_viewport_,
       ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_NoUndocking
     );
   }
@@ -157,16 +157,8 @@ void Gui::build_main_menu_bar(EventQueue& event_queue, Editor& editor) {
 }
 
 void Gui::build_editor(Editor& editor) const {
-  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 6.f));
-  // TODO: while this lets the padding blend in with the background, when scrolling you
-  // can clearly see the padding because the text is truncated early
-  ImGui::PushStyleColor(ImGuiCol_WindowBg, editor.palette().get(TextEditor::Color::background));
-
-  ImGui::Begin(
-    EDITOR_WINDOW_NAME.data(),
-    nullptr,
-    editor.dirty() ? ImGuiWindowFlags_UnsavedDocument : ImGuiWindowFlags_None
-  );
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
+  ImGui::Begin(EDITOR_WINDOW_NAME.data());
 
   {
     ImGui::PushFont(fonts_.geist_mono, 0.f);
@@ -177,8 +169,6 @@ void Gui::build_editor(Editor& editor) const {
   }
 
   ImGui::End();
-
-  ImGui::PopStyleColor();
   ImGui::PopStyleVar();
 }
 
@@ -376,7 +366,7 @@ void Gui::build_viewport(
 
 void Gui::set_up_initial_layout(ImGuiID dockspace_id) const {
   ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
-  ImGui::DockBuilderSetNodeSize(dockspace_id, viewport_->Size);
+  ImGui::DockBuilderSetNodeSize(dockspace_id, imgui_viewport_->Size);
 
   ImGuiID left_id = {};
   ImGuiID right_id = {};
