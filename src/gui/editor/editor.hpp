@@ -33,7 +33,7 @@ class Editor {
     diagnostics_ = std::move(diagnostics);
   }
 
-  void build_layout(const ImVec2& size) { impl_.Render("##editor", size); }
+  void build_layout(const ImVec2& size) { impl_.Render("##Editor", size); }
 
   std::string combined_code() const {
     // TODO: cache this?

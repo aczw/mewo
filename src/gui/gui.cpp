@@ -217,6 +217,9 @@ void Gui::build_viewport(
   Viewport& viewport,
   Editor& editor
 ) {
+  const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
+
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
   ImGui::Begin(VIEWPORT_WINDOW_NAME.data());
 
   const Viewport::Mode prev_mode = viewport.mode();
@@ -265,103 +268,112 @@ void Gui::build_viewport(
     ImGui::Image(texture_id, ImVec2(window_size.x, window_size.x * inverse_ratio));
   }
 
-  if (ImGui::Button("Run"))
-    event_queue.push(RunRequest{.fragment_code = editor.combined_code()});
-
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, window_padding);
+  ImGui::BeginChild("##Viewport Controls", ImVec2(), ImGuiChildFlags_AlwaysUseWindowPadding);
   {
-    using Mode = Viewport::Mode;
+    if (ImGui::Button("Run"))
+      event_queue.push(RunRequest{.fragment_code = editor.combined_code()});
 
-    int prev_mode_value = std::to_underlying(prev_mode);
+    {
+      using Mode = Viewport::Mode;
 
-    ImGui::RadioButton("Aspect ratio", &prev_mode_value, std::to_underlying(Mode::AspectRatio));
-    ImGui::SameLine();
-    ImGui::RadioButton("Resolution", &prev_mode_value, std::to_underlying(Mode::Resolution));
+      int prev_mode_value = std::to_underlying(prev_mode);
 
-    if (auto curr_mode = static_cast<Mode>(prev_mode_value); curr_mode != prev_mode) {
-      viewport.set_mode(curr_mode);
+      ImGui::RadioButton("Aspect ratio", &prev_mode_value, std::to_underlying(Mode::AspectRatio));
+      ImGui::SameLine();
+      ImGui::RadioButton("Resolution", &prev_mode_value, std::to_underlying(Mode::Resolution));
 
-      switch (curr_mode) {
-        case Viewport::Mode::AspectRatio: {
-          event_queue.push(
-            ViewportResizeRequest::from_width_and_ratio(
-              curr_viewport_window_width, viewport.ratio_preset()
-            )
-          );
-          break;
+      if (auto curr_mode = static_cast<Mode>(prev_mode_value); curr_mode != prev_mode) {
+        viewport.set_mode(curr_mode);
+
+        switch (curr_mode) {
+          case Viewport::Mode::AspectRatio: {
+            event_queue.push(
+              ViewportResizeRequest::from_width_and_ratio(
+                curr_viewport_window_width, viewport.ratio_preset()
+              )
+            );
+            break;
+          }
+
+          case Viewport::Mode::Resolution: {
+            event_queue.push(
+              ViewportResizeRequest{.new_width = prev_width, .new_height = prev_height}
+            );
+            break;
+          }
+
+          default: util::enum_unreachable("Viewport::Mode", curr_mode);
         }
-
-        case Viewport::Mode::Resolution: {
-          event_queue.push(
-            ViewportResizeRequest{.new_width = prev_width, .new_height = prev_height}
-          );
-          break;
-        }
-
-        default: util::enum_unreachable("Viewport::Mode", curr_mode);
       }
     }
-  }
 
-  switch (prev_mode) {
-    case Viewport::Mode::AspectRatio: {
-      using Preset = AspectRatio::Preset;
+    switch (prev_mode) {
+      case Viewport::Mode::AspectRatio: {
+        using Preset = AspectRatio::Preset;
 
-      int prev_preset_value = std::to_underlying(prev_preset);
+        int prev_preset_value = std::to_underlying(prev_preset);
 
-      ImGui::RadioButton("1:1", &prev_preset_value, std::to_underlying(Preset::e1_1));
-      ImGui::SameLine();
-      ImGui::RadioButton("2:1", &prev_preset_value, std::to_underlying(Preset::e2_1));
-      ImGui::SameLine();
-      ImGui::RadioButton("3:2", &prev_preset_value, std::to_underlying(Preset::e3_2));
-      ImGui::SameLine();
-      ImGui::RadioButton("16:9", &prev_preset_value, std::to_underlying(Preset::e16_9));
+        ImGui::RadioButton("1:1", &prev_preset_value, std::to_underlying(Preset::e1_1));
+        ImGui::SameLine();
+        ImGui::RadioButton("2:1", &prev_preset_value, std::to_underlying(Preset::e2_1));
+        ImGui::SameLine();
+        ImGui::RadioButton("3:2", &prev_preset_value, std::to_underlying(Preset::e3_2));
+        ImGui::SameLine();
+        ImGui::RadioButton("16:9", &prev_preset_value, std::to_underlying(Preset::e16_9));
 
-      if (auto curr_preset = static_cast<Preset>(prev_preset_value); curr_preset != prev_preset) {
-        event_queue.push(
-          ViewportResizeRequest::from_width_and_ratio(curr_viewport_window_width, curr_preset)
+        if (auto curr_preset = static_cast<Preset>(prev_preset_value); curr_preset != prev_preset) {
+          event_queue.push(
+            ViewportResizeRequest::from_width_and_ratio(curr_viewport_window_width, curr_preset)
+          );
+          viewport.set_ratio_preset(curr_preset);
+        }
+
+        break;
+      }
+
+      case Viewport::Mode::Resolution: {
+        static constexpr auto SLIDER_FLAGS = ImGuiSliderFlags_AlwaysClamp;
+        static constexpr int VIEWPORT_SIZE_MIN = 2;
+        static constexpr int VIEWPORT_SIZE_MAX = 2048;
+
+        std::array prev_size = {static_cast<int>(prev_width), static_cast<int>(prev_height)};
+
+        ImGui::DragInt2(
+          "Width/Height",
+          prev_size.data(),
+          1.f,
+          VIEWPORT_SIZE_MIN,
+          VIEWPORT_SIZE_MAX,
+          "%d px",
+          SLIDER_FLAGS
         );
-        viewport.set_ratio_preset(curr_preset);
+
+        uint32_t curr_width = static_cast<uint32_t>(prev_size[0]);
+        uint32_t curr_height = static_cast<uint32_t>(prev_size[1]);
+
+        // TODO: don't submit if user is currently selecting/dragging the slider, or has the
+        // box active and is still entering values
+        if (curr_width != prev_width || curr_height != prev_height) {
+          event_queue.push(
+            ViewportResizeRequest{.new_width = curr_width, .new_height = curr_height}
+          );
+          viewport.set_resolution(curr_width, curr_height);
+        }
+
+        break;
       }
 
-      break;
+      default: util::enum_unreachable("Viewport::Mode", prev_mode);
     }
-
-    case Viewport::Mode::Resolution: {
-      static constexpr auto SLIDER_FLAGS = ImGuiSliderFlags_AlwaysClamp;
-      static constexpr int VIEWPORT_SIZE_MIN = 2;
-      static constexpr int VIEWPORT_SIZE_MAX = 2048;
-
-      std::array prev_size = {static_cast<int>(prev_width), static_cast<int>(prev_height)};
-
-      ImGui::DragInt2(
-        "Width/Height",
-        prev_size.data(),
-        1.f,
-        VIEWPORT_SIZE_MIN,
-        VIEWPORT_SIZE_MAX,
-        "%d px",
-        SLIDER_FLAGS
-      );
-
-      uint32_t curr_width = static_cast<uint32_t>(prev_size[0]);
-      uint32_t curr_height = static_cast<uint32_t>(prev_size[1]);
-
-      // TODO: don't submit if user is currently selecting/dragging the slider, or has the
-      // box active and is still entering values
-      if (curr_width != prev_width || curr_height != prev_height) {
-        event_queue.push(ViewportResizeRequest{.new_width = curr_width, .new_height = curr_height});
-        viewport.set_resolution(curr_width, curr_height);
-      }
-
-      break;
-    }
-
-    default: util::enum_unreachable("Viewport::Mode", prev_mode);
   }
+  ImGui::EndChild();
+  ImGui::PopStyleVar();
 
   prev_viewport_window_width_ = curr_viewport_window_width;
 
   ImGui::End();
+  ImGui::PopStyleVar();
 }
 
 void Gui::set_up_initial_layout(ImGuiID dockspace_id) const {
