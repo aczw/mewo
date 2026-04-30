@@ -73,8 +73,9 @@ class Viewport {
 
  private:
   struct Uniforms {
+    std::array<float, 2> resolution = {};
     float time = 0;
-    alignas(8) std::array<float, 2> resolution = {};
+    float padding = 0;
   };
 
   wgpu::Buffer unif_buf_;

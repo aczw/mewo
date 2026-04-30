@@ -142,10 +142,9 @@ void Viewport::update(
   float current_time
 ) const {
   Uniforms unif = {
+    .resolution =
+      {static_cast<float>(texture_.GetWidth()), static_cast<float>(texture_.GetHeight())},
     .time = current_time,
-    .resolution = {
-      static_cast<float>(texture_.GetWidth()), static_cast<float>(texture_.GetHeight())
-    },
   };
 
   queue.WriteBuffer(unif_buf_, 0, &unif, sizeof(Uniforms));
