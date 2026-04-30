@@ -11,6 +11,7 @@
 #include "window.hpp"
 
 #include <SDL3/SDL_dialog.h>
+#include <SDL3/SDL_events.h>
 
 #include <cstdint>
 #include <filesystem>
@@ -28,6 +29,7 @@ class Mewo {
   void process_queued_events();
   /// `delta_time` is expressed in milliseconds.
   void update(const gfx::FrameContext& frame_ctx, uint64_t delta_time);
+  void handle_keyboard_event(const SDL_KeyboardEvent& kbd_event);
 
   std::filesystem::path executable_dir_;
   std::filesystem::path assets_dir_;

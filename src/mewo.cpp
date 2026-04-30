@@ -13,6 +13,8 @@
 #include "util/match.hpp"
 
 #include <SDL3/SDL_dialog.h>
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL_keycode.h>
 #include <SDL3/SDL_timer.h>
 #include <imgui_impl_sdl3.h>
 #include <webgpu/webgpu_cpp.h>
@@ -278,6 +280,8 @@ void Mewo::update(const gfx::FrameContext& frame_ctx, uint64_t delta_time) {
         event_queue_.push(WindowResized{.new_width = new_width, .new_height = new_height});
         break;
       }
+
+      case SDL_EVENT_KEY_DOWN: handle_keyboard_event(event.key); break;
     }
   }
 
@@ -294,6 +298,18 @@ void Mewo::update(const gfx::FrameContext& frame_ctx, uint64_t delta_time) {
   );
 
   gui_.update(frame_ctx);
+}
+
+void Mewo::handle_keyboard_event(const SDL_KeyboardEvent& kbd_event) {
+  if (kbd_event.mod & os::PRIMARY_MOD_KEY) {
+    using CFR = ChooseFolderRequest;
+
+    switch (kbd_event.key) {
+      case SDLK_O: event_queue_.push(CFR{.reason = CFR::Reason::ProjectOpen}); break;
+
+      default: break;
+    }
+  }
 }
 
 }  // namespace mewo

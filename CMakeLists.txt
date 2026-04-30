@@ -13,12 +13,13 @@ project(mewo
 )
 
 # Handle unsupported platforms up front
+set(MEWO_UNSUPPORTED_PLATFORM_MSG "Unsupported platform. Supported platforms are macOS and Windows")
 if(APPLE AND CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   set(MEWO_PLATFORM_MACOS ON)
 elseif(WIN32)
   set(MEWO_PLATFORM_WINDOWS ON)
 else()
-  message(FATAL_ERROR "Unsupported OS. Supported platforms are macOS and Windows")
+  message(FATAL_ERROR ${MEWO_UNSUPPORTED_PLATFORM_MSG})
 endif()
 
 # Handle unsupported CMake build types up front
@@ -197,9 +198,12 @@ target_compile_definitions(mewo PRIVATE
   MEWO_VERSION_MINOR="${PROJECT_VERSION_MINOR}"
   MEWO_VERSION_PATCH="${PROJECT_VERSION_PATCH}"
   MEWO_VERSION_BUILD="${PROJECT_VERSION_TWEAK}"
+
   MEWO_VERSION_SEMVER="${MEWO_VERSION_SEMVER}"
   MEWO_VERSION_SUFFIX="${MEWO_VERSION_SUFFIX}"
   MEWO_VERSION_FULL="${MEWO_VERSION_FULL}"
+
+  MEWO_UNSUPPORTED_PLATFORM_MSG="${MEWO_UNSUPPORTED_PLATFORM_MSG}"
 )
 
 # Set compiler flags based on compiler and build type

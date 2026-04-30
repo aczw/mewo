@@ -41,8 +41,8 @@ std::filesystem::path find_executable_dir() {
 
   return std::filesystem::path(buf.data()).parent_path();
 #else
-#error "Unsupported platform. Supported platforms are macOS and Windows"
-  throw Exception("Unsupported platform. Supported platforms are macOS and Windows");
+#error MEWO_UNSUPPORTED_PLATFORM_MSG
+  throw Exception(MEWO_UNSUPPORTED_PLATFORM_MSG);
 #endif
 }
 
@@ -69,7 +69,7 @@ ImGui_ImplWGPU_CreateSurfaceInfo retrieve_surface_info(
     ),
     .RawInstance = static_cast<void*>(GetModuleHandle(nullptr)),
 #else
-#error "Unsupported platform. Supported platforms are macOS and Windows"
+#error MEWO_UNSUPPORTED_PLATFORM_MSG
 #endif
   };
 }

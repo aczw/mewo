@@ -154,7 +154,7 @@ void Viewport::update(
     .frame_rate = static_cast<uint32_t>(ImGui::GetIO().Framerate),
   };
 
-  queue.WriteBuffer(unif_buf_, 0, &unif, sizeof(Uniforms));
+  queue.WriteBuffer(unif_buf_, 0, &unif, sizeof(unif));
 
   {
     wgpu::RenderPassEncoder render_pass = frame_ctx.encoder.BeginRenderPass(&pass_desc_);

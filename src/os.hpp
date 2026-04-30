@@ -2,12 +2,24 @@
 
 #include "window.hpp"
 
+#include <SDL3/SDL_keycode.h>
+#include <SDL3/SDL_platform_defines.h>
 #include <imgui_impl_wgpu.h>
 #include <webgpu/webgpu_cpp.h>
 
+#include <cstdint>
 #include <filesystem>
 
 namespace mewo::os {
+
+/// Use the Command key on macOS and Ctrl on Windows.
+#if defined(SDL_PLATFORM_MACOS)
+inline constexpr uint16_t PRIMARY_MOD_KEY = SDL_KMOD_GUI;
+#elif defined(SDL_PLATFORM_WINDOWS)
+inline constexpr uint16_t PRIMARY_MOD_KEY = SDL_KMOD_CTRL;
+#else
+#error MEWO_UNSUPPORTED_PLATFORM_MSG
+#endif
 
 std::filesystem::path find_executable_dir();
 
