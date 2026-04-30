@@ -301,16 +301,22 @@ void Mewo::update(const gfx::FrameContext& frame_ctx, uint64_t delta_time) {
 }
 
 void Mewo::handle_keyboard_event(const SDL_KeyboardEvent& kbd_event) {
+  using CFR = ChooseFolderRequest;
+
   const bool has_primary = (kbd_event.mod & os::PRIMARY_MOD_KEY) != 0;
   const bool has_shift = (kbd_event.mod & SDL_KMOD_SHIFT) != 0;
   const bool has_alt = (kbd_event.mod & SDL_KMOD_ALT) != 0;
 
-  if (has_primary && !has_shift && !has_alt) {
-    using CFR = ChooseFolderRequest;
-
+  if (has_primary && !has_shift && !has_alt) {  // Primary only
     switch (kbd_event.key) {
       case SDLK_O: event_queue_.push(CFR{.reason = CFR::Reason::ProjectOpen}); break;
       case SDLK_S: event_queue_.push(ProjectSaveRequest{}); break;
+
+      default: break;
+    }
+  } else if (has_primary && has_shift && !has_alt) {  // Primary + Shift
+    switch (kbd_event.key) {
+      case SDLK_S: event_queue_.push(CFR{.reason = CFR::Reason::ProjectSaveAs}); break;
 
       default: break;
     }

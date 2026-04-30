@@ -30,18 +30,20 @@ constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
 constexpr std::string_view DIAGNOSTICS_WINDOW_NAME = "Diagnostics";
 constexpr std::string_view VIEWPORT_WINDOW_NAME = "Viewport";
 
-/// Generate shortcut label at compile time for each `Key`.
-template <char Key>
-consteval auto shortcut_label() {
+/// Generate shortcut label at compile time for the given keys.
+template <size_t N>
+consteval auto make_shortcut(const char (&keys)[N]) {
   constexpr std::string_view PREFIX = os::PRIMARY_MOD_LABEL;
-  std::array<char, PREFIX.size() + 1 + 1> label = {};  // Prefix length + "+" + key
+  std::array<char, PREFIX.size() + 1 + N> label = {};  // Prefix length + "+" + keys
 
   size_t index = 0;
   for (char character : PREFIX)
     label[index++] = character;
 
   label[index++] = '+';
-  label[index++] = Key;
+
+  for (size_t j = 0; j < N; ++j)
+    label[index++] = keys[j];
 
   return label;
 }
@@ -133,15 +135,15 @@ void Gui::build_main_menu_bar(EventQueue& event_queue, Editor& editor) {
     if (ImGui::BeginMenu("File")) {
       using CFR = ChooseFolderRequest;
 
-      if (ImGui::MenuItem("Open...", shortcut_label<'O'>().data()))
+      if (ImGui::MenuItem("Open...", make_shortcut("O").data()))
         event_queue.push(CFR{.reason = CFR::Reason::ProjectOpen});
 
       ImGui::Separator();
 
-      if (ImGui::MenuItem("Save", shortcut_label<'S'>().data()))
+      if (ImGui::MenuItem("Save", make_shortcut("S").data()))
         event_queue.push(ProjectSaveRequest{});
 
-      if (ImGui::MenuItem("Save As..."))
+      if (ImGui::MenuItem("Save As...", make_shortcut("Shift+S").data()))
         event_queue.push(CFR{.reason = CFR::Reason::ProjectSaveAs});
 
       ImGui::Separator();
