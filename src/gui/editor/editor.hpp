@@ -47,6 +47,8 @@ class Editor {
 
   void update_theme(Theme theme) { impl_.SetPalette(get_palette(theme)); }
 
+  bool is_dirty() const { return impl_.GetUndoIndex() != undo_index_; }
+
  private:
   TextEditor impl_;
 

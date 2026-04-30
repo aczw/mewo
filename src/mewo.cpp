@@ -171,6 +171,7 @@ void Mewo::process_queued_events() {
           if (project_) {
             try {
               project_->save(editor_);
+              window_.update_dirty_status_in_title(false);
               if constexpr (query::is_debug())
                 std::println("Saved project \"{}\"", project_->name());
             } catch (const Exception& ex) {
@@ -243,6 +244,9 @@ void Mewo::process_queued_events() {
           } else {
             auto_compiler_.start();
           }
+
+          if (project_)
+            window_.update_dirty_status_in_title(editor_.is_dirty());
         },
 
         [this](const AutoCompilerElapsed) {

@@ -49,16 +49,27 @@ void Window::update_project_in_title(const Project& project) {
     return;
   } else {
     cached_project_name_ = project_name;
+    cached_is_dirty_ = false;  // A new project implies dirty state is reset
   }
 
   update_title();
 }
 
+void Window::update_dirty_status_in_title(bool is_dirty) {
+  if (is_dirty == cached_is_dirty_) {
+    return;
+  }
+
+  cached_is_dirty_ = is_dirty;
+  update_title();
+}
+
 std::string Window::create_title() const {
   return std::format(
-    "{}{} — Mewo {}",
+    "{}{}{} — Mewo {}",
     query::is_debug() ? "[DEBUG] " : "",
     cached_project_name_,
+    cached_is_dirty_ ? "*" : "",
     query::version_full()
   );
 }
