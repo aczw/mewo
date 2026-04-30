@@ -138,7 +138,7 @@ void Gui::build_main_menu_bar(EventQueue& event_queue, Editor& editor) {
 
       ImGui::Separator();
 
-      if (ImGui::MenuItem("Save"))
+      if (ImGui::MenuItem("Save", shortcut_label<'S'>().data()))
         event_queue.push(ProjectSaveRequest{});
 
       if (ImGui::MenuItem("Save As..."))
