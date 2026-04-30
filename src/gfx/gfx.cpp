@@ -210,7 +210,7 @@ const FrameContext Gfx::begin_frame() {
   return {
     .surface_view = surface_texture.texture.CreateView(&SURFACE_VIEW_DESC),
     .encoder = device_.CreateCommandEncoder(&CMD_ENCODER_DESC),
-    .number = ++frame_count_,
+    .number = frame_count_++,
   };
 }
 

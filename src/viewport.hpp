@@ -75,15 +75,18 @@ class Viewport {
 
  private:
   struct Uniforms {
-    std::array<float, 2> resolution = {};
-    float time = 0.f;
     // TODO: Shadertoy's `iResolution` is a vec3. The third component stores the pixel aspect
     // ratio (usually 1.0 if the display has square pixels). Also see the comment under
     // https://stackoverflow.com/a/27897319.
+    std::array<float, 2> resolution = {};
+    float time = 0.f;
     float delta_time = 0.f;
+    uint32_t frame_number = 0;
+
+    uint32_t padding[3] = {};
   };
 
-  static_assert(sizeof(Uniforms) == 16);
+  static_assert(sizeof(Uniforms) % 16 == 0);
 
   wgpu::Buffer unif_buf_;
 

@@ -42,7 +42,7 @@ class Mewo {
   Viewport viewport_;
   AutoCompiler auto_compiler_;
 
-  uint64_t current_time_ = 0;  ///< Milliseconds since `SDL_Init()` has been called.
+  uint64_t previous_time_ = 0;  ///< Milliseconds since `SDL_Init()` has been called.
   std::optional<Project> project_;
 };
 

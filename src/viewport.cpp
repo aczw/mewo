@@ -147,6 +147,7 @@ void Viewport::update(
       {static_cast<float>(texture_.GetWidth()), static_cast<float>(texture_.GetHeight())},
     .time = current_time,
     .delta_time = delta_time,
+    .frame_number = frame_ctx.number,
   };
 
   queue.WriteBuffer(unif_buf_, 0, &unif, sizeof(Uniforms));

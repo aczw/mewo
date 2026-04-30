@@ -6,6 +6,7 @@
 
 #include <webgpu/webgpu_cpp.h>
 
+#include <cstdint>
 #include <limits>
 
 namespace mewo::gfx {
@@ -52,7 +53,9 @@ class Gfx {
   wgpu::SurfaceConfiguration surface_config_;
   wgpu::Queue queue_;
 
-  uint64_t frame_count_ = 0;
+  /// Should be large enough. Assuming the display is running at 240 FPS, this requires
+  /// 2^32 / 240 / 60 / 60 / 24 ≈ 207 days of uptime before overflowing.
+  uint32_t frame_count_ = 0;
 };
 
 }  // namespace mewo::gfx

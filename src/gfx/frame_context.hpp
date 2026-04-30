@@ -2,12 +2,14 @@
 
 #include <webgpu/webgpu_cpp.h>
 
+#include <cstdint>
+
 namespace mewo::gfx {
 
 struct FrameContext {
   wgpu::TextureView surface_view;
   wgpu::CommandEncoder encoder;
-  uint64_t number = 0;
+  uint32_t number = 0;
 };
 
 }  // namespace mewo::gfx

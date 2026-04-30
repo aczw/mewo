@@ -91,7 +91,7 @@ Mewo::Mewo()
       gui_(assets_dir_, window_, gfx_),
       editor_(event_queue_, assets_dir_, gui_.theme()),
       viewport_(event_queue_, assets_dir_, gfx_, editor_.combined_code()),
-      current_time_(SDL_GetTicks()) {}
+      previous_time_(SDL_GetTicks()) {}
 
 void Mewo::run() {
   while (!should_quit_) {
@@ -101,8 +101,8 @@ void Mewo::run() {
     gui_.begin_frame();
 
     uint64_t now = SDL_GetTicks();
-    update(frame_ctx, now - current_time_);
-    current_time_ = now;
+    update(frame_ctx, now - previous_time_);
+    previous_time_ = now;
 
     gfx_.end_frame(std::move(frame_ctx));
   }
@@ -285,7 +285,7 @@ void Mewo::update(const gfx::FrameContext& frame_ctx, uint64_t delta_time) {
   viewport_.update(
     gfx_.queue(),
     frame_ctx,
-    static_cast<float>(current_time_) * MILLISECONDS_TO_SECONDS,
+    static_cast<float>(previous_time_) * MILLISECONDS_TO_SECONDS,
     static_cast<float>(delta_time) * MILLISECONDS_TO_SECONDS
   );
 
