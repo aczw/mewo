@@ -278,7 +278,15 @@ void Mewo::update(const gfx::FrameContext& frame_ctx, uint64_t delta_time) {
   gui_.build_layout(event_queue_, frame_ctx, editor_, viewport_);
 
   auto_compiler_.update(event_queue_, delta_time);
-  viewport_.update(gfx_.queue(), frame_ctx, static_cast<float>(current_time_) * 1e-3f);
+
+  static constexpr float MILLISECONDS_TO_SECONDS = 1e-3f;
+  viewport_.update(
+    gfx_.queue(),
+    frame_ctx,
+    static_cast<float>(current_time_) * MILLISECONDS_TO_SECONDS,
+    static_cast<float>(delta_time) * MILLISECONDS_TO_SECONDS
+  );
+
   gui_.update(frame_ctx);
 
   static constexpr wgpu::CommandBufferDescriptor CMD_BUF_DESC = {.label = "command-buffer"};

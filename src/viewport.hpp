@@ -58,10 +58,12 @@ class Viewport {
     height_ = height;
   }
 
+  /// `current_time` and `delta_time` are both in seconds.
   void update(
     const wgpu::Queue& queue,
     const gfx::FrameContext& frame_ctx,
-    float current_time
+    float current_time,
+    float delta_time
   ) const;
 
   void rebuild_render_pipeline(
@@ -74,9 +76,14 @@ class Viewport {
  private:
   struct Uniforms {
     std::array<float, 2> resolution = {};
-    float time = 0;
-    float padding = 0;
+    float time = 0.f;
+    // TODO: Shadertoy's `iResolution` is a vec3. The third component stores the pixel aspect
+    // ratio (usually 1.0 if the display has square pixels). Also see the comment under
+    // https://stackoverflow.com/a/27897319.
+    float delta_time = 0.f;
   };
+
+  static_assert(sizeof(Uniforms) == 16);
 
   wgpu::Buffer unif_buf_;
 

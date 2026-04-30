@@ -139,12 +139,14 @@ Viewport::Viewport(
 void Viewport::update(
   const wgpu::Queue& queue,
   const gfx::FrameContext& frame_ctx,
-  float current_time
+  float current_time,
+  float delta_time
 ) const {
   Uniforms unif = {
     .resolution =
       {static_cast<float>(texture_.GetWidth()), static_cast<float>(texture_.GetHeight())},
     .time = current_time,
+    .delta_time = delta_time,
   };
 
   queue.WriteBuffer(unif_buf_, 0, &unif, sizeof(Uniforms));
