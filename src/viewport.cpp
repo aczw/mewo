@@ -9,9 +9,11 @@
 #include "gui/gui.hpp"
 #include "io.hpp"
 
+#include <imgui.h>
 #include <webgpu/webgpu_cpp.h>
 
 #include <cmath>
+#include <cstdint>
 #include <string_view>
 
 namespace mewo {
@@ -148,6 +150,8 @@ void Viewport::update(
     .time = current_time,
     .delta_time = delta_time,
     .frame_number = frame_ctx.number,
+    // TODO: Shadertoy counts how many frames were renderered in the last second instead. Use that?
+    .frame_rate = static_cast<uint32_t>(ImGui::GetIO().Framerate),
   };
 
   queue.WriteBuffer(unif_buf_, 0, &unif, sizeof(Uniforms));
@@ -161,7 +165,8 @@ void Viewport::update(
 
     render_pass.End();
   }
-}
+
+}  // namespace mewo
 
 void Viewport::rebuild_render_pipeline(
   const wgpu::ShaderModule& fragment_module,

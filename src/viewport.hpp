@@ -82,8 +82,9 @@ class Viewport {
     float time = 0.f;
     float delta_time = 0.f;
     uint32_t frame_number = 0;
+    uint32_t frame_rate = 0;
 
-    uint32_t padding[3] = {};
+    uint32_t padding[2] = {};
   };
 
   static_assert(sizeof(Uniforms) % 16 == 0);
