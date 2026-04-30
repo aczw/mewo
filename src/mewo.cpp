@@ -103,6 +103,8 @@ void Mewo::run() {
     uint64_t now = SDL_GetTicks();
     update(frame_ctx, now - current_time_);
     current_time_ = now;
+
+    gfx_.end_frame(std::move(frame_ctx));
   }
 }
 
@@ -288,9 +290,6 @@ void Mewo::update(const gfx::FrameContext& frame_ctx, uint64_t delta_time) {
   );
 
   gui_.update(frame_ctx);
-
-  static constexpr wgpu::CommandBufferDescriptor CMD_BUF_DESC = {.label = "command-buffer"};
-  gfx_.update(frame_ctx.encoder.Finish(&CMD_BUF_DESC));
 }
 
 }  // namespace mewo

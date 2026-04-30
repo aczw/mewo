@@ -3,6 +3,7 @@
 #include "event/event.hpp"
 #include "event/event_queue.hpp"
 #include "exception.hpp"
+#include "gfx/frame_context.hpp"
 #include "os.hpp"
 #include "query.hpp"
 #include "util/enum_unreachable.hpp"
@@ -211,6 +212,15 @@ const FrameContext Gfx::begin_frame() {
     .encoder = device_.CreateCommandEncoder(&CMD_ENCODER_DESC),
     .number = ++frame_count_,
   };
+}
+
+void Gfx::end_frame(const FrameContext&& frame_ctx) const {
+  static constexpr wgpu::CommandBufferDescriptor CMD_BUF_DESC = {.label = "command-buffer"};
+  wgpu::CommandBuffer cmd_buf = frame_ctx.encoder.Finish(&CMD_BUF_DESC);
+
+  queue_.Submit(1, &cmd_buf);
+  surface_.Present();
+  device_.Tick();
 }
 
 }  // namespace mewo::gfx

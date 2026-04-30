@@ -35,11 +35,9 @@ class Gfx {
   /// Otherwise, it returns a texture view of the current surface and a new command encoder.
   const FrameContext begin_frame();
 
-  void update(const wgpu::CommandBuffer& cmd_buf) const {
-    queue_.Submit(1, &cmd_buf);
-    surface_.Present();
-    device_.Tick();
-  }
+  /// Consumes the given command encoder and submits the corresponding command buffer
+  /// to the queue. We then request surface presentation and tick the device.
+  void end_frame(const FrameContext&& frame_ctx) const;
 
   void resize_surface(uint32_t new_width, uint32_t new_height) {
     surface_config_.width = new_width;
