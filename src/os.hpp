@@ -9,14 +9,17 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <string_view>
 
 namespace mewo::os {
 
 /// Use the Command key on macOS and Ctrl on Windows.
 #if defined(SDL_PLATFORM_MACOS)
 inline constexpr uint16_t PRIMARY_MOD_KEY = SDL_KMOD_GUI;
+inline constexpr std::string_view PRIMARY_MOD_LABEL = "⌘";
 #elif defined(SDL_PLATFORM_WINDOWS)
 inline constexpr uint16_t PRIMARY_MOD_KEY = SDL_KMOD_CTRL;
+inline constexpr std::string_view PRIMARY_MOD_LABEL = "Ctrl";
 #else
 #error MEWO_UNSUPPORTED_PLATFORM_MSG
 #endif

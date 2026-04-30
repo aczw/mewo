@@ -301,7 +301,10 @@ void Mewo::update(const gfx::FrameContext& frame_ctx, uint64_t delta_time) {
 }
 
 void Mewo::handle_keyboard_event(const SDL_KeyboardEvent& kbd_event) {
-  if (kbd_event.mod & os::PRIMARY_MOD_KEY) {
+  // Accept only the primary modifier key, not Shift or Alt
+  if (
+    (kbd_event.mod & (os::PRIMARY_MOD_KEY | SDL_KMOD_SHIFT | SDL_KMOD_ALT)) == os::PRIMARY_MOD_KEY
+  ) {
     using CFR = ChooseFolderRequest;
 
     switch (kbd_event.key) {

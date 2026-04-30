@@ -3,6 +3,7 @@
 #include "aspect_ratio.hpp"
 #include "event/event.hpp"
 #include "gui/editor/editor.hpp"
+#include "os.hpp"
 #include "util/enum_unreachable.hpp"
 
 #include <SDL3/SDL_dialog.h>
@@ -23,9 +24,29 @@
 
 namespace mewo {
 
-static constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
-static constexpr std::string_view DIAGNOSTICS_WINDOW_NAME = "Diagnostics";
-static constexpr std::string_view VIEWPORT_WINDOW_NAME = "Viewport";
+namespace {
+
+constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
+constexpr std::string_view DIAGNOSTICS_WINDOW_NAME = "Diagnostics";
+constexpr std::string_view VIEWPORT_WINDOW_NAME = "Viewport";
+
+/// Generate shortcut label at compile time for each `Key`.
+template <char Key>
+consteval auto shortcut_label() {
+  constexpr std::string_view PREFIX = os::PRIMARY_MOD_LABEL;
+  std::array<char, PREFIX.size() + 1 + 1> label = {};  // Prefix length + "+" + key
+
+  size_t index = 0;
+  for (char character : PREFIX)
+    label[index++] = character;
+
+  label[index++] = '+';
+  label[index++] = Key;
+
+  return label;
+}
+
+}  // namespace
 
 Gui::Gui(const std::filesystem::path& assets_dir, const Window& window, const gfx::Gfx& gfx) {
   IMGUI_CHECKVERSION();
@@ -112,7 +133,7 @@ void Gui::build_main_menu_bar(EventQueue& event_queue, Editor& editor) {
     if (ImGui::BeginMenu("File")) {
       using CFR = ChooseFolderRequest;
 
-      if (ImGui::MenuItem("Open..."))
+      if (ImGui::MenuItem("Open...", shortcut_label<'O'>().data()))
         event_queue.push(CFR{.reason = CFR::Reason::ProjectOpen});
 
       ImGui::Separator();
