@@ -135,11 +135,11 @@ void Mewo::process_queued_events() {
                   }
                 };
 
-              default: util::enum_unreachable("event::ChooseFolderRequest::Reason", reason);
+              default: util::enum_unreachable("ChooseFolderRequest::Reason", reason);
             }
           });
 
-          // TODO: probably can't use this for macOS because it doesn't let you create a
+          // TODO: probably shouldn't use this for macOS because it doesn't let you create a
           // folder from within the dialog by default
           SDL_ShowOpenFolderDialog(callback_fn, this, window_.get(), nullptr, false);
         },
