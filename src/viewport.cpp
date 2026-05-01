@@ -143,20 +143,28 @@ Viewport::Viewport(
 void Viewport::update(
   const wgpu::Queue& queue,
   const gfx::FrameContext& frame_ctx,
-  float current_time,
   float delta_time
-) const {
-  Uniforms unif = {
-    .resolution =
-      {static_cast<float>(texture_.GetWidth()), static_cast<float>(texture_.GetHeight())},
-    .time = current_time,
-    .delta_time = delta_time,
-    .frame_number = frame_ctx.number,
-    // TODO: Shadertoy counts how many frames were renderered in the last second instead. Use that?
-    .frame_rate = static_cast<uint32_t>(ImGui::GetIO().Framerate),
+) {
+  std::array resolution = {
+    static_cast<float>(texture_.GetWidth()), static_cast<float>(texture_.GetHeight())
   };
 
-  queue.WriteBuffer(unif_buf_, 0, &unif, sizeof(unif));
+  if (is_playing_) {
+    Uniforms unif = {
+      .resolution = resolution,
+      .time = current_time_,
+      .delta_time = delta_time,
+      .frame_number = frame_ctx.number,
+      // TODO: Shadertoy counts how many frames were renderered in the last
+      // second instead. Use that instead?
+      .frame_rate = static_cast<uint32_t>(ImGui::GetIO().Framerate),
+    };
+
+    current_time_ += delta_time;
+    queue.WriteBuffer(unif_buf_, 0, &unif, sizeof(unif));
+  } else {
+    queue.WriteBuffer(unif_buf_, 0, resolution.data(), sizeof(resolution));
+  }
 
   {
     wgpu::RenderPassEncoder render_pass = frame_ctx.encoder.BeginRenderPass(&pass_desc_);

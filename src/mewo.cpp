@@ -196,6 +196,8 @@ void Mewo::process_queued_events() {
           viewport_.resize(gfx_.device(), new_width, new_height);
         },
 
+        [this](const ViewportPlaybackToggled) { viewport_.toggle_playback(); },
+
         [this](const RunRequest& run_req) {
           // TODO: check if the code is the same before creating new fragment shader module
           // (how expensive is this anyway?)
@@ -303,10 +305,7 @@ void Mewo::update(const gfx::FrameContext& frame_ctx, uint64_t delta_time) {
 
   static constexpr float MILLISECONDS_TO_SECONDS = 1e-3f;
   viewport_.update(
-    gfx_.queue(),
-    frame_ctx,
-    static_cast<float>(previous_time_) * MILLISECONDS_TO_SECONDS,
-    static_cast<float>(delta_time) * MILLISECONDS_TO_SECONDS
+    gfx_.queue(), frame_ctx, static_cast<float>(delta_time) * MILLISECONDS_TO_SECONDS
   );
 
   gui_.update(frame_ctx);

@@ -19,6 +19,7 @@
 #include <array>
 #include <format>
 #include <functional>
+#include <print>
 #include <string_view>
 #include <utility>
 
@@ -269,7 +270,10 @@ void Gui::build_left_half(EventQueue& event_queue, Editor& editor) {
       ImGui::SameLine();
 
       if (is_last_compilation_successful_) {
-        ImGui::Text("Compiled in %.2f ms.", last_compilation_duration_.count() * 1000.0);
+        static constexpr double SECONDS_TO_MILLISECONDS = 1000.0;
+        ImGui::Text(
+          "Compiled in %.2f ms.", last_compilation_duration_.count() * SECONDS_TO_MILLISECONDS
+        );
       } else {
         ImGui::TextUnformatted("Compilation failed.");
       }
@@ -324,7 +328,8 @@ void Gui::build_viewport(
   const gfx::FrameContext& frame_ctx,
   Viewport& viewport
 ) {
-  const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
+  const auto& style = ImGui::GetStyle();
+  const ImVec2 window_padding = style.WindowPadding;
 
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
   ImGui::Begin(VIEWPORT_WINDOW_NAME.data());
@@ -379,6 +384,20 @@ void Gui::build_viewport(
   ImGui::BeginChild("##Viewport Controls", ImVec2(), ImGuiChildFlags_AlwaysUseWindowPadding);
   {
     {
+      if (
+        ImGui::Button(
+          viewport.is_playing() ? "Pause" : "Play",
+          ImVec2(ImGui::CalcTextSize("Pause").x + 2.f * style.FramePadding.x, 0.f)
+        )
+      ) {
+        event_queue.push(ViewportPlaybackToggled{});
+      }
+
+      ImGui::SameLine();
+
+      if (ImGui::Button("↺"))
+        std::println("restart!");
+
       std::string framerate_text = std::format("{:.0f} FPS", ImGui::GetIO().Framerate);
       ImGui::TextUnformatted(framerate_text.c_str());
     }

@@ -49,6 +49,8 @@ class Viewport {
 
   uint32_t height() const { return height_; }
 
+  bool is_playing() const { return is_playing_; }
+
   void set_mode(Mode mode) { mode_ = mode; }
 
   void set_ratio_preset(AspectRatio::Preset ratio_preset) { ratio_preset_ = ratio_preset; }
@@ -59,12 +61,7 @@ class Viewport {
   }
 
   /// `current_time` and `delta_time` are both in seconds.
-  void update(
-    const wgpu::Queue& queue,
-    const gfx::FrameContext& frame_ctx,
-    float current_time,
-    float delta_time
-  ) const;
+  void update(const wgpu::Queue& queue, const gfx::FrameContext& frame_ctx, float delta_time);
 
   void rebuild_render_pipeline(
     const wgpu::ShaderModule& fragment_module,
@@ -72,6 +69,8 @@ class Viewport {
   );
 
   void resize(const wgpu::Device& device, uint32_t new_width, uint32_t new_height);
+
+  void toggle_playback() { is_playing_ = !is_playing_; }
 
  private:
   struct Uniforms {
@@ -109,6 +108,11 @@ class Viewport {
   AspectRatio::Preset ratio_preset_ = AspectRatio::Preset::e16_9;
   uint32_t width_ = 0;
   uint32_t height_ = 0;
+
+  /// This measure of time is not necessarily synced up with the application's elapsed time,
+  /// and will likely be stopped and/or reset during playback.
+  float current_time_ = 0.f;
+  bool is_playing_ = true;
 };
 
 }  // namespace mewo
