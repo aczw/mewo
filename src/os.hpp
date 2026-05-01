@@ -17,9 +17,11 @@ namespace mewo::os {
 #if defined(SDL_PLATFORM_MACOS)
 inline constexpr uint16_t PRIMARY_MOD_KEY = SDL_KMOD_GUI;
 inline constexpr std::string_view PRIMARY_MOD_LABEL = "⌘";
+inline constexpr std::string_view ALT_MOD_LABEL = "⌥";
 #elif defined(SDL_PLATFORM_WINDOWS)
 inline constexpr uint16_t PRIMARY_MOD_KEY = SDL_KMOD_CTRL;
 inline constexpr std::string_view PRIMARY_MOD_LABEL = "Ctrl";
+inline constexpr std::string_view ALT_MOD_LABEL = "Alt";
 #else
 #error MEWO_UNSUPPORTED_PLATFORM_MSG
 #endif

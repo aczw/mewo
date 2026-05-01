@@ -29,10 +29,26 @@ namespace {
 constexpr std::string_view LEFT_HALF_WINDOW_NAME = "Editor";
 constexpr std::string_view VIEWPORT_WINDOW_NAME = "Viewport";
 
+enum class ModKey {
+  Primary,
+  Alt,
+};
+
 /// Generate shortcut label at compile time for the given keys.
-template <size_t N>
+template <ModKey Key, size_t N>
 consteval auto make_shortcut(const char (&keys)[N]) {
-  constexpr std::string_view PREFIX = os::PRIMARY_MOD_LABEL;
+  constexpr auto PREFIX = std::invoke([] -> std::string_view {
+    if constexpr (Key == ModKey::Primary) {
+      return os::PRIMARY_MOD_LABEL;
+    } else if constexpr (Key == ModKey::Alt) {
+      return os::ALT_MOD_LABEL;
+    } else {
+      static_assert(Key == ModKey::Primary || Key == ModKey::Alt, "Unhandled mod key");
+    }
+
+    return "<None>";
+  });
+
   std::array<char, PREFIX.size() + 1 + N> label = {};  // Prefix length + "+" + keys
 
   size_t index = 0;
@@ -45,6 +61,16 @@ consteval auto make_shortcut(const char (&keys)[N]) {
     label[index++] = keys[j];
 
   return label;
+}
+
+template <size_t N>
+consteval auto primary_shortcut(const char (&keys)[N]) {
+  return make_shortcut<ModKey::Primary>(keys);
+}
+
+template <size_t N>
+consteval auto alt_shortcut(const char (&keys)[N]) {
+  return make_shortcut<ModKey::Alt>(keys);
 }
 
 }  // namespace
@@ -133,15 +159,15 @@ void Gui::build_main_menu_bar(EventQueue& event_queue, Editor& editor) {
     if (ImGui::BeginMenu("File")) {
       using CFR = ChooseFolderRequest;
 
-      if (ImGui::MenuItem("Open...", make_shortcut("O").data()))
+      if (ImGui::MenuItem("Open...", primary_shortcut("O").data()))
         event_queue.push(CFR{.reason = CFR::Reason::ProjectOpen});
 
       ImGui::Separator();
 
-      if (ImGui::MenuItem("Save", make_shortcut("S").data()))
+      if (ImGui::MenuItem("Save", primary_shortcut("S").data()))
         event_queue.push(ProjectSaveRequest{});
 
-      if (ImGui::MenuItem("Save As...", make_shortcut("Shift+S").data()))
+      if (ImGui::MenuItem("Save As...", primary_shortcut("Shift+S").data()))
         event_queue.push(CFR{.reason = CFR::Reason::ProjectSaveAs});
 
       ImGui::Separator();
@@ -175,7 +201,7 @@ void Gui::build_main_menu_bar(EventQueue& event_queue, Editor& editor) {
     }
 
     if (ImGui::BeginMenu("Run")) {
-      if (ImGui::MenuItem("Compile", "Alt+Enter"))
+      if (ImGui::MenuItem("Compile", alt_shortcut("Enter").data()))
         event_queue.push(RunRequest{.fragment_code = editor.combined_code()});
 
       ImGui::EndMenu();
