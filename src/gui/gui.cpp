@@ -181,15 +181,33 @@ void Gui::build_main_menu_bar(EventQueue& event_queue, Editor& editor) {
 }
 
 void Gui::build_editor(Editor& editor) const {
+  const auto& style = ImGui::GetStyle();
+  ImVec2 window_padding = style.WindowPadding;
+
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
   ImGui::Begin(EDITOR_WINDOW_NAME.data());
 
   {
     ImGui::PushFont(fonts_.geist_mono, 0.f);
     {
-      editor.build_layout(ImGui::GetContentRegionAvail());
+      float status_bar_height = ImGui::GetFrameHeight() + 2.f * window_padding.y;
+      auto editor_size = ImVec2(0.f, ImGui::GetContentRegionAvail().y - status_bar_height);
+
+      editor.build_layout(editor_size);
     }
     ImGui::PopFont();
+  }
+
+  ImGui::Spacing();
+
+  {
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, window_padding);
+    ImGui::BeginChild("##Status Bar", ImVec2(), ImGuiChildFlags_AlwaysUseWindowPadding);
+    {
+      ImGui::Text("Prefix line count: %d", editor.prefix_line_count());
+    }
+    ImGui::EndChild();
+    ImGui::PopStyleVar();
   }
 
   ImGui::End();
