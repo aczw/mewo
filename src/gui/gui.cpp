@@ -26,14 +26,29 @@ namespace mewo {
 
 namespace {
 
-constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
-constexpr std::string_view DIAGNOSTICS_WINDOW_NAME = "Diagnostics";
+constexpr std::string_view LEFT_HALF_WINDOW_NAME = "Editor";
 constexpr std::string_view VIEWPORT_WINDOW_NAME = "Viewport";
 
+enum class ModKey {
+  Primary,
+  Alt,
+};
+
 /// Generate shortcut label at compile time for the given keys.
-template <size_t N>
+template <ModKey Key, size_t N>
 consteval auto make_shortcut(const char (&keys)[N]) {
-  constexpr std::string_view PREFIX = os::PRIMARY_MOD_LABEL;
+  constexpr auto PREFIX = std::invoke([] -> std::string_view {
+    if constexpr (Key == ModKey::Primary) {
+      return os::PRIMARY_MOD_LABEL;
+    } else if constexpr (Key == ModKey::Alt) {
+      return os::ALT_MOD_LABEL;
+    } else {
+      static_assert(Key == ModKey::Primary || Key == ModKey::Alt, "Unhandled mod key");
+    }
+
+    return "<None>";
+  });
+
   std::array<char, PREFIX.size() + 1 + N> label = {};  // Prefix length + "+" + keys
 
   size_t index = 0;
@@ -46,6 +61,16 @@ consteval auto make_shortcut(const char (&keys)[N]) {
     label[index++] = keys[j];
 
   return label;
+}
+
+template <size_t N>
+consteval auto primary_shortcut(const char (&keys)[N]) {
+  return make_shortcut<ModKey::Primary>(keys);
+}
+
+template <size_t N>
+consteval auto alt_shortcut(const char (&keys)[N]) {
+  return make_shortcut<ModKey::Alt>(keys);
 }
 
 }  // namespace
@@ -88,7 +113,8 @@ void Gui::build_layout(
   EventQueue& event_queue,
   const gfx::FrameContext& frame_ctx,
   Editor& editor,
-  Viewport& viewport
+  Viewport& viewport,
+  const std::optional<AutoCompiler>& auto_compiler
 ) {
   // Once the layout is created, the ID remains constant.
   if (
@@ -104,10 +130,9 @@ void Gui::build_layout(
     );
   }
 
-  build_main_menu_bar(event_queue, editor);
-  build_editor(editor);
-  build_diagnostics(editor);
-  build_viewport(event_queue, frame_ctx, viewport, editor);
+  build_main_menu_bar(event_queue, editor, auto_compiler);
+  build_left_half(event_queue, editor);
+  build_viewport(event_queue, frame_ctx, viewport);
 }
 
 void Gui::update(const gfx::FrameContext& frame_ctx) const {
@@ -130,20 +155,24 @@ void Gui::update(const gfx::FrameContext& frame_ctx) const {
   render_pass.End();
 }
 
-void Gui::build_main_menu_bar(EventQueue& event_queue, Editor& editor) {
+void Gui::build_main_menu_bar(
+  EventQueue& event_queue,
+  Editor& editor,
+  const std::optional<AutoCompiler>& auto_compiler
+) {
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
       using CFR = ChooseFolderRequest;
 
-      if (ImGui::MenuItem("Open...", make_shortcut("O").data()))
+      if (ImGui::MenuItem("Open...", primary_shortcut("O").data()))
         event_queue.push(CFR{.reason = CFR::Reason::ProjectOpen});
 
       ImGui::Separator();
 
-      if (ImGui::MenuItem("Save", make_shortcut("S").data()))
+      if (ImGui::MenuItem("Save", primary_shortcut("S").data()))
         event_queue.push(ProjectSaveRequest{});
 
-      if (ImGui::MenuItem("Save As...", make_shortcut("Shift+S").data()))
+      if (ImGui::MenuItem("Save As...", primary_shortcut("Shift+S").data()))
         event_queue.push(CFR{.reason = CFR::Reason::ProjectSaveAs});
 
       ImGui::Separator();
@@ -176,88 +205,137 @@ void Gui::build_main_menu_bar(EventQueue& event_queue, Editor& editor) {
       ImGui::EndMenu();
     }
 
+    if (ImGui::BeginMenu("Run")) {
+      if (ImGui::MenuItem("Compile", alt_shortcut("Enter").data()))
+        event_queue.push(RunRequest{.fragment_code = editor.combined_code()});
+
+      ImGui::Separator();
+
+      if (ImGui::MenuItem("Hot reloading", nullptr, auto_compiler.has_value()))
+        event_queue.push(HotReloadingToggled{});
+
+      ImGui::EndMenu();
+    }
+
     ImGui::EndMainMenuBar();
   }
 }
 
-void Gui::build_editor(Editor& editor) const {
+void Gui::build_left_half(EventQueue& event_queue, Editor& editor) {
   const auto& style = ImGui::GetStyle();
+
   ImVec2 window_padding = style.WindowPadding;
+  ImVec2 status_bar_window_padding = ImVec2(window_padding.x, 0.5f * window_padding.y);
+  ImVec2 diagnostics_size = ImVec2(0.f, 200.f);
 
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
-  ImGui::Begin(EDITOR_WINDOW_NAME.data());
+  ImGui::Begin(LEFT_HALF_WINDOW_NAME.data());
 
+  ImGui::PushFont(fonts_.geist_mono, 0.f);
   {
-    ImGui::PushFont(fonts_.geist_mono, 0.f);
-    {
-      float status_bar_height = ImGui::GetFrameHeight() + 2.f * window_padding.y;
-      auto editor_size = ImVec2(0.f, ImGui::GetContentRegionAvail().y - status_bar_height);
+    float status_bar_height = ImGui::GetFrameHeight() + (2.f * status_bar_window_padding.y);
+    auto editor_size = ImVec2(
+      0.f,
+      ImGui::GetContentRegionAvail().y - status_bar_height -
+        (is_diagnostics_visible_ ? diagnostics_size.y + style.ItemSpacing.y : 0.f)
+    );
 
-      editor.build_layout(editor_size);
-    }
-    ImGui::PopFont();
+    editor.build_layout(editor_size);
   }
+  ImGui::PopFont();
 
-  ImGui::Spacing();
-
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, status_bar_window_padding);
   {
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, window_padding);
+    if (is_diagnostics_visible_)
+      build_diagnostics(editor, diagnostics_size);
+
     ImGui::BeginChild("##Status Bar", ImVec2(), ImGuiChildFlags_AlwaysUseWindowPadding);
     {
-      ImGui::Text("Prefix line count: %d", editor.prefix_line_count());
+      ImGui::AlignTextToFramePadding();
+
+      if (ImGui ::Button("► Run"))
+        event_queue.push(RunRequest{.fragment_code = editor.combined_code()});
+
+      ImGui::SameLine();
+
+      if (
+        auto num_diagnostics = editor.diagnostics().size(); ImGui::Button(
+          std::format("{} diagnostic{}", num_diagnostics, num_diagnostics == 1 ? "" : "s").c_str()
+        )
+      ) {
+        is_diagnostics_visible_ = !is_diagnostics_visible_;
+      }
+
+      ImGui::SameLine();
+
+      if (is_last_compilation_successful_) {
+        ImGui::Text("Compiled in %.2f ms.", last_compilation_duration_.count() * 1000.0);
+      } else {
+        ImGui::TextUnformatted("Compilation failed.");
+      }
+
+      int line = 0, column = 0;
+      editor.impl().GetCurrentCursor(line, column);
+      std::string text = std::format("Ln {}, Col {}", line + 1, column + 1);
+
+      ImGui::SameLine();
+      ImGui::SetCursorPosX(
+        ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x -
+        ImGui::CalcTextSize(text.c_str()).x
+      );
+      ImGui::TextUnformatted(text.c_str());
     }
     ImGui::EndChild();
-    ImGui::PopStyleVar();
   }
+  ImGui::PopStyleVar();
 
   ImGui::End();
   ImGui::PopStyleVar();
 }
 
-void Gui::build_diagnostics(Editor& editor) const {
-  ImGui::Begin(DIAGNOSTICS_WINDOW_NAME.data());
+void Gui::build_diagnostics(Editor& editor, const ImVec2& size) const {
+  ImGui::BeginChild("##Diagnostics", size, ImGuiChildFlags_AlwaysUseWindowPadding);
 
-  ImGui::PushFont(fonts_.geist_mono, 0.f);
-  {
-    if (const auto& diagnostics = editor.diagnostics(); diagnostics.size() > 0) {
-      auto prefix_line_count = static_cast<uint64_t>(editor.prefix_line_count());
+  const auto& diagnostics = editor.diagnostics();
 
-      for (const auto& diag : diagnostics) {
-        // Subtract away the number of lines the fragment prefix takes up as it's not visible
-        uint64_t line_number = diag.line_number - prefix_line_count;
+  if (auto num_diagnostics = diagnostics.size(); num_diagnostics > 0) {
+    ImGui::PushFont(fonts_.geist_mono, 0.f);
 
-        ImGui::Text(
-          "(Ln %llu, Col %llu) %s: %s",
-          line_number,
-          diag.line_column,
-          diag.type_name.data(),
-          diag.message.c_str()
-        );
-        ImGui::Text("%s", diag.highlight.c_str());
+    auto prefix_line_count = static_cast<uint64_t>(editor.prefix_line_count());
 
-        std::string indicators;
-        for (size_t i = 0; i < diag.highlight.size(); ++i)
-          indicators += '^';
-        ImGui::Text("%s", indicators.c_str());
+    for (size_t i = 0; i < num_diagnostics; ++i) {
+      const auto& [message, type_name, line_number, line_column, highlight] = diagnostics[i];
 
-        // TODO: don't include spacing if it's the last diagnostic
-        ImGui::Spacing();
-        ImGui::Spacing();
-      }
-    } else {
-      ImGui::Text("Compilation succeeded with no issues.");
+      ImGui::TextWrapped(
+        "(Ln %llu, Col %llu) %s: %s",
+        line_number - prefix_line_count,
+        line_column,
+        type_name.data(),
+        message.c_str()
+      );
+
+      ImGui::Text("%s", highlight.c_str());
+      std::string indicators;
+      for (size_t i = 0; i < highlight.size(); ++i)
+        indicators += '^';
+      ImGui::Text("%s", indicators.c_str());
+
+      if (i != num_diagnostics - 1)
+        ImGui::Separator();
     }
-  }
-  ImGui::PopFont();
 
-  ImGui::End();
+    ImGui::PopFont();
+  } else {
+    ImGui::Text("Compilation succeeded with no issues.");
+  }
+
+  ImGui::EndChild();
 }
 
 void Gui::build_viewport(
   EventQueue& event_queue,
   const gfx::FrameContext& frame_ctx,
-  Viewport& viewport,
-  Editor& editor
+  Viewport& viewport
 ) {
   const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
 
@@ -314,16 +392,8 @@ void Gui::build_viewport(
   ImGui::BeginChild("##Viewport Controls", ImVec2(), ImGuiChildFlags_AlwaysUseWindowPadding);
   {
     {
-      if (ImGui::Button("Run"))
-        event_queue.push(RunRequest{.fragment_code = editor.combined_code()});
-
-      std::string framerate_text = std::format("{:.1f} FPS", ImGui::GetIO().Framerate);
-      float framerate_text_width = ImGui::CalcTextSize(framerate_text.c_str()).x;
-      float x = ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - framerate_text_width;
-
-      ImGui::SameLine();
-      ImGui::SetCursorPosX(x);
-      ImGui::Text("%s", framerate_text.c_str());
+      std::string framerate_text = std::format("{:.0f} FPS", ImGui::GetIO().Framerate);
+      ImGui::TextUnformatted(framerate_text.c_str());
     }
 
     {
@@ -436,17 +506,11 @@ void Gui::set_up_initial_layout(ImGuiID dockspace_id) const {
   ImGuiID right_id = {};
   ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, SPLIT_LEFT_RATIO, &left_id, &right_id);
 
-  ImGuiID left_up_id = {};
-  ImGuiID left_down_id = {};
-  ImGui::DockBuilderSplitNode(left_id, ImGuiDir_Up, 0.75f, &left_up_id, &left_down_id);
-
-  ImGui::DockBuilderDockWindow(EDITOR_WINDOW_NAME.data(), left_up_id);
-  ImGui::DockBuilderDockWindow(DIAGNOSTICS_WINDOW_NAME.data(), left_down_id);
+  ImGui::DockBuilderDockWindow(LEFT_HALF_WINDOW_NAME.data(), left_id);
   ImGui::DockBuilderDockWindow(VIEWPORT_WINDOW_NAME.data(), right_id);
 
   ImGui::DockBuilderGetNode(right_id)->SetLocalFlags(ImGuiDockNodeFlags_NoTabBar);
-  ImGui::DockBuilderGetNode(left_up_id)->SetLocalFlags(ImGuiDockNodeFlags_NoTabBar);
-  ImGui::DockBuilderGetNode(left_down_id)->SetLocalFlags(ImGuiDockNodeFlags_NoTabBar);
+  ImGui::DockBuilderGetNode(left_id)->SetLocalFlags(ImGuiDockNodeFlags_NoTabBar);
 
   ImGui::DockBuilderFinish(dockspace_id);
 }

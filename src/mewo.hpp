@@ -42,7 +42,7 @@ class Mewo {
   Gui gui_;
   Editor editor_;
   Viewport viewport_;
-  AutoCompiler auto_compiler_;
+  std::optional<AutoCompiler> auto_compiler_;  ///< Object only exists if hot reloading is on.
 
   uint64_t previous_time_ = 0;  ///< Milliseconds since `SDL_Init()` has been called.
   std::optional<Project> project_;

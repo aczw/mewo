@@ -18,9 +18,9 @@ class Editor {
  public:
   Editor(EventQueue& event_queue, const std::filesystem::path& assets_dir, Theme theme);
 
-  std::string visible_code() const { return impl_.GetText(); }
+  const TextEditor& impl() const { return impl_; }
 
-  const TextEditor::Palette& palette() const { return impl_.GetPalette(); }
+  std::string visible_code() const { return impl_.GetText(); }
 
   int prefix_line_count() const { return prefix_line_count_; }
 

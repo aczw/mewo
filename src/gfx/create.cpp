@@ -7,6 +7,7 @@
 
 #include <webgpu/webgpu_cpp.h>
 
+#include <chrono>
 #include <cstddef>
 #include <optional>
 #include <string>
@@ -33,14 +34,15 @@ ShaderCompilationResult shader_module_from_wgsl(
   std::string_view code,
   std::string_view label
 ) {
-  wgpu::ShaderSourceWGSL shader_source_wgsl = {{.code = code}};
+  auto start = std::chrono::steady_clock::now();
 
+  wgpu::ShaderSourceWGSL shader_source_wgsl = {{.code = code}};
   wgpu::ShaderModuleDescriptor shader_module_desc = {
     .nextInChain = &shader_source_wgsl,
     .label = label,
   };
-
   wgpu::ShaderModule shader = gfx.device().CreateShaderModule(&shader_module_desc);
+
   gfx::CompilationDiagnostics diagnostics;
   bool did_error_occur = false;
 
@@ -73,10 +75,16 @@ ShaderCompilationResult shader_module_from_wgsl(
     Gfx::WAIT_TIMEOUT_MAX
   );
 
+  auto finish = std::chrono::steady_clock::now();
+
   if (shader_status != wgpu::WaitStatus::Success)
     throw Exception("Waiting on wgpu::ShaderModule::GetCompilationInfo failed");
 
-  return {did_error_occur ? std::nullopt : std::optional(shader), diagnostics};
+  return {
+    .shader_module = did_error_occur ? std::nullopt : std::optional(shader),
+    .diagnostics = diagnostics,
+    .time_elapsed = finish - start,
+  };
 }
 
 }  // namespace mewo::gfx::create

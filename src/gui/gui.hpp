@@ -1,5 +1,6 @@
 #pragma once
 
+#include "editor/auto_compiler.hpp"
 #include "event/event_queue.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/gfx.hpp"
@@ -13,7 +14,9 @@
 #include <imgui_impl_wgpu.h>
 #include <webgpu/webgpu_cpp.h>
 
+#include <chrono>
 #include <filesystem>
+#include <optional>
 
 namespace mewo {
 
@@ -31,6 +34,14 @@ class Gui {
 
   Theme theme() const { return theme_; }
 
+  void set_last_compilation_duration(std::chrono::duration<double> duration) {
+    last_compilation_duration_ = duration;
+  }
+
+  void set_is_last_compilation_successful(bool is_successful) {
+    is_last_compilation_successful_ = is_successful;
+  }
+
   void begin_frame() const {
     ImGui_ImplWGPU_NewFrame();
     ImGui_ImplSDL3_NewFrame();
@@ -42,7 +53,8 @@ class Gui {
     EventQueue& event_queue,
     const gfx::FrameContext& frame_ctx,
     Editor& editor,
-    Viewport& viewport
+    Viewport& viewport,
+    const std::optional<AutoCompiler>& auto_compiler
   );
 
   void update(const gfx::FrameContext& frame_ctx) const;
@@ -53,14 +65,17 @@ class Gui {
     ImFont* geist_mono = nullptr;
   };
 
-  void build_main_menu_bar(EventQueue& event_queue, Editor& editor);
-  void build_editor(Editor& editor) const;
-  void build_diagnostics(Editor& editor) const;
+  void build_main_menu_bar(
+    EventQueue& event_queue,
+    Editor& editor,
+    const std::optional<AutoCompiler>& auto_compiler
+  );
+  void build_left_half(EventQueue& event_queue, Editor& editor);
+  void build_diagnostics(Editor& editor, const ImVec2& size) const;
   void build_viewport(
     EventQueue& event_queue,
     const gfx::FrameContext& frame_ctx,
-    Viewport& viewport,
-    Editor& editor
+    Viewport& viewport
   );
 
   /// Sets up the overall docking layout. Only needs to be called once. Can only
@@ -74,6 +89,10 @@ class Gui {
 
   Fonts fonts_;
   Theme theme_ = Theme::RosePine;
+
+  bool is_diagnostics_visible_ = false;
+  std::chrono::duration<double> last_compilation_duration_;
+  bool is_last_compilation_successful_ = true;
 };
 
 }  // namespace mewo

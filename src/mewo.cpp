@@ -4,6 +4,7 @@
 #include "exception.hpp"
 #include "gfx/create.hpp"
 #include "gfx/frame_context.hpp"
+#include "gui/editor/auto_compiler.hpp"
 #include "gui/editor/editor.hpp"
 #include "io.hpp"
 #include "os.hpp"
@@ -93,6 +94,7 @@ Mewo::Mewo()
       gui_(assets_dir_, window_, gfx_),
       editor_(event_queue_, assets_dir_, gui_.theme()),
       viewport_(event_queue_, assets_dir_, gfx_, editor_.combined_code()),
+      auto_compiler_(AutoCompiler()),
       previous_time_(SDL_GetTicks()) {}
 
 void Mewo::run() {
@@ -197,23 +199,22 @@ void Mewo::process_queued_events() {
         [this](const RunRequest& run_req) {
           // TODO: check if the code is the same before creating new fragment shader module
           // (how expensive is this anyway?)
-          auto compilation_result = gfx::create::shader_module_from_wgsl(
+          auto result = gfx::create::shader_module_from_wgsl(
             gfx_, run_req.fragment_code, Viewport::FRAGMENT_SHADER_LABEL
           );
 
-          editor_.set_diagnostics(std::move(compilation_result.second));
+          editor_.set_diagnostics(std::move(result.diagnostics));
+          gui_.set_last_compilation_duration(result.time_elapsed);
 
-          if constexpr (query::is_debug())
-            std::println(
-              "Shader compilation generated {} diagnostic(s)", editor_.diagnostics().size()
-            );
-
-          if (const auto& fragment_module = compilation_result.first; fragment_module) {
+          if (const auto& fragment_module = result.shader_module; fragment_module) {
             viewport_.rebuild_render_pipeline(fragment_module.value(), gfx_.device());
+            gui_.set_is_last_compilation_successful(true);
 
             if constexpr (query::is_debug())
               std::println("Updated viewport render pipeline");
           } else {
+            gui_.set_is_last_compilation_successful(false);
+
             if constexpr (query::is_debug())
               std::println(
                 "Shader compilation errors occurred, viewport render pipeline not updated"
@@ -241,10 +242,12 @@ void Mewo::process_queued_events() {
         },
 
         [this](const EditorTextChanged) {
-          if (auto_compiler_.is_running()) {
-            auto_compiler_.reset();
-          } else {
-            auto_compiler_.start();
+          if (auto_compiler_) {
+            if (auto_compiler_->is_running()) {
+              auto_compiler_->reset();
+            } else {
+              auto_compiler_->start();
+            }
           }
 
           if (project_)
@@ -253,6 +256,14 @@ void Mewo::process_queued_events() {
 
         [this](const AutoCompilerElapsed) {
           event_queue_.push(RunRequest{.fragment_code = editor_.combined_code()});
+        },
+
+        [this](const HotReloadingToggled) {
+          if (auto_compiler_) {
+            auto_compiler_.reset();
+          } else {
+            auto_compiler_ = AutoCompiler();
+          }
         },
 
         [](auto&&) { std::unreachable(); },
@@ -285,9 +296,10 @@ void Mewo::update(const gfx::FrameContext& frame_ctx, uint64_t delta_time) {
     }
   }
 
-  gui_.build_layout(event_queue_, frame_ctx, editor_, viewport_);
+  gui_.build_layout(event_queue_, frame_ctx, editor_, viewport_, auto_compiler_);
 
-  auto_compiler_.update(event_queue_, delta_time);
+  if (auto_compiler_)
+    auto_compiler_->update(event_queue_, delta_time);
 
   static constexpr float MILLISECONDS_TO_SECONDS = 1e-3f;
   viewport_.update(
@@ -317,6 +329,14 @@ void Mewo::handle_keyboard_event(const SDL_KeyboardEvent& kbd_event) {
   } else if (has_primary && has_shift && !has_alt) {  // Primary + Shift
     switch (kbd_event.key) {
       case SDLK_S: event_queue_.push(CFR{.reason = CFR::Reason::ProjectSaveAs}); break;
+
+      default: break;
+    }
+  } else if (!has_primary && !has_shift && has_alt) {  // Alt only
+    switch (kbd_event.key) {
+      case SDLK_RETURN:
+        event_queue_.push(RunRequest{.fragment_code = editor_.combined_code()});
+        break;
 
       default: break;
     }

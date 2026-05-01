@@ -70,6 +70,8 @@ struct EditorTextChanged {};
 
 struct AutoCompilerElapsed {};
 
+struct HotReloadingToggled {};
+
 using Event = std::variant<
   const QuitRequest,
   const ChooseFolderRequest,
@@ -82,7 +84,8 @@ using Event = std::variant<
   const WGPUDeviceLost,
   const WGPUUncapturedError,
   const EditorTextChanged,
-  const AutoCompilerElapsed
+  const AutoCompilerElapsed,
+  const HotReloadingToggled
 >;
 
 }  // namespace mewo

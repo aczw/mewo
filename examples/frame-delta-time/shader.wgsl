@@ -3,7 +3,10 @@
 // License: CC-BY-NC-SA-3.0
 
 // Font by P_Malin (https://www.shadertoy.com/view/4sf3RN)
-const FONT_LUT = array<u32, 10>(0x75557, 0x22222, 0x74717, 0x74747, 0x11574, 0x71747, 0x71757, 0x74444, 0x75757, 0x75747);
+const FONT_LUT = array<u32, 10>(
+	0x75557, 0x22222, 0x74717, 0x74747, 0x11574,
+	0x71747, 0x71757, 0x74444, 0x75757, 0x75747
+);
 
 fn glsl_mod(a: f32, b: f32) -> f32 {
     return a - b * floor(a / b);
