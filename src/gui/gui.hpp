@@ -1,5 +1,6 @@
 #pragma once
 
+#include "editor/auto_compiler.hpp"
 #include "event/event_queue.hpp"
 #include "gfx/frame_context.hpp"
 #include "gfx/gfx.hpp"
@@ -15,6 +16,7 @@
 
 #include <chrono>
 #include <filesystem>
+#include <optional>
 
 namespace mewo {
 
@@ -51,7 +53,8 @@ class Gui {
     EventQueue& event_queue,
     const gfx::FrameContext& frame_ctx,
     Editor& editor,
-    Viewport& viewport
+    Viewport& viewport,
+    const std::optional<AutoCompiler>& auto_compiler
   );
 
   void update(const gfx::FrameContext& frame_ctx) const;
@@ -62,7 +65,11 @@ class Gui {
     ImFont* geist_mono = nullptr;
   };
 
-  void build_main_menu_bar(EventQueue& event_queue, Editor& editor);
+  void build_main_menu_bar(
+    EventQueue& event_queue,
+    Editor& editor,
+    const std::optional<AutoCompiler>& auto_compiler
+  );
   void build_left_half(EventQueue& event_queue, Editor& editor);
   void build_diagnostics(Editor& editor, const ImVec2& size) const;
   void build_viewport(

@@ -113,7 +113,8 @@ void Gui::build_layout(
   EventQueue& event_queue,
   const gfx::FrameContext& frame_ctx,
   Editor& editor,
-  Viewport& viewport
+  Viewport& viewport,
+  const std::optional<AutoCompiler>& auto_compiler
 ) {
   // Once the layout is created, the ID remains constant.
   if (
@@ -129,7 +130,7 @@ void Gui::build_layout(
     );
   }
 
-  build_main_menu_bar(event_queue, editor);
+  build_main_menu_bar(event_queue, editor, auto_compiler);
   build_left_half(event_queue, editor);
   build_viewport(event_queue, frame_ctx, viewport);
 }
@@ -154,7 +155,11 @@ void Gui::update(const gfx::FrameContext& frame_ctx) const {
   render_pass.End();
 }
 
-void Gui::build_main_menu_bar(EventQueue& event_queue, Editor& editor) {
+void Gui::build_main_menu_bar(
+  EventQueue& event_queue,
+  Editor& editor,
+  const std::optional<AutoCompiler>& auto_compiler
+) {
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
       using CFR = ChooseFolderRequest;
@@ -203,6 +208,11 @@ void Gui::build_main_menu_bar(EventQueue& event_queue, Editor& editor) {
     if (ImGui::BeginMenu("Run")) {
       if (ImGui::MenuItem("Compile", alt_shortcut("Enter").data()))
         event_queue.push(RunRequest{.fragment_code = editor.combined_code()});
+
+      ImGui::Separator();
+
+      if (ImGui::MenuItem("Hot reloading", nullptr, auto_compiler.has_value()))
+        event_queue.push(HotReloadingToggled{});
 
       ImGui::EndMenu();
     }

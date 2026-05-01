@@ -4,6 +4,7 @@
 #include "exception.hpp"
 #include "gfx/create.hpp"
 #include "gfx/frame_context.hpp"
+#include "gui/editor/auto_compiler.hpp"
 #include "gui/editor/editor.hpp"
 #include "io.hpp"
 #include "os.hpp"
@@ -93,6 +94,7 @@ Mewo::Mewo()
       gui_(assets_dir_, window_, gfx_),
       editor_(event_queue_, assets_dir_, gui_.theme()),
       viewport_(event_queue_, assets_dir_, gfx_, editor_.combined_code()),
+      auto_compiler_(AutoCompiler()),
       previous_time_(SDL_GetTicks()) {}
 
 void Mewo::run() {
@@ -240,10 +242,12 @@ void Mewo::process_queued_events() {
         },
 
         [this](const EditorTextChanged) {
-          if (auto_compiler_.is_running()) {
-            auto_compiler_.reset();
-          } else {
-            auto_compiler_.start();
+          if (auto_compiler_) {
+            if (auto_compiler_->is_running()) {
+              auto_compiler_->reset();
+            } else {
+              auto_compiler_->start();
+            }
           }
 
           if (project_)
@@ -252,6 +256,14 @@ void Mewo::process_queued_events() {
 
         [this](const AutoCompilerElapsed) {
           event_queue_.push(RunRequest{.fragment_code = editor_.combined_code()});
+        },
+
+        [this](const HotReloadingToggled) {
+          if (auto_compiler_) {
+            auto_compiler_.reset();
+          } else {
+            auto_compiler_ = AutoCompiler();
+          }
         },
 
         [](auto&&) { std::unreachable(); },
@@ -284,9 +296,10 @@ void Mewo::update(const gfx::FrameContext& frame_ctx, uint64_t delta_time) {
     }
   }
 
-  gui_.build_layout(event_queue_, frame_ctx, editor_, viewport_);
+  gui_.build_layout(event_queue_, frame_ctx, editor_, viewport_, auto_compiler_);
 
-  auto_compiler_.update(event_queue_, delta_time);
+  if (auto_compiler_)
+    auto_compiler_->update(event_queue_, delta_time);
 
   static constexpr float MILLISECONDS_TO_SECONDS = 1e-3f;
   viewport_.update(
