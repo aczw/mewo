@@ -27,7 +27,6 @@ namespace mewo {
 namespace {
 
 constexpr std::string_view LEFT_HALF_WINDOW_NAME = "Editor";
-constexpr std::string_view DIAGNOSTICS_WINDOW_NAME = "Diagnostics";
 constexpr std::string_view VIEWPORT_WINDOW_NAME = "Viewport";
 
 /// Generate shortcut label at compile time for the given keys.
@@ -106,7 +105,6 @@ void Gui::build_layout(
 
   build_main_menu_bar(event_queue, editor);
   build_left_half(editor);
-  build_diagnostics(editor);
   build_viewport(event_queue, frame_ctx, viewport, editor);
 }
 
@@ -180,9 +178,12 @@ void Gui::build_main_menu_bar(EventQueue& event_queue, Editor& editor) {
   }
 }
 
-void Gui::build_left_half(Editor& editor) const {
-  ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
+void Gui::build_left_half(Editor& editor) {
+  const auto& style = ImGui::GetStyle();
+
+  ImVec2 window_padding = style.WindowPadding;
   ImVec2 status_bar_window_padding = ImVec2(window_padding.x, 0.5f * window_padding.y);
+  ImVec2 diagnostics_size = ImVec2(0.f, 200.f);
 
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
   ImGui::Begin(LEFT_HALF_WINDOW_NAME.data());
@@ -190,73 +191,92 @@ void Gui::build_left_half(Editor& editor) const {
   ImGui::PushFont(fonts_.geist_mono, 0.f);
   {
     float status_bar_height = ImGui::GetFrameHeight() + (2.f * status_bar_window_padding.y);
-    auto editor_size = ImVec2(0.f, ImGui::GetContentRegionAvail().y - status_bar_height);
+    auto editor_size = ImVec2(
+      0.f,
+      ImGui::GetContentRegionAvail().y - status_bar_height -
+        (is_diagnostics_visible_ ? diagnostics_size.y + style.ItemSpacing.y : 0.f)
+    );
 
     editor.build_layout(editor_size);
   }
   ImGui::PopFont();
 
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, status_bar_window_padding);
-  ImGui::BeginChild("##Status Bar", ImVec2(), ImGuiChildFlags_AlwaysUseWindowPadding);
   {
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("Compiled in %d ms.", 32);
+    if (is_diagnostics_visible_)
+      build_diagnostics(editor, diagnostics_size);
 
-    int line = 0, column = 0;
-    editor.impl().GetCurrentCursor(line, column);
-    std::string text = std::format("Ln {}, Col {}", line + 1, column + 1);
+    ImGui::BeginChild("##Status Bar", ImVec2(), ImGuiChildFlags_AlwaysUseWindowPadding);
+    {
+      ImGui::AlignTextToFramePadding();
 
-    ImGui::SameLine();
-    ImGui::SetCursorPosX(
-      ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x -
-      ImGui::CalcTextSize(text.c_str()).x
-    );
-    ImGui::TextUnformatted(text.c_str());
+      if (
+        auto num_diagnostics = editor.diagnostics().size(); ImGui::Button(
+          std::format("{} diagnostic{}", num_diagnostics, num_diagnostics == 1 ? "" : "s").c_str()
+        )
+      ) {
+        is_diagnostics_visible_ = !is_diagnostics_visible_;
+      }
+
+      ImGui::SameLine();
+      ImGui::Text("Compiled in %d ms.", 32);
+
+      int line = 0, column = 0;
+      editor.impl().GetCurrentCursor(line, column);
+      std::string text = std::format("Ln {}, Col {}", line + 1, column + 1);
+
+      ImGui::SameLine();
+      ImGui::SetCursorPosX(
+        ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x -
+        ImGui::CalcTextSize(text.c_str()).x
+      );
+      ImGui::TextUnformatted(text.c_str());
+    }
+    ImGui::EndChild();
   }
-  ImGui::EndChild();
   ImGui::PopStyleVar();
 
   ImGui::End();
   ImGui::PopStyleVar();
 }
 
-void Gui::build_diagnostics(Editor& editor) const {
-  ImGui::Begin(DIAGNOSTICS_WINDOW_NAME.data());
+void Gui::build_diagnostics(Editor& editor, const ImVec2& size) const {
+  ImGui::BeginChild("##Diagnostics", size, ImGuiChildFlags_AlwaysUseWindowPadding);
 
-  ImGui::PushFont(fonts_.geist_mono, 0.f);
-  {
-    if (const auto& diagnostics = editor.diagnostics(); diagnostics.size() > 0) {
-      auto prefix_line_count = static_cast<uint64_t>(editor.prefix_line_count());
+  const auto& diagnostics = editor.diagnostics();
 
-      for (const auto& diag : diagnostics) {
-        // Subtract away the number of lines the fragment prefix takes up as it's not visible
-        uint64_t line_number = diag.line_number - prefix_line_count;
+  if (auto num_diagnostics = diagnostics.size(); num_diagnostics > 0) {
+    ImGui::PushFont(fonts_.geist_mono, 0.f);
 
-        ImGui::Text(
-          "(Ln %llu, Col %llu) %s: %s",
-          line_number,
-          diag.line_column,
-          diag.type_name.data(),
-          diag.message.c_str()
-        );
-        ImGui::Text("%s", diag.highlight.c_str());
+    auto prefix_line_count = static_cast<uint64_t>(editor.prefix_line_count());
 
-        std::string indicators;
-        for (size_t i = 0; i < diag.highlight.size(); ++i)
-          indicators += '^';
-        ImGui::Text("%s", indicators.c_str());
+    for (size_t i = 0; i < num_diagnostics; ++i) {
+      const auto& [message, type_name, line_number, line_column, highlight] = diagnostics[i];
 
-        // TODO: don't include spacing if it's the last diagnostic
-        ImGui::Spacing();
-        ImGui::Spacing();
-      }
-    } else {
-      ImGui::Text("Compilation succeeded with no issues.");
+      ImGui::TextWrapped(
+        "(Ln %llu, Col %llu) %s: %s",
+        line_number - prefix_line_count,
+        line_column,
+        type_name.data(),
+        message.c_str()
+      );
+
+      ImGui::Text("%s", highlight.c_str());
+      std::string indicators;
+      for (size_t i = 0; i < highlight.size(); ++i)
+        indicators += '^';
+      ImGui::Text("%s", indicators.c_str());
+
+      if (i != num_diagnostics - 1)
+        ImGui::Separator();
     }
-  }
-  ImGui::PopFont();
 
-  ImGui::End();
+    ImGui::PopFont();
+  } else {
+    ImGui::Text("Compilation succeeded with no issues.");
+  }
+
+  ImGui::EndChild();
 }
 
 void Gui::build_viewport(
@@ -442,17 +462,11 @@ void Gui::set_up_initial_layout(ImGuiID dockspace_id) const {
   ImGuiID right_id = {};
   ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, SPLIT_LEFT_RATIO, &left_id, &right_id);
 
-  ImGuiID left_up_id = {};
-  ImGuiID left_down_id = {};
-  ImGui::DockBuilderSplitNode(left_id, ImGuiDir_Up, 0.75f, &left_up_id, &left_down_id);
-
-  ImGui::DockBuilderDockWindow(LEFT_HALF_WINDOW_NAME.data(), left_up_id);
-  ImGui::DockBuilderDockWindow(DIAGNOSTICS_WINDOW_NAME.data(), left_down_id);
+  ImGui::DockBuilderDockWindow(LEFT_HALF_WINDOW_NAME.data(), left_id);
   ImGui::DockBuilderDockWindow(VIEWPORT_WINDOW_NAME.data(), right_id);
 
   ImGui::DockBuilderGetNode(right_id)->SetLocalFlags(ImGuiDockNodeFlags_NoTabBar);
-  ImGui::DockBuilderGetNode(left_up_id)->SetLocalFlags(ImGuiDockNodeFlags_NoTabBar);
-  ImGui::DockBuilderGetNode(left_down_id)->SetLocalFlags(ImGuiDockNodeFlags_NoTabBar);
+  ImGui::DockBuilderGetNode(left_id)->SetLocalFlags(ImGuiDockNodeFlags_NoTabBar);
 
   ImGui::DockBuilderFinish(dockspace_id);
 }
