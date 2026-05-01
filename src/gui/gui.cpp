@@ -201,6 +201,17 @@ void Gui::build_left_half(Editor& editor) const {
   {
     ImGui::AlignTextToFramePadding();
     ImGui::Text("Compiled in %d ms.", 32);
+
+    int line = 0, column = 0;
+    editor.impl().GetCurrentCursor(line, column);
+    std::string text = std::format("Ln {}, Col {}", line + 1, column + 1);
+
+    ImGui::SameLine();
+    ImGui::SetCursorPosX(
+      ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x -
+      ImGui::CalcTextSize(text.c_str()).x
+    );
+    ImGui::TextUnformatted(text.c_str());
   }
   ImGui::EndChild();
   ImGui::PopStyleVar();
@@ -210,12 +221,7 @@ void Gui::build_left_half(Editor& editor) const {
 }
 
 void Gui::build_diagnostics(Editor& editor) const {
-  ImGui::SetNextWindowCollapsed(true);
-
-  if (!ImGui::Begin(DIAGNOSTICS_WINDOW_NAME.data())) {
-    ImGui::End();
-    return;
-  }
+  ImGui::Begin(DIAGNOSTICS_WINDOW_NAME.data());
 
   ImGui::PushFont(fonts_.geist_mono, 0.f);
   {
@@ -323,7 +329,7 @@ void Gui::build_viewport(
 
       ImGui::SameLine();
       ImGui::SetCursorPosX(x);
-      ImGui::Text("%s", framerate_text.c_str());
+      ImGui::TextUnformatted(framerate_text.c_str());
     }
 
     {
