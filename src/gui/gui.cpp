@@ -376,8 +376,34 @@ void Gui::build_viewport(
       }
     });
 
+    auto image_size = ImVec2(window_size.x, window_size.x * inverse_ratio);
+
     // Height of image is always derived from the width, because we horizontally fill the GUI
-    ImGui::Image(texture_id, ImVec2(window_size.x, window_size.x * inverse_ratio));
+    if (ImGui::Image(texture_id, image_size); ImGui::IsItemHovered()) {
+      ImVec2 upper_left = ImGui::GetItemRectMin();
+      ImVec2 mouse_pos = ImGui::GetIO().MousePos;
+
+      auto relative_pos =
+        ImVec2(mouse_pos.x - upper_left.x, std::floor(image_size.y) - (mouse_pos.y - upper_left.y));
+
+      if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+        viewport.set_mouse_pos_during_last_down(relative_pos);
+        viewport.set_mouse_pos_during_last_click(relative_pos);
+      } else {
+        ImVec2 mouse_pos_during_last_click = viewport.mouse_pos_during_last_click();
+
+        if (mouse_pos_during_last_click.x > 0.f)
+          mouse_pos_during_last_click.x *= -1.f;
+        if (mouse_pos_during_last_click.y > 0.f)
+          mouse_pos_during_last_click.y *= -1.f;
+
+        viewport.set_mouse_pos_during_last_click(mouse_pos_during_last_click);
+      }
+
+      if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+        viewport.set_mouse_pos_during_last_down(relative_pos);
+      }
+    }
   }
 
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, window_padding);

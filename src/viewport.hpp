@@ -5,6 +5,7 @@
 #include "gfx/frame_context.hpp"
 #include "gfx/gfx.hpp"
 
+#include <imgui.h>
 #include <webgpu/webgpu_cpp.h>
 
 #include <array>
@@ -53,6 +54,10 @@ class Viewport {
 
   bool is_playing() const { return is_playing_; }
 
+  ImVec2 mouse_pos_during_last_click() const {
+    return ImVec2(mouse_pos_during_last_click_[0], mouse_pos_during_last_click_[1]);
+  }
+
   void set_mode(Mode mode) { mode_ = mode; }
 
   void set_ratio_preset(AspectRatio::Preset ratio_preset) { ratio_preset_ = ratio_preset; }
@@ -60,6 +65,14 @@ class Viewport {
   void set_resolution(uint32_t width, uint32_t height) {
     width_ = width;
     height_ = height;
+  }
+
+  void set_mouse_pos_during_last_down(ImVec2 mouse_pos) {
+    mouse_pos_during_last_down_ = {mouse_pos.x, mouse_pos.y};
+  }
+
+  void set_mouse_pos_during_last_click(ImVec2 mouse_pos) {
+    mouse_pos_during_last_click_ = {mouse_pos.x, mouse_pos.y};
   }
 
   /// `current_time` and `delta_time` are both in seconds.
@@ -86,6 +99,7 @@ class Viewport {
     float delta_time = 0.f;
     uint32_t frame_number = 0;
     uint32_t frame_rate = 0;
+    std::array<float, 4> mouse = {};
 
     uint32_t padding[2] = {};
   };
@@ -117,6 +131,8 @@ class Viewport {
   /// and will likely be stopped and/or reset during playback.
   float current_time_ = 0.f;
   bool is_playing_ = true;
+  std::array<float, 2> mouse_pos_during_last_down_ = {};
+  std::array<float, 2> mouse_pos_during_last_click_ = {};
 };
 
 }  // namespace mewo
