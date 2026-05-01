@@ -296,23 +296,17 @@ void Gui::build_left_half(EventQueue& event_queue, Editor& editor) {
 void Gui::build_diagnostics(Editor& editor, const ImVec2& size) const {
   ImGui::BeginChild("##Diagnostics", size, ImGuiChildFlags_AlwaysUseWindowPadding);
 
-  const auto& diagnostics = editor.diagnostics();
-
-  if (auto num_diagnostics = diagnostics.size(); num_diagnostics > 0) {
+  if (const auto& diagnostics = editor.diagnostics(); diagnostics.size() > 0) {
     auto prefix_line_count = static_cast<uint64_t>(editor.prefix_line_count());
 
-    for (const auto& [message, type_name, line_number, line_column, highlight] : diagnostics) {
+    for (const auto& [message, type_name, line_number, line_column, code_highlight] : diagnostics) {
       ImGui::SeparatorText(
         std::format("Ln {}, Col {}", line_number - prefix_line_count, line_column).c_str()
       );
 
       ImGui::PushFont(fonts_.geist_mono, 0.f);
       {
-        ImGui::Text("%s", highlight.c_str());
-        std::string indicators;
-        for (size_t i = 0; i < highlight.size(); ++i)
-          indicators += '^';
-        ImGui::Text("%s", indicators.c_str());
+        ImGui::TextUnformatted(code_highlight.c_str());
       }
       ImGui::PopFont();
 

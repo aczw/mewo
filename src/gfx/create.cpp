@@ -61,13 +61,18 @@ ShaderCompilationResult shader_module_from_wgsl(
         for (size_t idx = 0; idx < count; ++idx) {
           const wgpu::CompilationMessage& msg = info->messages[idx];
 
+          auto code_highlight = std::string(code.substr(msg.offset, msg.length));
+          // Make room for original code + newline + indicators
+          code_highlight.resize(msg.length + 1 + msg.length, '^');
+          code_highlight[msg.length] = '\n';
+
           did_error_occur |= msg.type == wgpu::CompilationMessageType::Error;
           diagnostics.push_back({
             .message = std::string(msg.message),
             .type_name = get_compilation_mesage_type(msg.type),
             .line_number = msg.lineNum,
             .line_column = msg.linePos,
-            .highlight = std::string(code.substr(msg.offset, msg.length)),
+            .code_highlight = code_highlight,
           });
         }
       }
