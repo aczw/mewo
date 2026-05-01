@@ -299,32 +299,25 @@ void Gui::build_diagnostics(Editor& editor, const ImVec2& size) const {
   const auto& diagnostics = editor.diagnostics();
 
   if (auto num_diagnostics = diagnostics.size(); num_diagnostics > 0) {
-    ImGui::PushFont(fonts_.geist_mono, 0.f);
-
     auto prefix_line_count = static_cast<uint64_t>(editor.prefix_line_count());
 
-    for (size_t i = 0; i < num_diagnostics; ++i) {
-      const auto& [message, type_name, line_number, line_column, highlight] = diagnostics[i];
-
-      ImGui::TextWrapped(
-        "(Ln %llu, Col %llu) %s: %s",
-        line_number - prefix_line_count,
-        line_column,
-        type_name.data(),
-        message.c_str()
+    for (const auto& [message, type_name, line_number, line_column, highlight] : diagnostics) {
+      ImGui::SeparatorText(
+        std::format("Ln {}, Col {}", line_number - prefix_line_count, line_column).c_str()
       );
 
-      ImGui::Text("%s", highlight.c_str());
-      std::string indicators;
-      for (size_t i = 0; i < highlight.size(); ++i)
-        indicators += '^';
-      ImGui::Text("%s", indicators.c_str());
+      ImGui::PushFont(fonts_.geist_mono, 0.f);
+      {
+        ImGui::Text("%s", highlight.c_str());
+        std::string indicators;
+        for (size_t i = 0; i < highlight.size(); ++i)
+          indicators += '^';
+        ImGui::Text("%s", indicators.c_str());
+      }
+      ImGui::PopFont();
 
-      if (i != num_diagnostics - 1)
-        ImGui::Separator();
+      ImGui::TextWrapped("%s: %s", type_name.data(), message.c_str());
     }
-
-    ImGui::PopFont();
   } else {
     ImGui::Text("Compilation succeeded with no issues.");
   }
