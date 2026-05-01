@@ -26,7 +26,7 @@ namespace mewo {
 
 namespace {
 
-constexpr std::string_view EDITOR_WINDOW_NAME = "Editor";
+constexpr std::string_view LEFT_HALF_WINDOW_NAME = "Editor";
 constexpr std::string_view DIAGNOSTICS_WINDOW_NAME = "Diagnostics";
 constexpr std::string_view VIEWPORT_WINDOW_NAME = "Viewport";
 
@@ -105,7 +105,7 @@ void Gui::build_layout(
   }
 
   build_main_menu_bar(event_queue, editor);
-  build_editor(editor);
+  build_left_half(editor);
   build_diagnostics(editor);
   build_viewport(event_queue, frame_ctx, viewport, editor);
 }
@@ -180,42 +180,42 @@ void Gui::build_main_menu_bar(EventQueue& event_queue, Editor& editor) {
   }
 }
 
-void Gui::build_editor(Editor& editor) const {
-  const auto& style = ImGui::GetStyle();
-  ImVec2 window_padding = style.WindowPadding;
+void Gui::build_left_half(Editor& editor) const {
+  ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
+  ImVec2 status_bar_window_padding = ImVec2(window_padding.x, 0.5f * window_padding.y);
 
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
-  ImGui::Begin(EDITOR_WINDOW_NAME.data());
+  ImGui::Begin(LEFT_HALF_WINDOW_NAME.data());
 
+  ImGui::PushFont(fonts_.geist_mono, 0.f);
   {
-    ImGui::PushFont(fonts_.geist_mono, 0.f);
-    {
-      float status_bar_height = ImGui::GetFrameHeight() + 2.f * window_padding.y;
-      auto editor_size = ImVec2(0.f, ImGui::GetContentRegionAvail().y - status_bar_height);
+    float status_bar_height = ImGui::GetFrameHeight() + (2.f * status_bar_window_padding.y);
+    auto editor_size = ImVec2(0.f, ImGui::GetContentRegionAvail().y - status_bar_height);
 
-      editor.build_layout(editor_size);
-    }
-    ImGui::PopFont();
+    editor.build_layout(editor_size);
   }
+  ImGui::PopFont();
 
-  ImGui::Spacing();
-
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, status_bar_window_padding);
+  ImGui::BeginChild("##Status Bar", ImVec2(), ImGuiChildFlags_AlwaysUseWindowPadding);
   {
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, window_padding);
-    ImGui::BeginChild("##Status Bar", ImVec2(), ImGuiChildFlags_AlwaysUseWindowPadding);
-    {
-      ImGui::Text("Prefix line count: %d", editor.prefix_line_count());
-    }
-    ImGui::EndChild();
-    ImGui::PopStyleVar();
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("Compiled in %d ms.", 32);
   }
+  ImGui::EndChild();
+  ImGui::PopStyleVar();
 
   ImGui::End();
   ImGui::PopStyleVar();
 }
 
 void Gui::build_diagnostics(Editor& editor) const {
-  ImGui::Begin(DIAGNOSTICS_WINDOW_NAME.data());
+  ImGui::SetNextWindowCollapsed(true);
+
+  if (!ImGui::Begin(DIAGNOSTICS_WINDOW_NAME.data())) {
+    ImGui::End();
+    return;
+  }
 
   ImGui::PushFont(fonts_.geist_mono, 0.f);
   {
@@ -440,7 +440,7 @@ void Gui::set_up_initial_layout(ImGuiID dockspace_id) const {
   ImGuiID left_down_id = {};
   ImGui::DockBuilderSplitNode(left_id, ImGuiDir_Up, 0.75f, &left_up_id, &left_down_id);
 
-  ImGui::DockBuilderDockWindow(EDITOR_WINDOW_NAME.data(), left_up_id);
+  ImGui::DockBuilderDockWindow(LEFT_HALF_WINDOW_NAME.data(), left_up_id);
   ImGui::DockBuilderDockWindow(DIAGNOSTICS_WINDOW_NAME.data(), left_down_id);
   ImGui::DockBuilderDockWindow(VIEWPORT_WINDOW_NAME.data(), right_id);
 

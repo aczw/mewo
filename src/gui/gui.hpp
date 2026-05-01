@@ -54,7 +54,7 @@ class Gui {
   };
 
   void build_main_menu_bar(EventQueue& event_queue, Editor& editor);
-  void build_editor(Editor& editor) const;
+  void build_left_half(Editor& editor) const;
   void build_diagnostics(Editor& editor) const;
   void build_viewport(
     EventQueue& event_queue,
