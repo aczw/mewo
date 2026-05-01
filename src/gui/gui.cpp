@@ -174,6 +174,13 @@ void Gui::build_main_menu_bar(EventQueue& event_queue, Editor& editor) {
       ImGui::EndMenu();
     }
 
+    if (ImGui::BeginMenu("Run")) {
+      if (ImGui::MenuItem("Compile", "Alt+Enter"))
+        event_queue.push(RunRequest{.fragment_code = editor.combined_code()});
+
+      ImGui::EndMenu();
+    }
+
     ImGui::EndMainMenuBar();
   }
 }

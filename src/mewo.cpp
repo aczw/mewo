@@ -319,6 +319,14 @@ void Mewo::handle_keyboard_event(const SDL_KeyboardEvent& kbd_event) {
 
       default: break;
     }
+  } else if (!has_primary && !has_shift && has_alt) {  // Alt only
+    switch (kbd_event.key) {
+      case SDLK_RETURN:
+        event_queue_.push(RunRequest{.fragment_code = editor_.combined_code()});
+        break;
+
+      default: break;
+    }
   }
 }
 
