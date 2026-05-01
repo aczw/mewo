@@ -19,7 +19,6 @@
 #include <array>
 #include <format>
 #include <functional>
-#include <print>
 #include <string_view>
 #include <utility>
 
@@ -396,7 +395,7 @@ void Gui::build_viewport(
       ImGui::SameLine();
 
       if (ImGui::Button("↺"))
-        std::println("restart!");
+        event_queue.push(ViewportPlaybackTimeResetRequest{});
 
       std::string framerate_text = std::format("{:.0f} FPS", ImGui::GetIO().Framerate);
       ImGui::TextUnformatted(framerate_text.c_str());

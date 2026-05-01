@@ -49,6 +49,8 @@ struct ViewportResizeRequest {
 
 struct ViewportPlaybackToggled {};
 
+struct ViewportPlaybackTimeResetRequest {};
+
 struct RunRequest {
   std::string fragment_code;  ///< Combined fragment shader.
 };
@@ -82,6 +84,7 @@ using Event = std::variant<
   const ProjectSaveRequest,
   const ViewportResizeRequest,
   const ViewportPlaybackToggled,
+  const ViewportPlaybackTimeResetRequest,
   const RunRequest,
   const WindowResized,
   const WGPUDeviceLost,

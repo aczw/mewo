@@ -155,6 +155,10 @@ void Mewo::process_queued_events() {
             editor_.set_visible_code(io::read_wgsl_shader(project.shader_file_location()));
             event_queue_.push(RunRequest{.fragment_code = editor_.combined_code()});
             window_.update_project_in_title(project);
+
+            if (!viewport_.is_playing())
+              viewport_.toggle_playback();
+            viewport_.reset_playback_time();
           } catch (const Exception& ex) {
             std::println("Failed to open project: {}", ex.what());
           }
@@ -197,6 +201,8 @@ void Mewo::process_queued_events() {
         },
 
         [this](const ViewportPlaybackToggled) { viewport_.toggle_playback(); },
+
+        [this](const ViewportPlaybackTimeResetRequest) { viewport_.reset_playback_time(); },
 
         [this](const RunRequest& run_req) {
           // TODO: check if the code is the same before creating new fragment shader module

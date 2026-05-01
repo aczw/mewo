@@ -72,6 +72,8 @@ class Viewport {
 
   void toggle_playback() { is_playing_ = !is_playing_; }
 
+  void reset_playback_time() { current_time_ = 0.f; }
+
  private:
   struct Uniforms {
     // TODO: Shadertoy's `iResolution` is a vec3. The third component stores the pixel aspect
