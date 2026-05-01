@@ -19,6 +19,7 @@
 #include <array>
 #include <format>
 #include <functional>
+#include <print>
 #include <string_view>
 #include <utility>
 
@@ -391,14 +392,31 @@ void Gui::build_viewport(
       ) {
         event_queue.push(ViewportPlaybackToggled{});
       }
-
       ImGui::SameLine();
 
       if (ImGui::Button("↺"))
         event_queue.push(ViewportPlaybackTimeResetRequest{});
+      ImGui::SameLine();
 
-      std::string framerate_text = std::format("{:.0f} FPS", ImGui::GetIO().Framerate);
-      ImGui::TextUnformatted(framerate_text.c_str());
+      ImGui::Text("%.1f", viewport.current_time());
+      ImGui::SameLine();
+
+      {
+        std::string text = std::format("{:.0f} FPS", ImGui::GetIO().Framerate);
+        float text_width = ImGui::CalcTextSize(text.c_str()).x;
+        float controls_button_width =
+          ImGui::CalcTextSize("Controls").x + 2.f * style.FramePadding.x;
+        ImGui::SetCursorPosX(
+          ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - text_width -
+          style.ItemSpacing.x - controls_button_width
+        );
+
+        ImGui::TextUnformatted(text.c_str());
+        ImGui::SameLine();
+      }
+
+      if (ImGui::Button("Controls"))
+        std::println("controls!");
     }
 
     {

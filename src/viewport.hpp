@@ -49,6 +49,8 @@ class Viewport {
 
   uint32_t height() const { return height_; }
 
+  float current_time() const { return current_time_; }
+
   bool is_playing() const { return is_playing_; }
 
   void set_mode(Mode mode) { mode_ = mode; }
