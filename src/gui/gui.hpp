@@ -63,13 +63,12 @@ class Gui {
   };
 
   void build_main_menu_bar(EventQueue& event_queue, Editor& editor);
-  void build_left_half(Editor& editor);
+  void build_left_half(EventQueue& event_queue, Editor& editor);
   void build_diagnostics(Editor& editor, const ImVec2& size) const;
   void build_viewport(
     EventQueue& event_queue,
     const gfx::FrameContext& frame_ctx,
-    Viewport& viewport,
-    Editor& editor
+    Viewport& viewport
   );
 
   /// Sets up the overall docking layout. Only needs to be called once. Can only

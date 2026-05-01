@@ -104,8 +104,8 @@ void Gui::build_layout(
   }
 
   build_main_menu_bar(event_queue, editor);
-  build_left_half(editor);
-  build_viewport(event_queue, frame_ctx, viewport, editor);
+  build_left_half(event_queue, editor);
+  build_viewport(event_queue, frame_ctx, viewport);
 }
 
 void Gui::update(const gfx::FrameContext& frame_ctx) const {
@@ -178,7 +178,7 @@ void Gui::build_main_menu_bar(EventQueue& event_queue, Editor& editor) {
   }
 }
 
-void Gui::build_left_half(Editor& editor) {
+void Gui::build_left_half(EventQueue& event_queue, Editor& editor) {
   const auto& style = ImGui::GetStyle();
 
   ImVec2 window_padding = style.WindowPadding;
@@ -209,6 +209,11 @@ void Gui::build_left_half(Editor& editor) {
     ImGui::BeginChild("##Status Bar", ImVec2(), ImGuiChildFlags_AlwaysUseWindowPadding);
     {
       ImGui::AlignTextToFramePadding();
+
+      if (ImGui ::Button("► Run"))
+        event_queue.push(RunRequest{.fragment_code = editor.combined_code()});
+
+      ImGui::SameLine();
 
       if (
         auto num_diagnostics = editor.diagnostics().size(); ImGui::Button(
@@ -287,8 +292,7 @@ void Gui::build_diagnostics(Editor& editor, const ImVec2& size) const {
 void Gui::build_viewport(
   EventQueue& event_queue,
   const gfx::FrameContext& frame_ctx,
-  Viewport& viewport,
-  Editor& editor
+  Viewport& viewport
 ) {
   const ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
 
@@ -345,15 +349,7 @@ void Gui::build_viewport(
   ImGui::BeginChild("##Viewport Controls", ImVec2(), ImGuiChildFlags_AlwaysUseWindowPadding);
   {
     {
-      if (ImGui::Button("Run"))
-        event_queue.push(RunRequest{.fragment_code = editor.combined_code()});
-
-      std::string framerate_text = std::format("{:.1f} FPS", ImGui::GetIO().Framerate);
-      float framerate_text_width = ImGui::CalcTextSize(framerate_text.c_str()).x;
-      float x = ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - framerate_text_width;
-
-      ImGui::SameLine();
-      ImGui::SetCursorPosX(x);
+      std::string framerate_text = std::format("{:.0f} FPS", ImGui::GetIO().Framerate);
       ImGui::TextUnformatted(framerate_text.c_str());
     }
 
