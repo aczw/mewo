@@ -82,9 +82,10 @@ Viewport::Viewport(
     .bindGroupLayouts = &render_pipeline_bgl_,
   };
 
-  const auto& [vert_module_opt, vert_diagnostics] = gfx::create::shader_module_from_wgsl(
-    gfx, io::read_wgsl_shader(assets_dir / "shaders/viewport.vert.wgsl"), "viewport-vert-shader"
-  );
+  const auto& [vert_module_opt, vert_diagnostics, vert_time_elapsed] =
+    gfx::create::shader_module_from_wgsl(
+      gfx, io::read_wgsl_shader(assets_dir / "shaders/viewport.vert.wgsl"), "viewport-vert-shader"
+    );
 
   if (!vert_module_opt.has_value()) {
     throw Exception(
@@ -99,9 +100,10 @@ Viewport::Viewport(
   };
 
   // Compile a default fragment shader to enable render pipeline creation in constructor
-  const auto& [frag_module, frag_diagnostics] = gfx::create::shader_module_from_wgsl(
-    gfx, io::read_wgsl_shader(assets_dir / "shaders/viewport.frag.wgsl"), FRAGMENT_SHADER_LABEL
-  );
+  const auto& [frag_module, frag_diagnostics, frag_time_elapsed] =
+    gfx::create::shader_module_from_wgsl(
+      gfx, io::read_wgsl_shader(assets_dir / "shaders/viewport.frag.wgsl"), FRAGMENT_SHADER_LABEL
+    );
 
   if (!frag_module.has_value()) {
     throw Exception(

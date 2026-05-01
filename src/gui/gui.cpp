@@ -219,7 +219,12 @@ void Gui::build_left_half(Editor& editor) {
       }
 
       ImGui::SameLine();
-      ImGui::Text("Compiled in %d ms.", 32);
+
+      if (is_last_compilation_successful_) {
+        ImGui::Text("Compiled in %.2f ms.", last_compilation_duration_.count() * 1000.0);
+      } else {
+        ImGui::TextUnformatted("Compilation failed.");
+      }
 
       int line = 0, column = 0;
       editor.impl().GetCurrentCursor(line, column);

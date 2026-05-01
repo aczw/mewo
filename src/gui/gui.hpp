@@ -13,6 +13,7 @@
 #include <imgui_impl_wgpu.h>
 #include <webgpu/webgpu_cpp.h>
 
+#include <chrono>
 #include <filesystem>
 
 namespace mewo {
@@ -30,6 +31,14 @@ class Gui {
   }
 
   Theme theme() const { return theme_; }
+
+  void set_last_compilation_duration(std::chrono::duration<double> duration) {
+    last_compilation_duration_ = duration;
+  }
+
+  void set_is_last_compilation_successful(bool is_successful) {
+    is_last_compilation_successful_ = is_successful;
+  }
 
   void begin_frame() const {
     ImGui_ImplWGPU_NewFrame();
@@ -76,6 +85,8 @@ class Gui {
   Theme theme_ = Theme::RosePine;
 
   bool is_diagnostics_visible_ = false;
+  std::chrono::duration<double> last_compilation_duration_;
+  bool is_last_compilation_successful_ = true;
 };
 
 }  // namespace mewo

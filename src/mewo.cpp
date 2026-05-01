@@ -197,23 +197,22 @@ void Mewo::process_queued_events() {
         [this](const RunRequest& run_req) {
           // TODO: check if the code is the same before creating new fragment shader module
           // (how expensive is this anyway?)
-          auto compilation_result = gfx::create::shader_module_from_wgsl(
+          auto result = gfx::create::shader_module_from_wgsl(
             gfx_, run_req.fragment_code, Viewport::FRAGMENT_SHADER_LABEL
           );
 
-          editor_.set_diagnostics(std::move(compilation_result.second));
+          editor_.set_diagnostics(std::move(result.diagnostics));
+          gui_.set_last_compilation_duration(result.time_elapsed);
 
-          if constexpr (query::is_debug())
-            std::println(
-              "Shader compilation generated {} diagnostic(s)", editor_.diagnostics().size()
-            );
-
-          if (const auto& fragment_module = compilation_result.first; fragment_module) {
+          if (const auto& fragment_module = result.shader_module; fragment_module) {
             viewport_.rebuild_render_pipeline(fragment_module.value(), gfx_.device());
+            gui_.set_is_last_compilation_successful(true);
 
             if constexpr (query::is_debug())
               std::println("Updated viewport render pipeline");
           } else {
+            gui_.set_is_last_compilation_successful(false);
+
             if constexpr (query::is_debug())
               std::println(
                 "Shader compilation errors occurred, viewport render pipeline not updated"

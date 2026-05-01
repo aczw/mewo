@@ -5,14 +5,17 @@
 
 #include <webgpu/webgpu_cpp.h>
 
+#include <chrono>
 #include <optional>
 #include <string_view>
-#include <utility>
 
 namespace mewo::gfx::create {
 
-using ShaderCompilationResult =
-  std::pair<std::optional<wgpu::ShaderModule>, gfx::CompilationDiagnostics>;
+struct ShaderCompilationResult {
+  std::optional<wgpu::ShaderModule> shader_module;
+  gfx::CompilationDiagnostics diagnostics;
+  std::chrono::duration<double> time_elapsed;
+};
 
 ShaderCompilationResult shader_module_from_wgsl(
   const Gfx& gfx,
