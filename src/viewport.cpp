@@ -14,7 +14,6 @@
 
 #include <cmath>
 #include <cstdint>
-#include <print>
 #include <string_view>
 
 namespace mewo {
@@ -173,14 +172,6 @@ void Viewport::update(
     queue.WriteBuffer(unif_buf_, 0, resolution.data(), sizeof(resolution));
   }
 
-  std::println(
-    "{}, {}, {}, {}",
-    mouse_pos_during_last_down_[0],
-    mouse_pos_during_last_down_[1],
-    mouse_pos_during_last_click_[0],
-    mouse_pos_during_last_click_[1]
-  );
-
   {
     wgpu::RenderPassEncoder render_pass = frame_ctx.encoder.BeginRenderPass(&pass_desc_);
 
@@ -190,8 +181,7 @@ void Viewport::update(
 
     render_pass.End();
   }
-
-}  // namespace mewo
+}
 
 void Viewport::rebuild_render_pipeline(
   const wgpu::ShaderModule& fragment_module,
