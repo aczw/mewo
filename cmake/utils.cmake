@@ -1,15 +1,3 @@
-function(mewo_set_target_warnings target)
-  target_compile_options(${target} PRIVATE
-    -Wall -Wextra -Werror -Wpedantic
-    -Wconversion -Wsign-conversion
-    -Wshadow
-    -Wimplicit-fallthrough
-
-    "$<$<COMPILE_LANGUAGE:CXX>:-Wold-style-cast;-Wno-missing-designated-field-initializers>"
-    "$<$<COMPILE_LANGUAGE:C>:-Wstrict-prototypes;-Wmissing-prototypes>"
-  )
-endfunction()
-
 function(mewo_set_target_defaults target language)
   if(language STREQUAL "CXX")
      set_target_properties(${target} PROPERTIES
@@ -27,5 +15,21 @@ function(mewo_set_target_defaults target language)
     message(FATAL_ERROR "Unknown language option: ${language}")
   endif()
 
-  mewo_set_target_warnings(${target})
+  target_compile_options(${target} PRIVATE
+    -Wall -Wextra -Werror -Wpedantic
+    -Wconversion -Wsign-conversion
+    -Wshadow
+    -Wimplicit-fallthrough
+
+    "$<$<COMPILE_LANGUAGE:CXX>:-Wold-style-cast;-Wno-missing-designated-field-initializers>"
+    "$<$<COMPILE_LANGUAGE:C>:-Wstrict-prototypes;-Wmissing-prototypes>"
+  )
+
+  target_compile_definitions(${target} PRIVATE
+    MEWO_VERSION="${PROJECT_VERSION}"
+    MEWO_VERSION_MAJOR="${PROJECT_VERSION_MAJOR}"
+    MEWO_VERSION_MINOR="${PROJECT_VERSION_MINOR}"
+    MEWO_VERSION_PATCH="${PROJECT_VERSION_PATCH}"
+    MEWO_VERSION_BUILD="${PROJECT_VERSION_TWEAK}"
+  )
 endfunction()
