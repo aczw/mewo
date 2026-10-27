@@ -98,7 +98,7 @@ _Record each decision with a short "why"._
 - **macOS:** Apple Clang (its libc++ lags upstream LLVM on C++23 features). Clone with `--recursive` or run `git submodule update --init`. Dawn's dependency fetch needs Python 3 on both machines.
 
 ## Roadmap
-1. Skeleton: CMake targets, presets, submodules, placeholder sources; `mewo_sdl` prints `mewo_version_string()` and one Catch2 test passes, on both machines.
+1. Skeleton: CMake targets, presets, submodules, placeholder sources; `mewo_sdl` prints `mewo_get_version()` and one Catch2 test passes, on both machines.
 2. First vertical slice: `mewo_runtime_t` with async device init reported via the event queue, `mewo_surface_t` from SDL's native window handle (`gpu/` seam), a minimal session drawing one hardcoded shader, and the SDL host on SDL3 main callbacks (`SDL_AppInit`/`SDL_AppIterate`/...).
 3. Real `mewo_model`: project data model, validation, shader assembly + segment map. GPU-free, test-driven with the `-model` presets.
 4. Sessions render real projects: single pass, then multi-pass with feedback.
