@@ -1,0 +1,104 @@
+{
+  "version": 10,
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "debug-clang",
+      "inherits": "base",
+      "displayName": "Debug (Clang)",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "release-clang",
+      "inherits": "base",
+      "displayName": "Release (Clang)",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug-clang",
+      "displayName": "Debug (Clang): everything",
+      "configurePreset": "debug-clang"
+    },
+    {
+      "name": "debug-clang-model",
+      "displayName": "Debug (Clang): model + tests only",
+      "configurePreset": "debug-clang",
+      "targets": [
+        "mewo_model",
+        "mewo_tests"
+      ]
+    },
+    {
+      "name": "debug-clang-host-sdl",
+      "displayName": "Debug (Clang): SDL host",
+      "configurePreset": "debug-clang",
+      "targets": [
+        "mewo_sdl"
+      ]
+    },
+    {
+      "name": "release-clang",
+      "displayName": "Release (Clang): everything",
+      "configurePreset": "release-clang"
+    },
+    {
+      "name": "release-clang-model",
+      "displayName": "Release (Clang): model + tests only",
+      "configurePreset": "release-clang",
+      "targets": [
+        "mewo_model",
+        "mewo_tests"
+      ]
+    },
+    {
+      "name": "release-clang-host-sdl",
+      "displayName": "Release (Clang): SDL host",
+      "configurePreset": "release-clang",
+      "targets": [
+        "mewo_sdl"
+      ]
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "debug-clang",
+      "inherits": "base",
+      "displayName": "Debug (Clang)",
+      "configurePreset": "debug-clang"
+    },
+    {
+      "name": "release-clang",
+      "inherits": "base",
+      "displayName": "Release (Clang)",
+      "configurePreset": "release-clang"
+    }
+  ]
+}

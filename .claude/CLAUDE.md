@@ -6,7 +6,8 @@
 - Keep this file to durable content: vision, conventions, and decisions (with the reasoning). No progress logs or session-by-session status. Remove anything that goes stale.
 
 ## How we work
-- **Advise, don't edit.** The user writes the code themselves to learn. Give design guidance, explanations, reviews, and small illustrative snippets in chat. Only touch project files outside `.claude/` / `CLAUDE.md` when explicitly asked.
+- **Advise, don't edit.** The user writes the code themselves to learn. Give design guidance, explanations, reviews, and small illustrative snippets in chat. Only touch project files outside `.claude/` / `CLAUDE.md` when explicitly asked (the user has done this for mechanical config, e.g. writing `CMakePresets.json` entries).
+- **Reviews:** when the user asks "how am I doing?", read the actual files (don't assume earlier findings were fixed), group findings into "will break", "builds but undermines the intent", and "polish", and explain the *why*. Running read-only checks (configure, build, ctest, `cmake --list-presets`) to verify is fine.
 
 ## User's expertise
 - The `senior-project` branch reflects the user's current level, no more and no less: comfortable with modern C++ (C++23, variants/visitors, RAII), CMake and submodules, WebGPU basics (pipelines, bind groups, uniform buffers and alignment, shader modules), Dear ImGui, and SDL3.
@@ -69,14 +70,27 @@ _Record each decision with a short "why"._
 - Uniform layout has a single source of truth in C++ (a field table) that generates both the WGSL declarations and the byte offsets.
 
 ### Repo & build
-- Layout: `libmewo/` (`include/mewo/mewo.h` = the single public C header; `src/{api,project,shader,runtime,session,gpu,util}`; `tests/`), `hosts/` (`sdl/` reference host in plain C, later `macos/`, `web/`; "hosts" because the web isn't really an app), `examples/`, `docs/`, `third_party/`, `cmake/` (`webgpu.cmake` selects the implementation, `warnings.cmake`).
+- Layout: `libmewo/` (`include/mewo/mewo.h` = the single public C header; `src/{api,project,shader,runtime,session,gpu,util}`; `tests/`), `hosts/` (`sdl/` reference host in plain C, later `macos/`, `web/`; "hosts" because the web isn't really an app), `examples/`, `docs/`, `third_party/`, `cmake/` (`webgpu.cmake` selects the implementation; `utils.cmake` has `mewo_set_target_defaults(target C|CXX)`, which sets the language standard (C11 / C++23, no extensions) and calls `mewo_set_target_warnings`). Every first-party target calls `mewo_set_target_defaults`.
 - **CMake targets enforce the architecture:** `mewo_model` (project/ + shader/; links only the JSON lib; no webgpu, so GPU includes fail to compile), `mewo` (everything + `api/`; links `mewo_model`, webgpu, stb), `mewo_sdl` (links `mewo` + SDL3; only hosts see SDL).
 - `api/` is the only place C meets C++ (thin `extern "C"` + try/catch forwarding). `gpu/` is the seam for implementation-specific code (surface creation, extensions).
-- `tests/c_header_check.c` compiles `mewo.h` as C11 `-pedantic` to catch C++-isms.
+- `tests/c_check.c` (target `mewo_c_check`, an OBJECT library) compiles `mewo.h` as C11 `-pedantic` to catch C++-isms. It must stay C11, not C23: C23 makes `f()` mean `f(void)` and makes `bool` a keyword, which would hide exactly the mistakes it exists to catch.
+- **Presets** (`CMakePresets.json`): configure `debug-clang` / `release-clang` (Ninja, clang/clang++, `build/<preset>`, compile_commands on). Build presets per configuration: `<cfg>` (everything), `<cfg>-model` (`mewo_model` + `mewo_tests` only, never touches Dawn, so it's the fast loop), `<cfg>-host-sdl` (`mewo_sdl`). Test presets per configuration with `outputOnFailure` and `noTestsAction: error`. The user drives builds through VS Code's CMake Tools extension ("CMake: Select Build Preset"; "[Targets In Preset]" is the target setting, not the preset).
+- **Gotchas found during setup:** Dawn registers `tint_unittests` with CTest unless `TINT_BUILD_TESTS` is OFF. After adding any `set(... CACHE ...)` dependency option to an existing build dir, reconfigure with `cmake --preset <p> --fresh`, because non-`FORCE` cache sets don't override cached values. Multi-line generator expressions break (whitespace splits or leaks into flags); use one-line `"$<...:a;b>"` forms.
 - **Dawn first** as the `webgpu.h` implementation, selected through `cmake/webgpu.cmake` so wgpu-native can be added later.
 - **Dependencies are git submodules only** (no FetchContent). Small single-header deps (stb_image) are vendored in `third_party/`. Note: Dawn's own build may still fetch its dependencies via its script (`DAWN_FETCH_DEPENDENCIES`).
 - **Tests use Catch2 v3** (submodule, registered with CTest via `catch_discover_tests`). Why: expression-decomposing `REQUIRE`, and `SECTION`s suit the many small variations in GPU-free `mewo_model` tests; v3 is a compiled library, so no single-header compile cost.
 - The macOS SwiftUI app will be an Xcode/SwiftPM project linking a libmewo static lib/xcframework, not built by CMake.
+
+### Dev environment
+- **Windows:** LLVM via winget (`LLVM.LLVM`), but winget doesn't add `C:\Program Files\LLVM\bin` to PATH; add it manually. CMake (`Kitware.CMake`) and Ninja (`Ninja-build.Ninja`) via winget. Clang targets the MSVC ABI, so it needs **Build Tools for Visual Studio 2026** (winget id `Microsoft.VisualStudio.BuildTools`, no year in the id) with the `Microsoft.VisualStudio.Workload.VCTools` workload + recommended components (MSVC toolset and Windows SDK). Use the GNU-style `clang`/`clang++` drivers, not `clang-cl`, to match the warning flags.
+- **macOS:** Apple Clang (its libc++ lags upstream LLVM on C++23 features). Clone with `--recursive` or run `git submodule update --init`. Dawn's dependency fetch needs Python 3 on both machines.
+
+## Roadmap
+1. Skeleton: CMake targets, presets, submodules, placeholder sources; `mewo_sdl` prints `mewo_version_string()` and one Catch2 test passes, on both machines.
+2. First vertical slice: `mewo_runtime_t` with async device init reported via the event queue, `mewo_surface_t` from SDL's native window handle (`gpu/` seam), a minimal session drawing one hardcoded shader, and the SDL host on SDL3 main callbacks (`SDL_AppInit`/`SDL_AppIterate`/...).
+3. Real `mewo_model`: project data model, validation, shader assembly + segment map. GPU-free, test-driven with the `-model` presets.
+4. Sessions render real projects: single pass, then multi-pass with feedback.
+- Planned discussion before step 2: refcounting from first principles, and the exceptions-vs-`std::expected` question (both shape the first real `mewo.h`).
 
 ## Learning list
 Topics the user wants to learn through this project (teach from first principles when they come up):
