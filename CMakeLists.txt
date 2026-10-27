@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 4.0.0)
 
-project(mewo LANGUAGES C CXX)
+set(MEWO_VERSION_SEMVER 1.0.0)
+set(MEWO_VERSION_BUILD 0)
+
+project(mewo
+  VERSION "${MEWO_VERSION_SEMVER}.${MEWO_VERSION_BUILD}"
+  HOMEPAGE_URL "https://mewo.czw.sh"
+  LANGUAGES C CXX
+)
 
 # Support Clang only
 if(NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))

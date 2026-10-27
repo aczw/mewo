@@ -1,3 +1,3 @@
 #include <mewo/mewo.h>
 
-extern "C" const char* mewo_version_string() { return "0.0.1"; }
+extern "C" const char* mewo_get_version() { return MEWO_VERSION; }

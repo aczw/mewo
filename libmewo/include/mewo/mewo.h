@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-const char* mewo_version_string(void);
+const char* mewo_get_version(void);
 
 #ifdef __cplusplus
 }

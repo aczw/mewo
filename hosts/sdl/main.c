@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  printf("%s", mewo_version_string());
+  printf("Mewo version: %s", mewo_get_version());
 
   SDL_QuitSubSystem(SDL_INIT_VIDEO);
   SDL_Quit();
