@@ -9,28 +9,9 @@
 extern "C" {
 #endif
 
-/**
- * Opaque type that represents the runtime. This owns the WebGPU instance, device,
- * and everything in between.
- */
 typedef struct mewo_runtime mewo_runtime_t;
-
-/**
- * Opaque type that represents a session. This can be thought of as an "instance" of an
- * open project that is currently running.
- */
 typedef struct mewo_session mewo_session_t;
-
-/**
- * Opaque type that represents a project. This is a document that stores the passes, sources,
- * and settings that encompass a project. Serializable by the host.
- */
 typedef struct mewo_project mewo_project_t;
-
-/**
- * Opaque type that represents a window surface. This is the surface that the render will
- * present to each frame.
- */
 typedef struct mewo_surface mewo_surface_t;
 
 /**
@@ -38,11 +19,7 @@ typedef struct mewo_surface mewo_surface_t;
  */
 #define MEWO_ENUM_FORCE_INT INT_MAX
 
-/**
- * Represents all possible results from operations.
- */
 typedef enum mewo_result {
-  /** Everything succeeded */
   MEWO_SUCCESS = 0,
   /** Operation is not ready yet, check back later */
   MEWO_ERROR_NOT_READY = -1,
@@ -54,6 +31,9 @@ typedef enum mewo_result {
 /**
  * Other languages that call this API may not have strings that are null-terminated, so
  * to avoid unnecessary copies we use our own string type.
+ *
+ * This library guarantees that all functions will return an explicit length,
+ * null-terminated string view. The sentinel value is only provided for inputs from the host.
  */
 typedef struct mewo_string_view {
   const char* data;
@@ -72,12 +52,10 @@ typedef struct mewo_string_view {
  */
 #define MEWO_STRING_VIEW_SENTINEL SIZE_MAX
 
-/**
- * Retrieves what version of Mewo is currently running.
- *
- * @return Pointer to the null-terminated version string.
- */
-const char* mewo_get_version(void);
+mewo_result_t mewo_runtime_create(mewo_runtime_t** out);
+void mewo_runtime_destroy(mewo_runtime_t* runtime);
+
+mewo_string_view_t mewo_get_version(void);
 
 #ifdef __cplusplus
 }

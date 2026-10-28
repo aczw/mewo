@@ -5,11 +5,20 @@ function(mewo_set_target_defaults target language)
       CXX_STANDARD_REQUIRED ON
       CXX_EXTENSIONS OFF
     )
+    target_compile_options(${target} PRIVATE
+      -Wold-style-cast
+      -Wno-missing-designated-field-initializers
+      -Wextra-semi
+    )
   elseif(language STREQUAL "C")
     set_target_properties(${target} PROPERTIES
       C_STANDARD 11
       C_STANDARD_REQUIRED ON
       C_EXTENSIONS OFF
+    )
+    target_compile_options(${target} PRIVATE
+      -Wstrict-prototypes
+      -Wmissing-prototypes
     )
   else()
     message(FATAL_ERROR "Unknown language option: ${language}")
@@ -20,9 +29,6 @@ function(mewo_set_target_defaults target language)
     -Wconversion -Wsign-conversion
     -Wshadow
     -Wimplicit-fallthrough
-
-    "$<$<COMPILE_LANGUAGE:CXX>:-Wold-style-cast;-Wno-missing-designated-field-initializers>"
-    "$<$<COMPILE_LANGUAGE:C>:-Wstrict-prototypes;-Wmissing-prototypes>"
   )
 
   target_compile_definitions(${target} PRIVATE

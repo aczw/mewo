@@ -4,4 +4,4 @@ namespace mewo {
 
 int test();
 
-}
+}  // namespace mewo

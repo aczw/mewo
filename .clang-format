@@ -7,9 +7,12 @@ TabWidth: 2
 ContinuationIndentWidth: 2
 
 InsertNewlineAtEOF: true
-WrapNamespaceBodyWithEmptyLines: Always
 SeparateDefinitionBlocks: Always
+
+WrapNamespaceBodyWithEmptyLines: Always
 NamespaceIndentation: None
+FixNamespaceComments: true
+ShortNamespaceLines: 0
 
 BinPackArguments: false
 BinPackParameters: OnePerLine
