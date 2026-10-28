@@ -56,6 +56,12 @@ typedef struct mewo_string_view {
 mewo_string_view_t mewo_get_version(void);
 
 mewo_result_t mewo_runtime_create(mewo_runtime_t** out);
+
+/**
+ * Destroys and ends the runtime.
+ *
+ * @param runtime Pointer to the runtime. If `NULL`, nothing happens.
+ */
 void mewo_runtime_destroy(mewo_runtime_t* runtime);
 
 typedef enum mewo_event_type {
@@ -80,6 +86,8 @@ typedef struct mewo_event {
  */
 bool mewo_runtime_poll_event(mewo_runtime_t* runtime, mewo_event_t* out_event);
 void mewo_runtime_tick(mewo_runtime_t* runtime);
+
+void mewo_runtime_request_device(mewo_runtime_t* runtime);
 
 #ifdef __cplusplus
 }

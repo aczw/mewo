@@ -7,7 +7,6 @@ function(mewo_set_target_defaults target language)
     )
     target_compile_options(${target} PRIVATE
       -Wold-style-cast
-      -Wno-missing-designated-field-initializers
       -Wextra-semi
     )
   elseif(language STREQUAL "C")

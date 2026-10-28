@@ -15,12 +15,15 @@ add_library(mewo STATIC
   src/api/version.cpp
 
   src/gpu/move_only_handle.hpp
+  src/gpu/string.cpp
+  src/gpu/string.hpp
   src/gpu/types.hpp
 
   src/runtime/runtime.hpp
   src/runtime/runtime.cpp
 
   src/utility/error.hpp
+  src/utility/event.hpp
 )
 mewo_set_target_defaults(mewo CXX)
 target_include_directories(mewo PUBLIC include PRIVATE src)

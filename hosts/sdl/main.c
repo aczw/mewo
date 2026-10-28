@@ -10,22 +10,24 @@ int main(int argc, char* argv[]) {
   (void)argc;
   (void)argv;
 
-  if (!SDL_Init(SDL_INIT_VIDEO)) {
+  if (!SDL_Init(SDL_INIT_VIDEO))
     return EXIT_FAILURE;
-  }
 
-  printf("Mewo version: %s", mewo_get_version().data);
+  printf("Mewo version: %s\n", mewo_get_version().data);
 
+  int exit_code = EXIT_SUCCESS;
   mewo_runtime_t* runtime = NULL;
   mewo_result_t res = mewo_runtime_create(&runtime);
 
-  if (res < 0)
-    return res;
+  if (res < 0) {
+    exit_code = EXIT_FAILURE;
+    goto cleanup;
+  }
 
+cleanup:
   mewo_runtime_destroy(runtime);
-
   SDL_QuitSubSystem(SDL_INIT_VIDEO);
   SDL_Quit();
 
-  return EXIT_SUCCESS;
+  return exit_code;
 }

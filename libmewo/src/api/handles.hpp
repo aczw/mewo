@@ -2,6 +2,8 @@
 
 #include "runtime/runtime.hpp"
 
+#include <memory>
+
 struct mewo_runtime {
-  mewo::Runtime impl;
+  std::unique_ptr<mewo::Runtime> impl;
 };

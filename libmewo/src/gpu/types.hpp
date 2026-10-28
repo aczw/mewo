@@ -7,5 +7,6 @@
 namespace mewo {
 
 using Instance = MoveOnlyHandle<WGPUInstance, wgpuInstanceRelease>;
+using Adapter = MoveOnlyHandle<WGPUAdapter, wgpuAdapterRelease>;
 
 }  // namespace mewo

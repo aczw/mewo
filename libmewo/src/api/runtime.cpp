@@ -8,7 +8,8 @@
 #include <cassert>
 #include <utility>
 
-extern "C" mewo_result_t mewo_runtime_create(mewo_runtime_t** out) {
+extern "C" {
+mewo_result_t mewo_runtime_create(mewo_runtime_t** out) {
   assert(out);
   *out = nullptr;
 
@@ -26,4 +27,10 @@ extern "C" mewo_result_t mewo_runtime_create(mewo_runtime_t** out) {
   return MEWO_SUCCESS;
 }
 
-extern "C" void mewo_runtime_destroy(mewo_runtime_t* runtime) { delete runtime; }
+void mewo_runtime_destroy(mewo_runtime_t* runtime) { delete runtime; }
+
+void mewo_runtime_request_device(mewo_runtime_t* runtime) {
+  assert(runtime);
+  runtime->impl->request_device();
+}
+}

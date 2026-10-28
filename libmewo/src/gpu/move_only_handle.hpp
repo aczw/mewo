@@ -9,6 +9,8 @@ template <typename T, void (*release_fn)(T)>
   requires std::is_pointer_v<T>
 class MoveOnlyHandle {
  public:
+  MoveOnlyHandle() = default;
+
   explicit MoveOnlyHandle(T handle) : handle_(handle) {}
 
   ~MoveOnlyHandle() {
@@ -38,7 +40,7 @@ class MoveOnlyHandle {
   explicit operator bool() const { return handle_ != nullptr; }
 
  private:
-  T handle_;
+  T handle_ = nullptr;
 };
 
 }  // namespace mewo
