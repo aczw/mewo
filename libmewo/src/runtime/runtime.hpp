@@ -20,6 +20,8 @@ class Runtime {
   Runtime(const Runtime&) = delete;
   Runtime& operator=(const Runtime&) = delete;
 
+  void tick() const;
+
   /**
    * Requests the WebGPU adapter and device.
    */

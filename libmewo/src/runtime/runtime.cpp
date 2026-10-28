@@ -17,10 +17,17 @@ std::expected<std::unique_ptr<Runtime>, Error> Runtime::create() {
   return std::unique_ptr<Runtime>(new Runtime(Instance(instance)));
 }
 
+void Runtime::tick() const { wgpuInstanceProcessEvents(instance_.get()); }
+
 void Runtime::request_device() {
+  WGPURequestAdapterOptions adapter_opts = {
+    .featureLevel = WGPUFeatureLevel_Core,
+    .powerPreference = WGPUPowerPreference_HighPerformance,
+  };
+
   wgpuInstanceRequestAdapter(
     instance_.get(),
-    nullptr,
+    &adapter_opts,
     WGPURequestAdapterCallbackInfo{
       .mode = WGPUCallbackMode_AllowProcessEvents,
       .callback =
