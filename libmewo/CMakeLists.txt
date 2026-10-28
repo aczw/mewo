@@ -9,6 +9,8 @@ target_include_directories(mewo_model PUBLIC src)
 
 add_library(mewo STATIC
   src/api/handles.hpp
+  src/api/result.cpp
+  src/api/result.hpp
   src/api/runtime.cpp
   src/api/version.cpp
 
@@ -17,7 +19,7 @@ add_library(mewo STATIC
 
   src/runtime/runtime.hpp
   src/runtime/runtime.cpp
-  
+
   src/utility/error.hpp
 )
 mewo_set_target_defaults(mewo CXX)
