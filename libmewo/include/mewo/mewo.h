@@ -2,6 +2,7 @@
 #define MEWO_H_
 
 #include <limits.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -52,10 +53,33 @@ typedef struct mewo_string_view {
  */
 #define MEWO_STRING_VIEW_SENTINEL SIZE_MAX
 
+mewo_string_view_t mewo_get_version(void);
+
 mewo_result_t mewo_runtime_create(mewo_runtime_t** out);
 void mewo_runtime_destroy(mewo_runtime_t* runtime);
 
-mewo_string_view_t mewo_get_version(void);
+typedef enum mewo_event_type {
+  MEWO_EVENT_NONE = 0,
+  MEWO_EVENT_FORCE_INT = MEWO_ENUM_FORCE_INT,
+} mewo_event_type_t;
+
+typedef struct mewo_event {
+  mewo_event_type_t type;
+
+  union {
+    uint8_t reserved[64];
+  } variant;
+} mewo_event_t;
+
+/**
+ * Pops the next event from the event queue.
+ *
+ * @param runtime Pointer to the runtime.
+ * @param out_event Pointer to the location where the popped event will be stored, if any.
+ * @return True if an event was popped from the queue, and false if the queue was empty.
+ */
+bool mewo_runtime_poll_event(mewo_runtime_t* runtime, mewo_event_t* out_event);
+void mewo_runtime_tick(mewo_runtime_t* runtime);
 
 #ifdef __cplusplus
 }
