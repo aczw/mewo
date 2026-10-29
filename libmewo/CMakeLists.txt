@@ -12,19 +12,23 @@ add_library(mewo STATIC
   src/api/result.cpp
   src/api/result.hpp
   src/api/runtime.cpp
+  src/api/surface.cpp
   src/api/version.cpp
 
-  src/gpu/move_only_handle.hpp
   src/gpu/string.cpp
   src/gpu/string.hpp
+  src/gpu/surface_source.cpp
+  src/gpu/surface_source.hpp
   src/gpu/types.hpp
 
-  src/runtime/event.cpp
-  src/runtime/event.hpp
-  src/runtime/runtime.hpp
-  src/runtime/runtime.cpp
+  src/core/error.hpp
+  src/core/event.cpp
+  src/core/event.hpp
+  src/core/runtime.cpp
+  src/core/runtime.hpp
+  src/core/surface_state.cpp
+  src/core/surface_state.hpp
 
-  src/utility/error.hpp
   src/utility/match.hpp
 )
 mewo_set_target_defaults(mewo CXX)

@@ -1,8 +1,8 @@
-#include "runtime/runtime.hpp"
+#include "core/runtime.hpp"
 
 #include "api/handles.hpp"
 #include "api/result.hpp"
-#include "runtime/event.hpp"
+#include "core/event.hpp"
 #include "utility/match.hpp"
 
 #include <mewo/mewo.h>
@@ -10,8 +10,6 @@
 #include <cassert>
 #include <utility>
 #include <variant>
-
-static_assert(sizeof(mewo_event_t::variant) == 32, "event payload outgrew reserved space");
 
 extern "C" {
 mewo_result_t mewo_runtime_create(mewo_runtime_t** out) {
@@ -24,7 +22,7 @@ mewo_result_t mewo_runtime_create(mewo_runtime_t** out) {
     if (!runtime_res)
       return mewo::error_to_result(runtime_res.error());
 
-    *out = new mewo_runtime(std::move(runtime_res.value()));
+    *out = new mewo_runtime_t(std::move(runtime_res.value()));
   } catch (...) {
     return MEWO_ERROR_INTERNAL;
   }

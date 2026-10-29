@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utility/error.hpp"
+#include "core/error.hpp"
 
 #include <mewo/mewo.h>
 

@@ -1,8 +1,8 @@
 #pragma once
 
+#include "core/error.hpp"
+#include "core/event.hpp"
 #include "gpu/types.hpp"
-#include "runtime/event.hpp"
-#include "utility/error.hpp"
 
 #include <deque>
 #include <expected>
@@ -20,6 +20,8 @@ class Runtime {
   Runtime& operator=(Runtime&&) = delete;
   Runtime(const Runtime&) = delete;
   Runtime& operator=(const Runtime&) = delete;
+
+  const Instance& instance() const { return instance_; }
 
   std::optional<Event> poll_event();
   void tick();

@@ -29,7 +29,7 @@ IncludeCategories:
     Priority: 1
   - Regex: '^<mewo/mewo.h>'
     Priority: 2
-  - Regex: '^<(SDL3|webgpu|nlohmann|catch2)/?.*>'
+  - Regex: '^<(SDL3|mewo|webgpu|nlohmann|catch2)/?.*>'
     Priority: 3
   - Regex: '^<.*>'
     Priority: 4

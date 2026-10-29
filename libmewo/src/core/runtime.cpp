@@ -1,7 +1,7 @@
-#include "runtime/runtime.hpp"
+#include "core/runtime.hpp"
 
+#include "core/event.hpp"
 #include "gpu/string.hpp"
-#include "runtime/event.hpp"
 
 #include <webgpu/webgpu.h>
 
