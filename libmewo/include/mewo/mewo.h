@@ -92,6 +92,9 @@ typedef enum mewo_gpu_error {
   MEWO_GPU_ERROR_FORCE_INT = MEWO_ENUM_FORCE_INT,
 } mewo_gpu_error_t;
 
+/**
+ * Event string messages, if any, always carry a real length.
+ */
 typedef struct mewo_event {
   mewo_event_type_t type;
 

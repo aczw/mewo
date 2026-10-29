@@ -20,6 +20,11 @@ int main(int argc, char* argv[]) {
   mewo_runtime_t* runtime = NULL;
   mewo_result_t res = mewo_runtime_create(&runtime);
 
+  if (res < 0) {
+    exit_code = EXIT_FAILURE;
+    goto cleanup;
+  }
+
   mewo_runtime_request_device(runtime);
   mewo_event_t event;
 
@@ -47,11 +52,6 @@ int main(int argc, char* argv[]) {
 
     if (device_is_ready)
       break;
-  }
-
-  if (res < 0) {
-    exit_code = EXIT_FAILURE;
-    goto cleanup;
   }
 
 cleanup:
