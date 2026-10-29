@@ -1,63 +1,93 @@
 #include <mewo/mewo.h>
 
+#define SDL_MAIN_USE_CALLBACKS
+
+#include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
+#include <SDL3/SDL_log.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3/SDL_stdinc.h>
 
 #include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
 
-int main(int argc, char* argv[]) {
+typedef struct {
+  mewo_runtime_t* runtime;
+} state_t;
+
+SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
   (void)argc;
   (void)argv;
 
-  if (!SDL_Init(SDL_INIT_VIDEO))
-    return EXIT_FAILURE;
+  if (!SDL_Init(SDL_INIT_VIDEO)) {
+    SDL_Log("[error] failed to initialize SDL");
+    return SDL_APP_FAILURE;
+  }
 
-  printf("[info] Mewo version: %s\n", mewo_get_version().data);
+  mewo_string_view_t version = mewo_get_version();
+  SDL_Log("[info] Mewo version: %.*s", (int)version.length, version.data);
 
-  int exit_code = EXIT_SUCCESS;
-  mewo_runtime_t* runtime = NULL;
-  mewo_result_t res = mewo_runtime_create(&runtime);
+  state_t* state = SDL_malloc(sizeof(*state));
+  *appstate = state;
+
+  if (!state)
+    return SDL_APP_FAILURE;
+
+  mewo_result_t res = mewo_runtime_create(&state->runtime);
 
   if (res < 0) {
-    exit_code = EXIT_FAILURE;
-    goto cleanup;
+    SDL_Log("[error] failed to create Mewo runtime");
+    return SDL_APP_FAILURE;
   }
 
-  mewo_runtime_request_device(runtime);
+  mewo_runtime_request_device(state->runtime);
+
+  return SDL_APP_CONTINUE;
+}
+
+SDL_AppResult SDL_AppIterate(void* appstate) {
+  state_t* state = (state_t*)appstate;
+  mewo_runtime_t* runtime = state->runtime;
+
+  mewo_runtime_tick(runtime);
+
   mewo_event_t event;
-
-  while (true) {
-    mewo_runtime_tick(runtime);
-    bool device_is_ready = false;
-
-    while (mewo_runtime_poll_event(runtime, &event)) {
-      switch (event.type) {
-        case MEWO_EVENT_DEVICE_READY: {
-          printf("[info] device is ready\n");
-          device_is_ready = true;
-          break;
-        }
-
-        case MEWO_EVENT_DEVICE_FAILED: {
-          printf("[error] failed to get device: %s\n", event.variant.device_failed.message.data);
-          exit_code = EXIT_FAILURE;
-          goto cleanup;
-        }
-
-        default: break;
+  while (mewo_runtime_poll_event(runtime, &event)) {
+    switch (event.type) {
+      case MEWO_EVENT_DEVICE_READY: {
+        SDL_Log("[info] device is ready");
+        break;
       }
-    }
 
-    if (device_is_ready)
-      break;
+      case MEWO_EVENT_DEVICE_FAILED: {
+        mewo_string_view_t* message = &event.variant.device_failed.message;
+        SDL_Log("[error] failed to get device: %.*s", (int)message->length, message->data);
+        return SDL_APP_FAILURE;
+      }
+
+      default: break;
+    }
   }
 
-cleanup:
-  mewo_runtime_destroy(runtime);
-  SDL_QuitSubSystem(SDL_INIT_VIDEO);
-  SDL_Quit();
+  return SDL_APP_CONTINUE;
+}
 
-  return exit_code;
+SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
+  (void)appstate;
+
+  if (event->type == SDL_EVENT_QUIT)
+    return SDL_APP_SUCCESS;
+
+  return SDL_APP_CONTINUE;
+}
+
+void SDL_AppQuit(void* appstate, SDL_AppResult result) {
+  (void)result;
+
+  if (!appstate)
+    return;
+
+  state_t* state = (state_t*)appstate;
+
+  mewo_runtime_destroy(state->runtime);
+  SDL_free(state);
 }

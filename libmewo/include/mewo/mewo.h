@@ -33,8 +33,8 @@ typedef enum mewo_result {
  * Other languages that call this API may not have strings that are null-terminated, so
  * to avoid unnecessary copies we use our own string type.
  *
- * This library guarantees that all functions will return an explicit length,
- * null-terminated string view. The sentinel value is only provided for inputs from the host.
+ * This library guarantees that all functions returning a string view will carry an explicit
+ * length (not `MEWO_STRING_VIEW_SENTINEL`), but it may not be null-terminated.
  */
 typedef struct mewo_string_view {
   const char* data;
@@ -55,12 +55,18 @@ typedef struct mewo_string_view {
 
 mewo_string_view_t mewo_get_version(void);
 
+/**
+ * Creates and allocates the runtime. On failure, `*out` is set to `NULL`.
+ *
+ * @param out Out parameter where a pointer to the runtime will be stored.
+ * @return Returns whether the operation was successful.
+ */
 mewo_result_t mewo_runtime_create(mewo_runtime_t** out);
 
 /**
  * Destroys and ends the runtime.
  *
- * @param runtime Pointer to the runtime. If `NULL`, nothing happens.
+ * @param runtime Pointer to the runtime. If `NULL` is passed in, nothing happens.
  */
 void mewo_runtime_destroy(mewo_runtime_t* runtime);
 
@@ -92,9 +98,6 @@ typedef enum mewo_gpu_error {
   MEWO_GPU_ERROR_FORCE_INT = MEWO_ENUM_FORCE_INT,
 } mewo_gpu_error_t;
 
-/**
- * Event string messages, if any, always carry a real length.
- */
 typedef struct mewo_event {
   mewo_event_type_t type;
 
@@ -127,8 +130,20 @@ typedef struct mewo_event {
  */
 bool mewo_runtime_poll_event(mewo_runtime_t* runtime, mewo_event_t* out);
 
+/**
+ * Call this every frame so the runtime can process pending async work and queue any new
+ * resulting events.
+ *
+ * @param runtime Pointer to the runtime.
+ */
 void mewo_runtime_tick(mewo_runtime_t* runtime);
 
+/**
+ * Requests a GPU device. This operation is async, so check via the `MEWO_EVENT_DEVICE_READY`
+ * and `MEWO_EVENT_DEVICE_FAILED` events.
+ *
+ * @param runtime A pointer to the runtime.
+ */
 void mewo_runtime_request_device(mewo_runtime_t* runtime);
 
 #ifdef __cplusplus
