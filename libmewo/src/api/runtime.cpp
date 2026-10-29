@@ -58,55 +58,66 @@ bool mewo_runtime_poll_event(mewo_runtime_t* runtime, mewo_event_t* out) {
   *out = std::visit(
     mewo::Match{
       [&convert_to_view](const mewo::AdapterRequestFailed& variant) {
-        mewo_event_t event = {.type = MEWO_EVENT_DEVICE_FAILED};
-        event.variant.device_failed = {
-          .reason = [&variant]() -> mewo_device_failure_t {
-            switch (variant.reason) {
-              case mewo::AdapterRequestFailed::Reason::kError: return MEWO_DEVICE_FAILURE_ERROR;
-              case mewo::AdapterRequestFailed::Reason::kUnavailable:
-                return MEWO_DEVICE_FAILURE_UNAVAILABLE;
+        return mewo_event_t{
+          .type = MEWO_EVENT_DEVICE_FAILED,
+          .variant = {
+            .device_failed = {
+              .reason = [&variant]() -> mewo_device_failure_t {
+                switch (variant.reason) {
+                  case mewo::AdapterRequestFailed::Reason::kError: return MEWO_DEVICE_FAILURE_ERROR;
+                  case mewo::AdapterRequestFailed::Reason::kUnavailable:
+                    return MEWO_DEVICE_FAILURE_UNAVAILABLE;
+                }
+                std::unreachable();
+              }(),
+              .message = convert_to_view(),
             }
-            std::unreachable();
-          }(),
-          .message = convert_to_view(),
+          }
         };
-        return event;
       },
 
       [&convert_to_view](const mewo::DeviceLost&) {
-        mewo_event_t event = {.type = MEWO_EVENT_DEVICE_LOST};
-        event.variant.device_lost = {.message = convert_to_view()};
-        return event;
+        return mewo_event_t{
+          .type = MEWO_EVENT_DEVICE_LOST,
+          .variant = {
+            .device_lost = {.message = convert_to_view()},
+          }
+        };
       },
 
       [&convert_to_view](const mewo::GpuErrorOccurred& variant) {
-        mewo_event_t event = {.type = MEWO_EVENT_GPU_ERROR};
-        event.variant.gpu_error = {
-          .type = [&variant]() -> mewo_gpu_error_t {
-            switch (variant.type) {
-              case WGPUErrorType_Validation: return MEWO_GPU_ERROR_VALIDATION;
-              case WGPUErrorType_OutOfMemory: return MEWO_GPU_ERROR_OUT_OF_MEMORY;
-              case WGPUErrorType_Internal: return MEWO_GPU_ERROR_INTERNAL;
-              default: return MEWO_GPU_ERROR_UNKNOWN;
+        return mewo_event_t{
+          .type = MEWO_EVENT_GPU_ERROR,
+          .variant = {
+            .gpu_error = {
+              .type = [&variant]() -> mewo_gpu_error_t {
+                switch (variant.type) {
+                  case WGPUErrorType_Validation: return MEWO_GPU_ERROR_VALIDATION;
+                  case WGPUErrorType_OutOfMemory: return MEWO_GPU_ERROR_OUT_OF_MEMORY;
+                  case WGPUErrorType_Internal: return MEWO_GPU_ERROR_INTERNAL;
+                  default: return MEWO_GPU_ERROR_UNKNOWN;
+                }
+              }(),
+              .message = convert_to_view(),
             }
-          }(),
-          .message = convert_to_view(),
+          },
         };
-        return event;
       },
 
       [](const mewo::DeviceRequestSucceeded&) {
-        mewo_event_t event = {.type = MEWO_EVENT_DEVICE_READY};
-        return event;
+        return mewo_event_t{.type = MEWO_EVENT_DEVICE_READY, .variant = {}};
       },
 
       [&convert_to_view](const mewo::DeviceRequestFailed&) {
-        mewo_event_t event = {.type = MEWO_EVENT_DEVICE_FAILED};
-        event.variant.device_failed = {
-          .reason = MEWO_DEVICE_FAILURE_ERROR,
-          .message = convert_to_view(),
+        return mewo_event_t{
+          .type = MEWO_EVENT_DEVICE_FAILED,
+          .variant = {
+            .device_failed = {
+              .reason = MEWO_DEVICE_FAILURE_ERROR,
+              .message = convert_to_view(),
+            }
+          },
         };
-        return event;
       },
     },
     popped_event
