@@ -38,12 +38,12 @@
       "configurePreset": "debug-clang"
     },
     {
-      "name": "debug-clang-model",
-      "displayName": "Debug (Clang): model + tests only",
+      "name": "debug-clang-tests",
+      "displayName": "Debug (Clang): tests only",
       "configurePreset": "debug-clang",
       "targets": [
-        "mewo_model",
-        "mewo_tests"
+        "mewo_tests",
+        "mewo_c_check"
       ]
     },
     {
@@ -60,12 +60,12 @@
       "configurePreset": "release-clang"
     },
     {
-      "name": "release-clang-model",
-      "displayName": "Release (Clang): model + tests only",
+      "name": "release-clang-tests",
+      "displayName": "Release (Clang): tests only",
       "configurePreset": "release-clang",
       "targets": [
-        "mewo_model",
-        "mewo_tests"
+        "mewo_tests",
+        "mewo_c_check"
       ]
     },
     {

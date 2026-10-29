@@ -28,7 +28,12 @@ endif()
 include(cmake/utils.cmake)
 add_subdirectory(third_party)
 include(cmake/webgpu.cmake)
+
 add_subdirectory(src)
+
+if(MEWO_BUILD_TESTS)
+  add_subdirectory(tests)
+endif()
 
 if(MEWO_BUILD_HOSTS)
   add_subdirectory(hosts/sdl)

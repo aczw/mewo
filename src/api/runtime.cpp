@@ -1,9 +1,7 @@
-#include "core/runtime.hpp"
-
-#include "api/handles.hpp"
-#include "api/result.hpp"
+#include "api/types.hpp"
 #include "core/event.hpp"
-#include "utility/match.hpp"
+#include "core/utility/match.hpp"
+#include "runtime_impl.hpp"
 
 #include <mewo/mewo.h>
 
@@ -17,12 +15,12 @@ mewo_result_t mewo_runtime_create(mewo_runtime_t** out) {
   *out = nullptr;
 
   try {
-    auto runtime_res = mewo::Runtime::create();
+    auto runtime_opt = mewo::RuntimeImpl::create();
 
-    if (!runtime_res)
-      return mewo::error_to_result(runtime_res.error());
+    if (!runtime_opt)
+      return MEWO_ERROR_INTERNAL;
 
-    *out = new mewo_runtime_t(std::move(runtime_res.value()));
+    *out = new mewo_runtime_t(std::move(runtime_opt.value()));
   } catch (...) {
     return MEWO_ERROR_INTERNAL;
   }

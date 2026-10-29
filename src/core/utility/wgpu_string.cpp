@@ -1,6 +1,4 @@
-#include "gpu/string.hpp"
-
-#include <optional>
+#include "core/utility/wgpu_string.hpp"
 
 namespace mewo {
 

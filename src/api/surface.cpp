@@ -1,9 +1,5 @@
-#include "mewo/detail/surface.h"
-
-#include "api/handles.hpp"
-#include "api/result.hpp"
-#include "core/surface_state.hpp"
-#include "gpu/surface_source.hpp"
+#include "api/types.hpp"
+#include "surface_impl.hpp"
 
 #include <mewo/mewo.h>
 
@@ -22,7 +18,7 @@ mewo_result_t mewo_surface_create(
   assert(out);
   *out = nullptr;
 
-  auto source_opt = [&desc]() -> std::optional<mewo::SurfaceSource> {
+  auto source_opt = [&desc]() -> std::optional<mewo::SurfaceImpl::Source> {
     switch (desc->type) {
       case MEWO_SURFACE_SOURCE_METAL_LAYER: {
         if (!desc->variant.metal_layer.layer) {
@@ -51,17 +47,17 @@ mewo_result_t mewo_surface_create(
     return MEWO_ERROR_INVALID_ARGUMENT;
 
   try {
-    auto surface_res = mewo::SurfaceState::create(
+    auto surface_opt = mewo::SurfaceImpl::create(
       runtime->impl->instance(),
       desc->initial_width,
       desc->initial_height,
       std::move(source_opt.value())
     );
 
-    if (!surface_res)
-      return mewo::error_to_result(surface_res.error());
+    if (!surface_opt)
+      return MEWO_ERROR_INTERNAL;
 
-    *out = new mewo_surface_t(std::move(surface_res.value()));
+    *out = new mewo_surface_t(std::move(surface_opt.value()));
   } catch (...) {
     return MEWO_ERROR_INTERNAL;
   }

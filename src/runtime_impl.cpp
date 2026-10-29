@@ -1,7 +1,7 @@
-#include "core/runtime.hpp"
+#include "runtime_impl.hpp"
 
 #include "core/event.hpp"
-#include "gpu/string.hpp"
+#include "core/utility/wgpu_string.hpp"
 
 #include <webgpu/webgpu.h>
 
@@ -13,24 +13,24 @@ namespace {
 
 constexpr std::string_view kUnknownReason = "Unknown reason";
 
-std::string to_string_or(WGPUStringView view, std::string_view fallback = kUnknownReason) {
-  return to_string(view).value_or(std::string(fallback));
+std::string to_string_or_fallback(WGPUStringView view) {
+  return to_string(view).value_or(std::string(kUnknownReason));
 }
 
 }  // namespace
 
-std::expected<std::unique_ptr<Runtime>, Error> Runtime::create() {
+std::optional<std::unique_ptr<RuntimeImpl>> RuntimeImpl::create() {
   WGPUInstanceDescriptor instance_desc = WGPU_INSTANCE_DESCRIPTOR_INIT;
   WGPUInstance instance = wgpuCreateInstance(&instance_desc);
 
   if (!instance)
-    return std::unexpected(Error::kInstanceCreationFailed);
+    return std::nullopt;
 
   // I would love to use `std::make_unique` here but the constructor is private
-  return std::unique_ptr<Runtime>(new Runtime(Instance(instance)));
+  return std::unique_ptr<RuntimeImpl>(new RuntimeImpl(Instance(instance)));
 }
 
-std::optional<Event> Runtime::poll_event() {
+std::optional<Event> RuntimeImpl::poll_event() {
   if (event_queue_.empty())
     return std::nullopt;
 
@@ -40,9 +40,9 @@ std::optional<Event> Runtime::poll_event() {
   return popped_event;
 }
 
-void Runtime::tick() { wgpuInstanceProcessEvents(instance_.get()); }
+void RuntimeImpl::tick() { wgpuInstanceProcessEvents(instance_.get()); }
 
-void Runtime::request_adapter_and_device(const Surface& surface) {
+void RuntimeImpl::request_adapter_and_device(const Surface& surface) {
   WGPURequestAdapterOptions adapter_opts = WGPU_REQUEST_ADAPTER_OPTIONS_INIT;
   adapter_opts.featureLevel = WGPUFeatureLevel_Core;
   adapter_opts.powerPreference = WGPUPowerPreference_HighPerformance;
@@ -57,7 +57,7 @@ void Runtime::request_adapter_and_device(const Surface& surface) {
                                void* userdata1,
                                void*
                              ) noexcept {
-    Runtime& rt = *static_cast<Runtime*>(userdata1);
+    RuntimeImpl& rt = *static_cast<RuntimeImpl*>(userdata1);
 
     switch (status) {
       case WGPURequestAdapterStatus_CallbackCancelled: return;
@@ -72,7 +72,7 @@ void Runtime::request_adapter_and_device(const Surface& surface) {
         rt.event_queue_.push_back(
           AdapterRequestFailed{
             .reason = AdapterRequestFailed::Reason::kUnavailable,
-            .message = to_string_or(message),
+            .message = to_string_or_fallback(message),
           }
         );
         break;
@@ -82,7 +82,7 @@ void Runtime::request_adapter_and_device(const Surface& surface) {
         rt.event_queue_.push_back(
           AdapterRequestFailed{
             .reason = AdapterRequestFailed::Reason::kError,
-            .message = to_string_or(message),
+            .message = to_string_or_fallback(message),
           }
         );
         break;
@@ -96,7 +96,7 @@ void Runtime::request_adapter_and_device(const Surface& surface) {
   wgpuInstanceRequestAdapter(instance_.get(), &adapter_opts, adapter_cb_info);
 }
 
-void Runtime::request_device() {
+void RuntimeImpl::request_device() {
   WGPUDeviceDescriptor device_desc = WGPU_DEVICE_DESCRIPTOR_INIT;
   device_desc.label = to_string_view("device");
   device_desc.defaultQueue.label = to_string_view("default-queue");
@@ -113,11 +113,11 @@ void Runtime::request_device() {
       if (reason == WGPUDeviceLostReason_FailedCreation)
         return;
 
-      Runtime& rt = *static_cast<Runtime*>(userdata1);
+      RuntimeImpl& rt = *static_cast<RuntimeImpl*>(userdata1);
       rt.event_queue_.push_back(
         DeviceLost{
           .reason = reason,
-          .message = to_string_or(message),
+          .message = to_string_or_fallback(message),
         }
       );
     };
@@ -129,11 +129,11 @@ void Runtime::request_device() {
     [](
       const WGPUDevice*, WGPUErrorType type, WGPUStringView message, void* userdata1, void*
     ) noexcept {
-      Runtime& rt = *static_cast<Runtime*>(userdata1);
+      RuntimeImpl& rt = *static_cast<RuntimeImpl*>(userdata1);
       rt.event_queue_.push_back(
         GpuErrorOccurred{
           .type = type,
-          .message = to_string_or(message),
+          .message = to_string_or_fallback(message),
         }
       );
     };
@@ -149,7 +149,7 @@ void Runtime::request_device() {
                               void* userdata1,
                               void*
                             ) noexcept {
-    Runtime& rt = *static_cast<Runtime*>(userdata1);
+    RuntimeImpl& rt = *static_cast<RuntimeImpl*>(userdata1);
 
     switch (status) {
       case WGPURequestDeviceStatus_CallbackCancelled: return;
@@ -161,7 +161,7 @@ void Runtime::request_device() {
       }
 
       case WGPURequestDeviceStatus_Error: {
-        rt.event_queue_.push_back(DeviceRequestFailed{.message = to_string_or(message)});
+        rt.event_queue_.push_back(DeviceRequestFailed{.message = to_string_or_fallback(message)});
         break;
       }
 
