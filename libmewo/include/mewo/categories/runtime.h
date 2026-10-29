@@ -48,9 +48,10 @@ void mewo_runtime_tick(mewo_runtime_t* runtime);
  * Requests a GPU device. This operation is async, so check via the `MEWO_EVENT_DEVICE_READY`
  * and `MEWO_EVENT_DEVICE_FAILED` events.
  *
- * @param runtime A pointer to the runtime.
+ * @param runtime Pointer to the runtime.
+ * @param surface Pointer to the surface.
  */
-void mewo_runtime_request_device(mewo_runtime_t* runtime);
+void mewo_runtime_request_device(mewo_runtime_t* runtime, mewo_surface_t* surface);
 
 #ifdef __cplusplus
 }

@@ -1,3 +1,5 @@
+#include "mewo/categories/surface.h"
+
 #include "api/handles.hpp"
 #include "api/result.hpp"
 #include "core/surface_state.hpp"
@@ -30,13 +32,13 @@ mewo_result_t mewo_surface_create(
         }
       }
 
-      case MEWO_SURFACE_SOURCE_WINDOWS_HWND: {
-        if (!desc->variant.windows_hwnd.hinstance || !desc->variant.windows_hwnd.hwnd) {
+      case MEWO_SURFACE_SOURCE_WIN32: {
+        if (!desc->variant.win32.hinstance || !desc->variant.win32.hwnd) {
           return std::nullopt;
         } else {
-          return mewo::WindowsHwnd{
-            .hinstance = desc->variant.windows_hwnd.hinstance,
-            .hwnd = desc->variant.windows_hwnd.hwnd,
+          return mewo::Win32{
+            .hinstance = desc->variant.win32.hinstance,
+            .hwnd = desc->variant.win32.hwnd,
           };
         }
       }
@@ -50,7 +52,10 @@ mewo_result_t mewo_surface_create(
 
   try {
     auto surface_res = mewo::SurfaceState::create(
-      *runtime->impl, desc->initial_width, desc->initial_height, std::move(source_opt.value())
+      runtime->impl->instance(),
+      desc->initial_width,
+      desc->initial_height,
+      std::move(source_opt.value())
     );
 
     if (!surface_res)
@@ -65,4 +70,9 @@ mewo_result_t mewo_surface_create(
 }
 
 void mewo_surface_destroy(mewo_surface_t* surface) { delete surface; }
+
+void mewo_surface_resize(mewo_surface_t* surface, uint32_t new_width, uint32_t new_height) {
+  assert(surface);
+  surface->impl->resize(new_width, new_height);
+}
 }

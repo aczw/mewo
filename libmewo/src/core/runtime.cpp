@@ -42,10 +42,11 @@ std::optional<Event> Runtime::poll_event() {
 
 void Runtime::tick() { wgpuInstanceProcessEvents(instance_.get()); }
 
-void Runtime::request_adapter_and_device() {
+void Runtime::request_adapter_and_device(const Surface& surface) {
   WGPURequestAdapterOptions adapter_opts = WGPU_REQUEST_ADAPTER_OPTIONS_INIT;
   adapter_opts.featureLevel = WGPUFeatureLevel_Core;
   adapter_opts.powerPreference = WGPUPowerPreference_HighPerformance;
+  adapter_opts.compatibleSurface = surface.get();
 
   WGPURequestAdapterCallbackInfo adapter_cb_info = WGPU_REQUEST_ADAPTER_CALLBACK_INFO_INIT;
   adapter_cb_info.mode = WGPUCallbackMode_AllowProcessEvents;

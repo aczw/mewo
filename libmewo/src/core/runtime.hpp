@@ -25,10 +25,10 @@ class Runtime {
 
   std::optional<Event> poll_event();
   void tick();
-  void request_adapter_and_device();
+  void request_adapter_and_device(const Surface& surface);
 
  private:
-  explicit Runtime(Instance&& instance) : instance_(std::move(instance)) {}
+  explicit Runtime(Instance&& instance) : instance_(std::move(instance)), adapter_(), device_() {}
 
   void request_device();
 

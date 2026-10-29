@@ -129,8 +129,9 @@ void mewo_runtime_tick(mewo_runtime_t* runtime) {
   runtime->impl->tick();
 }
 
-void mewo_runtime_request_device(mewo_runtime_t* runtime) {
+void mewo_runtime_request_device(mewo_runtime_t* runtime, mewo_surface_t* surface) {
   assert(runtime);
-  runtime->impl->request_adapter_and_device();
+  assert(surface);
+  runtime->impl->request_adapter_and_device(surface->impl->surface());
 }
 }

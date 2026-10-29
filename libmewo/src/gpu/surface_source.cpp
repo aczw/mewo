@@ -21,12 +21,12 @@ Surface create_surface_from_source(const Instance& instance, const SurfaceSource
         desc.nextInChain = &ml.chain;
         return Surface(wgpuInstanceCreateSurface(instance.get(), &desc));
       },
-      [&desc, &instance](const WindowsHwnd& variant) {
-        WGPUSurfaceSourceWindowsHWND wh = WGPU_SURFACE_SOURCE_WINDOWS_HWND_INIT;
-        wh.hinstance = variant.hinstance;
-        wh.hwnd = variant.hwnd;
+      [&desc, &instance](const Win32& variant) {
+        WGPUSurfaceSourceWindowsHWND win = WGPU_SURFACE_SOURCE_WINDOWS_HWND_INIT;
+        win.hinstance = variant.hinstance;
+        win.hwnd = variant.hwnd;
 
-        desc.nextInChain = &wh.chain;
+        desc.nextInChain = &win.chain;
         return Surface(wgpuInstanceCreateSurface(instance.get(), &desc));
       }
     },
