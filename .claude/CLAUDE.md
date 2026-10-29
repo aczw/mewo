@@ -128,6 +128,9 @@ Topics the user wants to learn through this project (teach from first principles
 - Async/non-blocking design (WebGPU futures/callbacks, `wgpuInstanceProcessEvents`, no blocking on the web).
 - Render graphs / multi-pass rendering with feedback (ping-pong).
 
+## Reminders for Claude
+- `libmewo/src/runtime/event.cpp` keeps a commented-out `event_to_string` that formats internal events as English sentences (reason + WebGPU message). It was replaced because public events carry structured reasons plus the raw message. When the user works on logging, debug output, or human-readable event/error text, remind them it exists and can be revived (it needs `<format>` re-included). Remove this note if that code is deleted.
+
 ## Open questions
 - Frontend order. Suggested: the SDL3 reference host first (it runs on both dev machines), then SwiftUI on macOS. The Windows frontend can wait.
 - Built-in editor vs. external editor + hot reload.

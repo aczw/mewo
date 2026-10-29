@@ -66,25 +66,64 @@ void mewo_runtime_destroy(mewo_runtime_t* runtime);
 
 typedef enum mewo_event_type {
   MEWO_EVENT_NONE = 0,
+  MEWO_EVENT_DEVICE_READY,
+  MEWO_EVENT_DEVICE_FAILED,
+  MEWO_EVENT_DEVICE_LOST,
+  MEWO_EVENT_GPU_ERROR,
   MEWO_EVENT_FORCE_INT = MEWO_ENUM_FORCE_INT,
 } mewo_event_type_t;
+
+typedef enum mewo_device_failure {
+  /** Something went wrong while requesting the device. */
+  MEWO_DEVICE_FAILURE_ERROR = 0,
+  /** No suitable GPU found, or WebGPU is unsupported. */
+  MEWO_DEVICE_FAILURE_UNAVAILABLE,
+  MEWO_DEVICE_FAILURE_FORCE_INT = MEWO_ENUM_FORCE_INT,
+} mewo_device_failure_t;
+
+/**
+ * Maps to the corresponding `WGPUErrorType` value.
+ */
+typedef enum mewo_gpu_error {
+  MEWO_GPU_ERROR_VALIDATION = 0,
+  MEWO_GPU_ERROR_OUT_OF_MEMORY,
+  MEWO_GPU_ERROR_INTERNAL,
+  MEWO_GPU_ERROR_UNKNOWN,
+  MEWO_GPU_ERROR_FORCE_INT = MEWO_ENUM_FORCE_INT,
+} mewo_gpu_error_t;
 
 typedef struct mewo_event {
   mewo_event_type_t type;
 
   union {
-    uint8_t reserved[64];
+    struct {
+      mewo_device_failure_t reason;
+      mewo_string_view_t message;
+    } device_failed;
+
+    struct {
+      mewo_string_view_t message;
+    } device_lost;
+
+    struct {
+      mewo_gpu_error_t type;
+      mewo_string_view_t message;
+    } gpu_error;
+
+    uint8_t reserved[32];
   } variant;
 } mewo_event_t;
 
 /**
- * Pops the next event from the event queue.
+ * Pops the next event from the event queue. Strings in the event only stay valid
+ * until the next event poll operation.
  *
  * @param runtime Pointer to the runtime.
- * @param out_event Pointer to the location where the popped event will be stored, if any.
+ * @param out Pointer to the location where the popped event will be stored, if any.
  * @return True if an event was popped from the queue, and false if the queue was empty.
  */
-bool mewo_runtime_poll_event(mewo_runtime_t* runtime, mewo_event_t* out_event);
+bool mewo_runtime_poll_event(mewo_runtime_t* runtime, mewo_event_t* out);
+
 void mewo_runtime_tick(mewo_runtime_t* runtime);
 
 void mewo_runtime_request_device(mewo_runtime_t* runtime);

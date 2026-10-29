@@ -7,6 +7,7 @@
 #include <deque>
 #include <expected>
 #include <memory>
+#include <optional>
 #include <utility>
 
 namespace mewo {
@@ -20,6 +21,7 @@ class Runtime {
   Runtime(const Runtime&) = delete;
   Runtime& operator=(const Runtime&) = delete;
 
+  std::optional<Event> poll_event();
   void tick();
   void request_adapter_and_device();
 

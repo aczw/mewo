@@ -5,6 +5,7 @@
 
 #include <webgpu/webgpu.h>
 
+#include <optional>
 #include <string_view>
 
 namespace mewo {
@@ -27,6 +28,16 @@ std::expected<std::unique_ptr<Runtime>, Error> Runtime::create() {
 
   // I would love to use `std::make_unique` here but the constructor is private
   return std::unique_ptr<Runtime>(new Runtime(Instance(instance)));
+}
+
+std::optional<Event> Runtime::poll_event() {
+  if (event_queue_.empty())
+    return std::nullopt;
+
+  Event popped_event = std::move(event_queue_.front());
+  event_queue_.pop_front();
+
+  return popped_event;
 }
 
 void Runtime::tick() { wgpuInstanceProcessEvents(instance_.get()); }

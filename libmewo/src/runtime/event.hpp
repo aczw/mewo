@@ -38,4 +38,6 @@ using Event = std::variant<
   DeviceRequestFailed
 >;
 
+std::string get_event_message(const Event& event);
+
 }  // namespace mewo
