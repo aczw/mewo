@@ -1,8 +1,8 @@
 #ifndef MEWO_RUNTIME_H
 #define MEWO_RUNTIME_H
 
-#include <mewo/categories/event.h>
-#include <mewo/categories/types.h>
+#include <mewo/detail/event.h>
+#include <mewo/detail/types.h>
 
 #include <stdbool.h>
 

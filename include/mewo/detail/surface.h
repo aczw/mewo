@@ -1,7 +1,7 @@
 #ifndef MEWO_SURFACE_H
 #define MEWO_SURFACE_H
 
-#include <mewo/categories/types.h>
+#include <mewo/detail/types.h>
 
 #include <stdint.h>
 

@@ -1,4 +1,4 @@
-#include "mewo/categories/surface.h"
+#include "mewo/detail/surface.h"
 
 #include "api/handles.hpp"
 #include "api/result.hpp"

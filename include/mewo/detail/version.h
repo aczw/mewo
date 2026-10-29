@@ -1,7 +1,7 @@
 #ifndef MEWO_VERSION_H
 #define MEWO_VERSION_H
 
-#include <mewo/categories/types.h>
+#include <mewo/detail/types.h>
 
 #ifdef __cplusplus
 extern "C" {

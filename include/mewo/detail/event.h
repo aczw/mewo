@@ -1,7 +1,7 @@
 #ifndef MEWO_EVENT_H
 #define MEWO_EVENT_H
 
-#include <mewo/categories/types.h>
+#include <mewo/detail/types.h>
 
 #include <stdint.h>
 

@@ -123,6 +123,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
     case SDL_EVENT_QUIT: return SDL_APP_SUCCESS;
 
     case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED: {
+      SDL_Log("[info] window resized to %ix%i", event->window.data1, event->window.data2);
       mewo_surface_resize(
         state->surface, (uint32_t)event->window.data1, (uint32_t)event->window.data2
       );

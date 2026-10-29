@@ -1,38 +1,41 @@
 add_library(mewo_model STATIC
-  src/project/project.cpp
-  src/project/project.hpp
+  project/project.cpp
+  project/project.hpp
 )
 mewo_set_target_defaults(mewo_model CXX)
 target_link_libraries(mewo_model PRIVATE nlohmann_json::nlohmann_json)
 # Let the include directories propagate to later libraries
-target_include_directories(mewo_model PUBLIC src)
+target_include_directories(mewo_model PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_library(mewo STATIC
-  src/api/handles.hpp
-  src/api/result.cpp
-  src/api/result.hpp
-  src/api/runtime.cpp
-  src/api/surface.cpp
-  src/api/version.cpp
+  api/handles.hpp
+  api/result.cpp
+  api/result.hpp
+  api/runtime.cpp
+  api/surface.cpp
+  api/version.cpp
 
-  src/gpu/string.cpp
-  src/gpu/string.hpp
-  src/gpu/surface_source.cpp
-  src/gpu/surface_source.hpp
-  src/gpu/types.hpp
+  gpu/string.cpp
+  gpu/string.hpp
+  gpu/surface_source.cpp
+  gpu/surface_source.hpp
+  gpu/types.hpp
 
-  src/core/error.hpp
-  src/core/event.cpp
-  src/core/event.hpp
-  src/core/runtime.cpp
-  src/core/runtime.hpp
-  src/core/surface_state.cpp
-  src/core/surface_state.hpp
+  core/error.hpp
+  core/event.cpp
+  core/event.hpp
+  core/runtime.cpp
+  core/runtime.hpp
+  core/surface_state.cpp
+  core/surface_state.hpp
 
-  src/utility/match.hpp
+  utility/match.hpp
 )
 mewo_set_target_defaults(mewo CXX)
-target_include_directories(mewo PUBLIC include PRIVATE src)
+target_include_directories(mewo
+  PUBLIC ${PROJECT_SOURCE_DIR}/include
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+)
 target_link_libraries(mewo PRIVATE mewo_model webgpu)
 
 if(MEWO_BUILD_TESTS)
