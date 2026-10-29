@@ -4,6 +4,7 @@
 
 #include <optional>
 #include <string>
+#include <string_view>
 
 namespace mewo {
 
@@ -14,5 +15,7 @@ namespace mewo {
  * @return Newly allocated string containing the WebGPU string view data.
  */
 std::optional<std::string> to_string(WGPUStringView);
+
+WGPUStringView to_string_view(std::string_view view);
 
 }  // namespace mewo

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "gpu/types.hpp"
+#include "runtime/event.hpp"
 #include "utility/error.hpp"
-#include "utility/event.hpp"
 
 #include <deque>
 #include <expected>
@@ -20,20 +20,19 @@ class Runtime {
   Runtime(const Runtime&) = delete;
   Runtime& operator=(const Runtime&) = delete;
 
-  void tick() const;
-
-  /**
-   * Requests the WebGPU adapter and device.
-   */
-  void request_device();
+  void tick();
+  void request_adapter_and_device();
 
  private:
   explicit Runtime(Instance&& instance) : instance_(std::move(instance)) {}
+
+  void request_device();
 
   std::deque<Event> event_queue_;
 
   Instance instance_;
   Adapter adapter_;
+  Device device_;
 };
 
 }  // namespace mewo

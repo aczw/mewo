@@ -29,10 +29,13 @@ mewo_result_t mewo_runtime_create(mewo_runtime_t** out) {
 
 void mewo_runtime_destroy(mewo_runtime_t* runtime) { delete runtime; }
 
-void mewo_runtime_tick(mewo_runtime_t* runtime) { assert(runtime); }
+void mewo_runtime_tick(mewo_runtime_t* runtime) {
+  assert(runtime);
+  runtime->impl->tick();
+}
 
 void mewo_runtime_request_device(mewo_runtime_t* runtime) {
   assert(runtime);
-  runtime->impl->request_device();
+  runtime->impl->request_adapter_and_device();
 }
 }

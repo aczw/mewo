@@ -19,6 +19,9 @@
   - Include paths always start at `src/` (`"runtime/runtime.hpp"`), even for a file's own header; never relative to the current file.
   - Include order (enforced by `.clang-format`): project headers (quoted), then `<mewo/mewo.h>`, then third-party, then the standard library.
   - Every class states its copy/move support explicitly (`= delete` / `= default` / user-defined), even when the compiler would infer it.
+  - File-local definitions in a `.cpp` (helpers, constants) go in an unnamed namespace inside `namespace mewo`, closed with `}  // namespace`; not `static`.
+  - Constants shared from a header are `inline constexpr` (not needed in a `.cpp`'s unnamed namespace). String constants are `constexpr std::string_view kName = "..."`; convert with `std::string(kName)` where a `std::string` is needed, never via `.data()` (a `string_view` isn't guaranteed NUL-terminated).
+  - WebGPU structs are always initialized with their `WGPU_*_INIT` macro, then fields assigned (e.g. `WGPUDeviceDescriptor desc = WGPU_DEVICE_DESCRIPTOR_INIT;`), never `= {}` or bare designated initializers. Remind the user in reviews when one is missed. Why: the macros set non-zero defaults correctly and keep up with header changes.
   - Doc comments use `/** ... */` (Javadoc style, matching `mewo.h`), not `//`.
   - Every namespace closes with `}  // namespace name` (`.clang-format`: `FixNamespaceComments`, `ShortNamespaceLines: 0`).
   - Formatting is whatever `.clang-format` (Chromium-based) produces.

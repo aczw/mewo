@@ -13,4 +13,11 @@ std::optional<std::string> to_string(WGPUStringView view) {
   return view.length == WGPU_STRLEN ? std::string(view.data) : std::string(view.data, view.length);
 }
 
+WGPUStringView to_string_view(std::string_view view) {
+  WGPUStringView result = WGPU_STRING_VIEW_INIT;
+  result.data = view.data();
+  result.length = view.length();
+  return result;
+}
+
 }  // namespace mewo
