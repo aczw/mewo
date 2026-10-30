@@ -19,6 +19,7 @@ typedef struct {
 
   mewo_runtime_t* runtime;
   mewo_surface_t* surface;
+  mewo_project_t* project;
 } state_t;
 
 static bool fill_surface_desc(state_t* state, mewo_surface_descriptor_t* desc) {
@@ -84,6 +85,9 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
   if (mewo_surface_create(state->runtime, &surface_desc, &state->surface) < 0)
     return SDL_APP_FAILURE;
 
+  if (mewo_project_create(&state->project) < 0)
+    return SDL_APP_FAILURE;
+
   mewo_runtime_request_device(state->runtime, state->surface);
 
   return SDL_APP_CONTINUE;
@@ -144,6 +148,7 @@ void SDL_AppQuit(void* appstate, SDL_AppResult result) {
 
   state_t* state = (state_t*)appstate;
 
+  mewo_project_destroy(state->project);
   mewo_surface_destroy(state->surface);
   mewo_runtime_destroy(state->runtime);
   if (state->metal_view)

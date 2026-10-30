@@ -51,7 +51,7 @@ mewo_result_t mewo_surface_create(
 /**
  * Destroys the window surface. All sessions must be destroyed first.
  *
- * @param surface Pointer to the surface. If `NULL` is passed in, nothing happens.
+ * @param surface Pointer to the surface. If `NULL` is passed, nothing happens.
  */
 void mewo_surface_destroy(mewo_surface_t* surface);
 

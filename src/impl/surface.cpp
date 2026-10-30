@@ -44,6 +44,7 @@ std::optional<std::unique_ptr<Surface>> Surface::create(
   if (!surface)
     return std::nullopt;
 
+  // Constructor is private so can't use `std::make_unique`
   return std::unique_ptr<Surface>(new Surface(std::move(surface), initial_width, initial_height));
 }
 

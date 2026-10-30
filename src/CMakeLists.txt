@@ -17,6 +17,7 @@ add_library(mewo STATIC
   impl/surface.cpp
   impl/surface.hpp
 
+  project.cpp
   runtime.cpp
   surface.cpp
   version.cpp

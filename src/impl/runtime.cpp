@@ -27,7 +27,7 @@ std::optional<std::unique_ptr<Runtime>> Runtime::create() {
   if (!instance)
     return std::nullopt;
 
-  // I would love to use `std::make_unique` here but the constructor is private
+  // Constructor is private so can't use `std::make_unique`
   return std::unique_ptr<Runtime>(new Runtime(gpu::Instance(instance)));
 }
 
