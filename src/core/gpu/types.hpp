@@ -9,21 +9,20 @@ namespace mewo::gpu {
 
 template <typename T, void (*release_fn)(T)>
   requires std::is_pointer_v<T>
-class MoveOnlyHandle {
+class RaiiHandle {
  public:
-  MoveOnlyHandle() = default;
+  RaiiHandle() = default;
 
-  explicit MoveOnlyHandle(T handle) : handle_(handle) {}
+  explicit RaiiHandle(T handle) : handle_(handle) {}
 
-  ~MoveOnlyHandle() {
+  ~RaiiHandle() {
     if (handle_)
       release_fn(handle_);
   }
 
-  MoveOnlyHandle(MoveOnlyHandle&& other) noexcept
-      : handle_(std::exchange(other.handle_, nullptr)) {}
+  RaiiHandle(RaiiHandle&& other) noexcept : handle_(std::exchange(other.handle_, nullptr)) {}
 
-  MoveOnlyHandle& operator=(MoveOnlyHandle&& other) noexcept {
+  RaiiHandle& operator=(RaiiHandle&& other) noexcept {
     if (this != &other) {
       if (handle_)
         release_fn(handle_);
@@ -34,8 +33,8 @@ class MoveOnlyHandle {
     return *this;
   }
 
-  MoveOnlyHandle(const MoveOnlyHandle&) = delete;
-  MoveOnlyHandle& operator=(const MoveOnlyHandle&) = delete;
+  RaiiHandle(const RaiiHandle&) = delete;
+  RaiiHandle& operator=(const RaiiHandle&) = delete;
 
   T get() const { return handle_; }
 
@@ -45,9 +44,33 @@ class MoveOnlyHandle {
   T handle_ = nullptr;
 };
 
-using Instance = MoveOnlyHandle<WGPUInstance, wgpuInstanceRelease>;
-using Adapter = MoveOnlyHandle<WGPUAdapter, wgpuAdapterRelease>;
-using Device = MoveOnlyHandle<WGPUDevice, wgpuDeviceRelease>;
-using Surface = MoveOnlyHandle<WGPUSurface, wgpuSurfaceRelease>;
+template <typename T, void (*free_fn)(T)>
+  requires std::is_class_v<T>
+class Raii {
+ public:
+  explicit Raii(T value) : value_(value) {}
+
+  ~Raii() { free_fn(value_); }
+
+  Raii(Raii&&) = delete;
+  Raii& operator=(Raii&&) = delete;
+  Raii(const Raii&) = delete;
+  Raii& operator=(const Raii&) = delete;
+
+  T& get() { return value_; }
+
+  const T& get() const { return value_; }
+
+ private:
+  T value_;
+};
+
+using Instance = RaiiHandle<WGPUInstance, wgpuInstanceRelease>;
+using Adapter = RaiiHandle<WGPUAdapter, wgpuAdapterRelease>;
+using Device = RaiiHandle<WGPUDevice, wgpuDeviceRelease>;
+using Surface = RaiiHandle<WGPUSurface, wgpuSurfaceRelease>;
+using SurfaceCaps = Raii<WGPUSurfaceCapabilities, wgpuSurfaceCapabilitiesFreeMembers>;
+using Tex = RaiiHandle<WGPUTexture, wgpuTextureRelease>;
+using TexView = RaiiHandle<WGPUTextureView, wgpuTextureViewRelease>;
 
 }  // namespace mewo::gpu
