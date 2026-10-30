@@ -1,7 +1,8 @@
-#include "api/types.hpp"
+#include "impl/runtime.hpp"
+
 #include "core/event.hpp"
 #include "core/utility/match.hpp"
-#include "runtime_impl.hpp"
+#include "impl/surface.hpp"
 
 #include <mewo/mewo.h>
 
@@ -15,7 +16,7 @@ mewo_result_t mewo_runtime_create(mewo_runtime_t** out) {
   *out = nullptr;
 
   try {
-    auto runtime_opt = mewo::RuntimeImpl::create();
+    auto runtime_opt = mewo::impl::Runtime::create();
 
     if (!runtime_opt)
       return MEWO_ERROR_INTERNAL;

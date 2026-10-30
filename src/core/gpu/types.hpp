@@ -5,7 +5,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace mewo {
+namespace mewo::gpu {
 
 template <typename T, void (*release_fn)(T)>
   requires std::is_pointer_v<T>
@@ -50,4 +50,4 @@ using Adapter = MoveOnlyHandle<WGPUAdapter, wgpuAdapterRelease>;
 using Device = MoveOnlyHandle<WGPUDevice, wgpuDeviceRelease>;
 using Surface = MoveOnlyHandle<WGPUSurface, wgpuSurfaceRelease>;
 
-}  // namespace mewo
+}  // namespace mewo::gpu

@@ -1,22 +1,25 @@
 add_library(mewo STATIC
-  api/runtime.cpp
-  api/surface.cpp
-  api/types.hpp
-  api/version.cpp
+  core/gpu/string.cpp
+  core/gpu/string.hpp
+  core/gpu/types.hpp
 
   core/utility/match.hpp
-  core/utility/wgpu_string.cpp
-  core/utility/wgpu_string.hpp
+
   core/event.cpp
   core/event.hpp
-  core/gpu_types.hpp
 
-  project_impl.cpp
-  project_impl.hpp
-  runtime_impl.cpp
-  runtime_impl.hpp
-  surface_impl.cpp
-  surface_impl.hpp
+  impl/surface/source.hpp
+
+  impl/project.cpp
+  impl/project.hpp
+  impl/runtime.cpp
+  impl/runtime.hpp
+  impl/surface.cpp
+  impl/surface.hpp
+
+  runtime.cpp
+  surface.cpp
+  version.cpp
 )
 mewo_set_target_defaults(mewo CXX)
 target_include_directories(mewo

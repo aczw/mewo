@@ -1,3 +1,3 @@
 Diagnostics:
   Includes:
-    IgnoreHeader: ["api/types\\.hpp", "mewo/detail/.*"]
+    IgnoreHeader: ["mewo/detail/.*"]

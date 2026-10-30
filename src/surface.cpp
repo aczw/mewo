@@ -1,5 +1,6 @@
-#include "api/types.hpp"
-#include "surface_impl.hpp"
+#include "impl/surface.hpp"
+
+#include "impl/runtime.hpp"
 
 #include <mewo/mewo.h>
 
@@ -18,13 +19,13 @@ mewo_result_t mewo_surface_create(
   assert(out);
   *out = nullptr;
 
-  auto source_opt = [&desc]() -> std::optional<mewo::SurfaceImpl::Source> {
+  auto source_opt = [&desc]() -> std::optional<mewo::impl::SurfaceSource> {
     switch (desc->type) {
       case MEWO_SURFACE_SOURCE_METAL_LAYER: {
         if (!desc->variant.metal_layer.layer) {
           return std::nullopt;
         } else {
-          return mewo::MetalLayer{.layer = desc->variant.metal_layer.layer};
+          return mewo::impl::MetalLayer{.layer = desc->variant.metal_layer.layer};
         }
       }
 
@@ -32,7 +33,7 @@ mewo_result_t mewo_surface_create(
         if (!desc->variant.win32.hinstance || !desc->variant.win32.hwnd) {
           return std::nullopt;
         } else {
-          return mewo::Win32{
+          return mewo::impl::Win32{
             .hinstance = desc->variant.win32.hinstance,
             .hwnd = desc->variant.win32.hwnd,
           };
@@ -47,7 +48,7 @@ mewo_result_t mewo_surface_create(
     return MEWO_ERROR_INVALID_ARGUMENT;
 
   try {
-    auto surface_opt = mewo::SurfaceImpl::create(
+    auto surface_opt = mewo::impl::Surface::create(
       runtime->impl->instance(),
       desc->initial_width,
       desc->initial_height,

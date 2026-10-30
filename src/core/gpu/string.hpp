@@ -5,7 +5,7 @@
 #include <optional>
 #include <string>
 
-namespace mewo {
+namespace mewo::gpu {
 
 /**
  * String views returned by WebGPU are often allocated and freed in a very specific time frame,
@@ -17,4 +17,4 @@ std::optional<std::string> to_string(WGPUStringView);
 
 WGPUStringView to_string_view(std::string_view view);
 
-}  // namespace mewo
+}  // namespace mewo::gpu

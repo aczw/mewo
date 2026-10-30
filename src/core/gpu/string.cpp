@@ -1,6 +1,6 @@
-#include "core/utility/wgpu_string.hpp"
+#include "core/gpu/string.hpp"
 
-namespace mewo {
+namespace mewo::gpu {
 
 std::optional<std::string> to_string(WGPUStringView view) {
   if (view.data == nullptr)
@@ -18,4 +18,4 @@ WGPUStringView to_string_view(std::string_view view) {
   return result;
 }
 
-}  // namespace mewo
+}  // namespace mewo::gpu
