@@ -1,11 +1,11 @@
 #pragma once
 
 #include "core/gpu/types.hpp"
+#include "impl/common/dimensions.hpp"
 #include "impl/surface/source.hpp"
 
 #include <webgpu/webgpu.h>
 
-#include <cstdint>
 #include <memory>
 #include <optional>
 
@@ -15,8 +15,7 @@ class Surface {
  public:
   static std::optional<std::unique_ptr<Surface>> create(
     const gpu::Instance& instance,
-    uint32_t initial_width,
-    uint32_t initial_height,
+    Dimensions initial_dimensions,
     const SurfaceSource& source
   );
 
@@ -33,15 +32,16 @@ class Surface {
 
   const gpu::Surface& surface() const { return surface_; }
 
-  void resize(uint32_t new_width, uint32_t new_height);
+  const Dimensions& dimensions() const { return dimensions_; }
+
+  void resize(Dimensions new_dimensions);
   std::optional<gpu::TexView> acquire(const gpu::Adapter& adapter, const gpu::Device& device);
 
  private:
-  explicit Surface(gpu::Surface&& surface, uint32_t initial_width, uint32_t initial_height)
+  Surface(gpu::Surface&& surface, Dimensions initial_dimensions)
       : surface_(std::move(surface)),
         config_(WGPU_SURFACE_CONFIGURATION_INIT),
-        width_(initial_width),
-        height_(initial_height),
+        dimensions_(initial_dimensions),
         needs_configure_(true),
         is_invalid_(false) {}
 
@@ -50,8 +50,7 @@ class Surface {
   gpu::Surface surface_;
   WGPUSurfaceConfiguration config_;
 
-  uint32_t width_;
-  uint32_t height_;
+  Dimensions dimensions_;
   bool needs_configure_;
   bool is_invalid_;
 };

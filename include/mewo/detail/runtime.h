@@ -49,7 +49,7 @@ void mewo_runtime_tick(mewo_runtime_t* runtime);
  * and `MEWO_EVENT_DEVICE_FAILED` events.
  *
  * @param runtime Pointer to the runtime.
- * @param surface Pointer to the surface.
+ * @param surface Pointer to the optional surface to present to, or `NULL` for headless use.
  */
 void mewo_runtime_request_device(mewo_runtime_t* runtime, mewo_surface_t* surface);
 

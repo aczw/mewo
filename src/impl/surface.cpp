@@ -16,8 +16,7 @@ namespace mewo::impl {
 
 std::optional<std::unique_ptr<Surface>> Surface::create(
   const gpu::Instance& instance,
-  uint32_t initial_width,
-  uint32_t initial_height,
+  Dimensions initial_dimensions,
   const SurfaceSource& source
 ) {
   WGPUSurfaceDescriptor desc = WGPU_SURFACE_DESCRIPTOR_INIT;
@@ -47,12 +46,11 @@ std::optional<std::unique_ptr<Surface>> Surface::create(
     return std::nullopt;
 
   // Constructor is private so can't use `std::make_unique`
-  return std::unique_ptr<Surface>(new Surface(std::move(surface), initial_width, initial_height));
+  return std::unique_ptr<Surface>(new Surface(std::move(surface), initial_dimensions));
 }
 
-void Surface::resize(uint32_t new_width, uint32_t new_height) {
-  width_ = new_width;
-  height_ = new_height;
+void Surface::resize(Dimensions new_dimensions) {
+  dimensions_ = new_dimensions;
   needs_configure_ = true;
 }
 
@@ -61,7 +59,7 @@ std::optional<gpu::TexView> Surface::acquire(
   const gpu::Device& device
 ) {
   // No need to present anything this frame if we can't see anything
-  if (width_ == 0 || height_ == 0 || is_invalid_)
+  if (dimensions_.width == 0 || dimensions_.height == 0 || is_invalid_)
     return std::nullopt;
 
   if (needs_configure_) {
@@ -105,8 +103,8 @@ std::optional<gpu::TexView> Surface::acquire(
 }
 
 bool Surface::configure(const gpu::Adapter& adapter, const gpu::Device& device) {
-  config_.width = width_;
-  config_.height = height_;
+  config_.width = dimensions_.width;
+  config_.height = dimensions_.height;
 
   gpu::SurfaceCaps caps(WGPU_SURFACE_CAPABILITIES_INIT);
   WGPUStatus status = wgpuSurfaceGetCapabilities(surface_.get(), adapter.get(), &caps.get());

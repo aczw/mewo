@@ -6,6 +6,7 @@
 #include <deque>
 #include <memory>
 #include <optional>
+#include <string>
 #include <utility>
 
 namespace mewo::impl {
@@ -21,9 +22,11 @@ class Runtime {
 
   const gpu::Instance& instance() const { return instance_; }
 
+  const gpu::Device& device() const { return device_; }
+
   std::optional<Event> poll_event();
   void tick();
-  void request_adapter_and_device(const gpu::Surface& surface);
+  void request_adapter_and_device(const gpu::Surface* compatible_surface);
 
  private:
   explicit Runtime(gpu::Instance&& instance)

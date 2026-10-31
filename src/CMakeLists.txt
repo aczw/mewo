@@ -8,17 +8,22 @@ add_library(mewo STATIC
   core/event.cpp
   core/event.hpp
 
+  impl/common/dimensions.hpp
+  
   impl/surface/source.hpp
 
   impl/project.cpp
   impl/project.hpp
   impl/runtime.cpp
   impl/runtime.hpp
+  impl/session.cpp
+  impl/session.hpp
   impl/surface.cpp
   impl/surface.hpp
 
   project.cpp
   runtime.cpp
+  session.cpp
   surface.cpp
   version.cpp
 )

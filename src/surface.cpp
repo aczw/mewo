@@ -50,8 +50,7 @@ mewo_result_t mewo_surface_create(
   try {
     auto surface_opt = mewo::impl::Surface::create(
       runtime->impl->instance(),
-      desc->initial_width,
-      desc->initial_height,
+      {.width = desc->initial_width, .height = desc->initial_height},
       std::move(source_opt.value())
     );
 
@@ -70,6 +69,6 @@ void mewo_surface_destroy(mewo_surface_t* surface) { delete surface; }
 
 void mewo_surface_resize(mewo_surface_t* surface, uint32_t new_width, uint32_t new_height) {
   assert(surface);
-  surface->impl->resize(new_width, new_height);
+  surface->impl->resize({.width = new_width, .height = new_height});
 }
 }

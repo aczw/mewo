@@ -7,6 +7,7 @@
 #include <mewo/mewo.h>
 
 #include <cassert>
+#include <optional>
 #include <utility>
 #include <variant>
 
@@ -43,7 +44,14 @@ bool mewo_runtime_poll_event(mewo_runtime_t* runtime, mewo_event_t* out) {
   }
 
   const mewo::Event& popped_event = popped_opt.value();
-  runtime->current_message = mewo::get_event_message(popped_event);
+
+  // Allocating a `std::string` might throw
+  try {
+    runtime->current_message = mewo::get_event_message(popped_event);
+  } catch (...) {
+    // Instead of throwing the whole event away we instead deliver an empty message
+    runtime->current_message.clear();
+  }
 
   auto convert_to_view = [&runtime]() -> mewo_string_view_t {
     return {
@@ -130,7 +138,6 @@ void mewo_runtime_tick(mewo_runtime_t* runtime) {
 
 void mewo_runtime_request_device(mewo_runtime_t* runtime, mewo_surface_t* surface) {
   assert(runtime);
-  assert(surface);
-  runtime->impl->request_adapter_and_device(surface->impl->surface());
+  runtime->impl->request_adapter_and_device(surface ? &surface->impl->surface() : nullptr);
 }
 }
