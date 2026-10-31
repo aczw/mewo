@@ -43,7 +43,7 @@ std::optional<Event> Runtime::poll_event() {
 
 void Runtime::tick() { wgpuInstanceProcessEvents(instance_.get()); }
 
-void Runtime::request_adapter_and_device(const gpu::Surface* compatible_surface) {
+void Runtime::request_gfx_components(const gpu::Surface* compatible_surface) {
   WGPURequestAdapterOptions adapter_opts = WGPU_REQUEST_ADAPTER_OPTIONS_INIT;
   adapter_opts.featureLevel = WGPUFeatureLevel_Core;
   adapter_opts.powerPreference = WGPUPowerPreference_HighPerformance;
@@ -65,7 +65,7 @@ void Runtime::request_adapter_and_device(const gpu::Surface* compatible_surface)
 
       case WGPURequestAdapterStatus_Success: {
         rt.adapter_ = gpu::Adapter(adapter);
-        rt.request_device();
+        rt.request_device_and_queue();
         break;
       }
 
@@ -97,7 +97,7 @@ void Runtime::request_adapter_and_device(const gpu::Surface* compatible_surface)
   wgpuInstanceRequestAdapter(instance_.get(), &adapter_opts, adapter_cb_info);
 }
 
-void Runtime::request_device() {
+void Runtime::request_device_and_queue() {
   WGPUDeviceDescriptor device_desc = WGPU_DEVICE_DESCRIPTOR_INIT;
   device_desc.label = gpu::to_string_view("device");
   device_desc.defaultQueue.label = gpu::to_string_view("default-queue");
@@ -158,6 +158,8 @@ void Runtime::request_device() {
       case WGPURequestDeviceStatus_Success: {
         rt.device_ = gpu::Device(device);
         rt.event_queue_.push_back(DeviceRequestSucceeded{});
+        // Queue is created at the same time as the device, so it must exist
+        rt.queue_ = gpu::Queue(wgpuDeviceGetQueue(rt.device_.get()));
         break;
       }
 

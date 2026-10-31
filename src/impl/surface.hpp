@@ -37,6 +37,8 @@ class Surface {
   void resize(Dimensions new_dimensions);
   std::optional<gpu::TexView> acquire(const gpu::Adapter& adapter, const gpu::Device& device);
 
+  void present() { wgpuSurfacePresent(surface_.get()); }
+
  private:
   Surface(gpu::Surface&& surface, Dimensions initial_dimensions)
       : surface_(std::move(surface)),

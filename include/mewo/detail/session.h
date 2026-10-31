@@ -60,15 +60,15 @@ mewo_result_t mewo_session_set_render_size(
  * @param session Pointer to the session.
  * @param surface Pointer to the surface to render to. Can be `NULL`, meaning that the session is
  * rendering in headless mode.
- * @param host_time The current time of the host, in nanoseconds. Should be monotonic. Time going
- * backwards is treated as no time passing.
+ * @param current_time The current time of the host, in nanoseconds. Should be monotonic.
+ * Time going backwards is treated as no time passing.
  * @return The result of the operation. Note that `MEWO_SUCCESS` is returned for skipped or dropped
  * frames as well.
  */
 mewo_result_t mewo_session_render(
   mewo_session_t* session,
   mewo_surface_t* surface,
-  uint64_t host_time
+  uint64_t current_time
 );
 
 #ifdef __cplusplus

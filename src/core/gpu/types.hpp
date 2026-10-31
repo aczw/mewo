@@ -68,9 +68,14 @@ class Raii {
 using Instance = RaiiHandle<WGPUInstance, wgpuInstanceRelease>;
 using Adapter = RaiiHandle<WGPUAdapter, wgpuAdapterRelease>;
 using Device = RaiiHandle<WGPUDevice, wgpuDeviceRelease>;
+using Queue = RaiiHandle<WGPUQueue, wgpuQueueRelease>;
 using Surface = RaiiHandle<WGPUSurface, wgpuSurfaceRelease>;
 using SurfaceCaps = Raii<WGPUSurfaceCapabilities, wgpuSurfaceCapabilitiesFreeMembers>;
 using Tex = RaiiHandle<WGPUTexture, wgpuTextureRelease>;
 using TexView = RaiiHandle<WGPUTextureView, wgpuTextureViewRelease>;
+using Buf = RaiiHandle<WGPUBuffer, wgpuBufferRelease>;
+using BindGroupLayout = RaiiHandle<WGPUBindGroupLayout, wgpuBindGroupLayoutRelease>;
+using BindGroup = RaiiHandle<WGPUBindGroup, wgpuBindGroupRelease>;
+using RenderPipeline = RaiiHandle<WGPURenderPipeline, wgpuRenderPipelineRelease>;
 
 }  // namespace mewo::gpu
