@@ -50,10 +50,28 @@ mewo_result_t mewo_session_set_render_size(
   uint32_t new_width,
   uint32_t new_height
 ) {
+  assert(session);
+
   if (new_width == 0 || new_height == 0)
     return MEWO_ERROR_INVALID_ARGUMENT;
 
   session->impl->set_render_size(mewo::impl::Dimensions{.width = new_width, .height = new_height});
+  return MEWO_SUCCESS;
+}
+
+mewo_result_t mewo_session_render(
+  mewo_session_t* session,
+  mewo_surface_t* surface,
+  uint64_t current_time
+) {
+  assert(session);
+
+  try {
+    session->impl->render(surface ? surface->impl.get() : nullptr, current_time);
+  } catch (...) {
+    return MEWO_ERROR_INTERNAL;
+  }
+
   return MEWO_SUCCESS;
 }
 }

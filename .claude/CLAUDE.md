@@ -23,7 +23,7 @@
   - File-local definitions in a `.cpp` (helpers, constants) go in an unnamed namespace inside `namespace mewo`, closed with `}  // namespace`; not `static`.
   - Constants shared from a header are `inline constexpr` (not needed in a `.cpp`'s unnamed namespace). String constants are `constexpr std::string_view kName = "..."`; convert with `std::string(kName)` where a `std::string` is needed, never via `.data()` (a `string_view` isn't guaranteed NUL-terminated).
   - WebGPU structs are always initialized with their `WGPU_*_INIT` macro, then fields assigned (e.g. `WGPUDeviceDescriptor desc = WGPU_DEVICE_DESCRIPTOR_INIT;`), never `= {}` or bare designated initializers. Remind the user in reviews when one is missed. Why: the macros set non-zero defaults correctly and keep up with header changes.
-  - Abbreviations: existing ones are accepted as-is (e.g. `Tex`, `TexView`, `Caps`, `Raii`, `desc`, `cb_info`); don't question them. When the user introduces a *new* abbreviation, point it out (Google's guide says not to abbreviate by deleting letters inside words) so they can decide.
+  - Abbreviations: existing ones are accepted as-is (e.g. `Tex`, `TexView`, `Caps`, `Raii`, `Cmd` (`CmdEncoder`, `CmdBuf`), `desc`, `cb_info`); don't question them. When the user introduces a *new* abbreviation, point it out (Google's guide says not to abbreviate by deleting letters inside words) so they can decide.
   - Doc comments use `/** ... */` (Javadoc style, matching `mewo.h`), not `//`.
   - Every namespace closes with `}  // namespace name` (`.clang-format`: `FixNamespaceComments`, `ShortNamespaceLines: 0`).
   - Formatting is whatever `.clang-format` (Chromium-based) produces.

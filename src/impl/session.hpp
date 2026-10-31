@@ -26,7 +26,7 @@ class Session {
   Session(const Session&) = delete;
   Session& operator=(const Session&) = delete;
 
-  void set_render_size(Dimensions render_size) { render_size_ = render_size; }
+  void set_render_size(Dimensions render_size);
 
   void render(impl::Surface* surface, uint64_t current_time);
 
@@ -37,19 +37,29 @@ class Session {
     float delta_time = {};
   };
 
-  Session(impl::Runtime& runtime, impl::Project& project, Dimensions render_size);
+  static_assert(sizeof(Uniforms) == 16);
+
+  Session(
+    impl::Runtime& runtime,
+    impl::Project& project,
+    Dimensions render_size,
+    gpu::Buf&& out_unif_buf,
+    gpu::BindGroup&& out_bg,
+    gpu::RenderPipeline&& out_rpl,
+    gpu::TexView&& out_view
+  );
 
   impl::Runtime& runtime_;
-  impl::Project& project_;
+  [[maybe_unused]] impl::Project& project_;
   Dimensions render_size_;
 
   std::optional<uint64_t> previous_time_;
   uint64_t elapsed_;
 
-  gpu::Buf unif_buf_;
-  gpu::BindGroupLayout render_pipeline_bgl_;
-  gpu::BindGroup render_pipeline_bg_;
-  gpu::RenderPipeline render_pipeline_;
+  gpu::Buf out_unif_buf_;
+  gpu::BindGroup out_bg_;
+  gpu::RenderPipeline out_rpl_;
+  gpu::TexView out_view_;
 };
 
 }  // namespace mewo::impl

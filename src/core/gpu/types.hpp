@@ -77,5 +77,10 @@ using Buf = RaiiHandle<WGPUBuffer, wgpuBufferRelease>;
 using BindGroupLayout = RaiiHandle<WGPUBindGroupLayout, wgpuBindGroupLayoutRelease>;
 using BindGroup = RaiiHandle<WGPUBindGroup, wgpuBindGroupRelease>;
 using RenderPipeline = RaiiHandle<WGPURenderPipeline, wgpuRenderPipelineRelease>;
+using ShaderModule = RaiiHandle<WGPUShaderModule, wgpuShaderModuleRelease>;
+using PipelineLayout = RaiiHandle<WGPUPipelineLayout, wgpuPipelineLayoutRelease>;
+using CmdEncoder = RaiiHandle<WGPUCommandEncoder, wgpuCommandEncoderRelease>;
+using RenderPassEncoder = RaiiHandle<WGPURenderPassEncoder, wgpuRenderPassEncoderRelease>;
+using CmdBuf = RaiiHandle<WGPUCommandBuffer, wgpuCommandBufferRelease>;
 
 }  // namespace mewo::gpu
