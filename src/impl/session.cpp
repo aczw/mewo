@@ -11,7 +11,6 @@
 
 #include <cassert>
 #include <cstdint>
-#include <format>
 #include <memory>
 #include <optional>
 #include <string_view>
@@ -74,7 +73,7 @@ std::optional<std::unique_ptr<Session>> Session::create(
   std::vector<PassState> passes;
   passes.reserve(project.passes().size());
   for (const Pass& pass : project.passes())
-    passes.push_back(PassState(device, common_unifs_bgl, pass.name(), render_size));
+    passes.push_back(PassState(device, common_unifs_bgl, pass, render_size));
 
   assert(!passes.empty());
 
@@ -163,19 +162,18 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
     pass_color_attachment.loadOp = WGPULoadOp_Clear;
     pass_color_attachment.storeOp = WGPUStoreOp_Store;
     WGPURenderPassDescriptor pass_desc = WGPU_RENDER_PASS_DESCRIPTOR_INIT;
-    std::string pass_label = std::format("render-pass ({})", pass.name());
-    pass_desc.label = gpu::to_string_view(pass_label);
+    pass_desc.label = gpu::to_string_view(pass.label());
     pass_desc.colorAttachmentCount = 1;
     pass_desc.colorAttachments = &pass_color_attachment;
 
-    gpu::RenderPassEncoder out_encoder(
+    gpu::RenderPassEncoder pass_encoder(
       wgpuCommandEncoderBeginRenderPass(cmd_encoder.get(), &pass_desc)
     );
 
-    wgpuRenderPassEncoderSetPipeline(out_encoder.get(), pass.render_pipeline().get());
-    wgpuRenderPassEncoderSetBindGroup(out_encoder.get(), 0, common_unifs_bg_.get(), 0, nullptr);
-    wgpuRenderPassEncoderDraw(out_encoder.get(), 3, 1, 0, 0);
-    wgpuRenderPassEncoderEnd(out_encoder.get());
+    wgpuRenderPassEncoderSetPipeline(pass_encoder.get(), pass.render_pipeline().get());
+    wgpuRenderPassEncoderSetBindGroup(pass_encoder.get(), 0, common_unifs_bg_.get(), 0, nullptr);
+    wgpuRenderPassEncoderDraw(pass_encoder.get(), 3, 1, 0, 0);
+    wgpuRenderPassEncoderEnd(pass_encoder.get());
   }
 
   std::optional<gpu::TexView> surface_view;
@@ -196,7 +194,7 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
     pass_color_attachment.loadOp = WGPULoadOp_Clear;
     pass_color_attachment.storeOp = WGPUStoreOp_Store;
     WGPURenderPassDescriptor pass_desc = WGPU_RENDER_PASS_DESCRIPTOR_INIT;
-    pass_desc.label = gpu::to_string_view("session-blit-pass");
+    pass_desc.label = gpu::to_string_view("surface-blit");
     pass_desc.colorAttachmentCount = 1;
     pass_desc.colorAttachments = &pass_color_attachment;
 

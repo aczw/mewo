@@ -15,7 +15,7 @@ class Project : private Pinned {
   const std::vector<Pass>& passes() const { return passes_; }
 
  private:
-  Project(std::vector<Pass>&& passes) : passes_(std::move(passes)) {}
+  explicit Project(std::vector<Pass>&& passes) : passes_(std::move(passes)) {}
 
   std::vector<Pass> passes_;
 };
