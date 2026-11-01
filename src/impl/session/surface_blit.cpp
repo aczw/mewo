@@ -1,4 +1,4 @@
-#include "impl/session/blit_pass.hpp"
+#include "impl/session/surface_blit.hpp"
 
 #include "core/gpu/string.hpp"
 #include "core/gpu/types.hpp"
@@ -110,7 +110,7 @@ gpu::RenderPipeline create_blit_rpl(
   return gpu::RenderPipeline(wgpuDeviceCreateRenderPipeline(device.get(), &rpl_desc));
 }
 
-BlitPass create_blit_pass(const gpu::Device& device, const gpu::TexView& source) {
+SurfaceBlit create_blit(const gpu::Device& device, const gpu::TexView& source) {
   std::array<WGPUBindGroupLayoutEntry, 2> bgl_entries = {
     WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT,
     WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT,

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/gpu/types.hpp"
+#include "core/pinned.hpp"
 #include "impl/common/dimensions.hpp"
 #include "impl/surface/source.hpp"
 
@@ -11,7 +12,7 @@
 
 namespace mewo::impl {
 
-class Surface {
+class Surface : private Pinned {
  public:
   static std::optional<std::unique_ptr<Surface>> create(
     const gpu::Instance& instance,
@@ -24,11 +25,6 @@ class Surface {
     if (config_.device != nullptr)
       wgpuSurfaceUnconfigure(surface_.get());
   }
-
-  Surface(Surface&&) = delete;
-  Surface& operator=(Surface&&) = delete;
-  Surface(const Surface&) = delete;
-  Surface& operator=(const Surface&) = delete;
 
   const gpu::Surface& surface() const { return surface_; }
 

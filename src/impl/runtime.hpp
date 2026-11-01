@@ -2,6 +2,7 @@
 
 #include "core/event.hpp"
 #include "core/gpu/types.hpp"
+#include "core/pinned.hpp"
 
 #include <deque>
 #include <memory>
@@ -11,14 +12,9 @@
 
 namespace mewo::impl {
 
-class Runtime {
+class Runtime : private Pinned {
  public:
   static std::optional<std::unique_ptr<Runtime>> create();
-
-  Runtime(Runtime&&) = delete;
-  Runtime& operator=(Runtime&&) = delete;
-  Runtime(const Runtime&) = delete;
-  Runtime& operator=(const Runtime&) = delete;
 
   const gpu::Instance& instance() const { return instance_; }
 

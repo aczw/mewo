@@ -1,19 +1,23 @@
 #pragma once
 
+#include "core/gpu/types.hpp"
+#include "core/pinned.hpp"
 #include "impl/common/dimensions.hpp"
 #include "impl/project.hpp"
 #include "impl/runtime.hpp"
-#include "impl/session/blit_pass.hpp"
-#include "impl/session/out_pass.hpp"
+#include "impl/session/pass_state.hpp"
+#include "impl/session/surface_blit.hpp"
 #include "impl/surface.hpp"
 
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <vector>
 
 namespace mewo::impl {
 
-class Session {
+class Session : private Pinned {
  public:
   static std::optional<std::unique_ptr<Session>> create(
     impl::Runtime& runtime,
@@ -21,22 +25,28 @@ class Session {
     Dimensions render_size
   );
 
-  Session(Session&&) = delete;
-  Session& operator=(Session&&) = delete;
-  Session(const Session&) = delete;
-  Session& operator=(const Session&) = delete;
-
   void set_render_size(Dimensions render_size);
 
   void render(impl::Surface* surface, uint64_t current_time);
 
  private:
+  struct alignas(16) CommonUnifs {
+    std::array<float, 2> resolution = {};
+    float time = {};
+    float delta_time = {};
+  };
+
+  static_assert(sizeof(CommonUnifs) == 16);
+
   Session(
     impl::Runtime& runtime,
     impl::Project& project,
     Dimensions render_size,
-    OutPass&& out_pass,
-    BlitPass&& blit_pass
+    gpu::Buf&& common_unifs_buf,
+    gpu::BindGroupLayout&& common_unifs_bgl,
+    gpu::BindGroup&& common_unifs_bg,
+    std::vector<PassState>&& passes,
+    SurfaceBlit&& blit
   );
 
   impl::Runtime& runtime_;
@@ -46,8 +56,12 @@ class Session {
   std::optional<uint64_t> previous_time_;
   uint64_t elapsed_;
 
-  OutPass out_pass_;
-  BlitPass blit_pass_;
+  gpu::Buf common_unifs_buf_;
+  gpu::BindGroupLayout common_unifs_bgl_;
+  gpu::BindGroup common_unifs_bg_;
+
+  std::vector<PassState> passes_;
+  SurfaceBlit blit_;
 };
 
 }  // namespace mewo::impl

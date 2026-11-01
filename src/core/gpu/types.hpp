@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/pinned.hpp"
+
 #include <webgpu/webgpu.h>
 
 #include <type_traits>
@@ -46,16 +48,11 @@ class RaiiHandle {
 
 template <typename T, void (*free_fn)(T)>
   requires std::is_class_v<T>
-class Raii {
+class Raii : private Pinned {
  public:
   explicit Raii(T value) : value_(value) {}
 
   ~Raii() { free_fn(value_); }
-
-  Raii(Raii&&) = delete;
-  Raii& operator=(Raii&&) = delete;
-  Raii(const Raii&) = delete;
-  Raii& operator=(const Raii&) = delete;
 
   T& get() { return value_; }
 

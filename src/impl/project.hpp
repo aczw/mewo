@@ -1,20 +1,23 @@
 #pragma once
 
+#include "core/pinned.hpp"
+#include "impl/project/pass.hpp"
+
 #include <memory>
+#include <vector>
 
 namespace mewo::impl {
 
-class Project {
+class Project : private Pinned {
  public:
   static std::unique_ptr<Project> create();
 
-  Project(Project&&) = default;
-  Project& operator=(Project&&) = default;
-  Project(const Project&) = delete;
-  Project& operator=(const Project&) = delete;
+  const std::vector<Pass>& passes() const { return passes_; }
 
  private:
-  Project() = default;
+  Project(std::vector<Pass>&& passes) : passes_(std::move(passes)) {}
+
+  std::vector<Pass> passes_;
 };
 
 }  // namespace mewo::impl

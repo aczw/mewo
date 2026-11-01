@@ -4,7 +4,7 @@
 
 namespace mewo::impl {
 
-struct BlitPass {
+struct SurfaceBlit {
   gpu::BindGroupLayout bgl;
   gpu::BindGroup bg;
   gpu::RenderPipeline rpl;
@@ -29,6 +29,6 @@ gpu::RenderPipeline create_blit_rpl(
   WGPUTextureFormat surface_format
 );
 
-BlitPass create_blit_pass(const gpu::Device& device, const gpu::TexView& source);
+SurfaceBlit create_blit(const gpu::Device& device, const gpu::TexView& source);
 
 }  // namespace mewo::impl

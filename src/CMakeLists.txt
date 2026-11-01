@@ -7,13 +7,17 @@ add_library(mewo STATIC
 
   core/event.cpp
   core/event.hpp
+  core/pinned.hpp
 
   impl/common/dimensions.hpp
 
-  impl/session/blit_pass.cpp
-  impl/session/blit_pass.hpp
-  impl/session/out_pass.cpp
-  impl/session/out_pass.hpp
+  impl/project/pass.cpp
+  impl/project/pass.hpp
+
+  impl/session/pass_state.cpp
+  impl/session/pass_state.hpp
+  impl/session/surface_blit.cpp
+  impl/session/surface_blit.hpp
   
   impl/surface/source.hpp
 
