@@ -1,5 +1,3 @@
-#include "mewo/detail/event.h"
-
 #include <mewo/mewo.h>
 
 #define SDL_MAIN_USE_CALLBACKS
