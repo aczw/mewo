@@ -1,12 +1,11 @@
 #pragma once
 
-#include "core/gpu/types.hpp"
 #include "impl/common/dimensions.hpp"
 #include "impl/project.hpp"
 #include "impl/runtime.hpp"
+#include "impl/session/out_pass.hpp"
 #include "impl/surface.hpp"
 
-#include <array>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -31,22 +30,11 @@ class Session {
   void render(impl::Surface* surface, uint64_t current_time);
 
  private:
-  struct alignas(16) Uniforms {
-    std::array<float, 2> resolution = {};
-    float time = {};
-    float delta_time = {};
-  };
-
-  static_assert(sizeof(Uniforms) == 16);
-
   Session(
     impl::Runtime& runtime,
     impl::Project& project,
     Dimensions render_size,
-    gpu::Buf&& out_unif_buf,
-    gpu::BindGroup&& out_bg,
-    gpu::RenderPipeline&& out_rpl,
-    gpu::TexView&& out_view
+    OutPass&& out_pass
   );
 
   impl::Runtime& runtime_;
@@ -56,10 +44,7 @@ class Session {
   std::optional<uint64_t> previous_time_;
   uint64_t elapsed_;
 
-  gpu::Buf out_unif_buf_;
-  gpu::BindGroup out_bg_;
-  gpu::RenderPipeline out_rpl_;
-  gpu::TexView out_view_;
+  OutPass out_pass_;
 };
 
 }  // namespace mewo::impl

@@ -9,6 +9,9 @@ add_library(mewo STATIC
   core/event.hpp
 
   impl/common/dimensions.hpp
+
+  impl/session/out_pass.cpp
+  impl/session/out_pass.hpp
   
   impl/surface/source.hpp
 
