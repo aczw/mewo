@@ -1,3 +1,5 @@
+#include "mewo/detail/event.h"
+
 #include <mewo/mewo.h>
 
 #define SDL_MAIN_USE_CALLBACKS
@@ -9,6 +11,7 @@
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL_metal.h>
 #include <SDL3/SDL_stdinc.h>
+#include <SDL3/SDL_timer.h>
 #include <SDL3/SDL_video.h>
 
 #include <stdbool.h>
@@ -20,14 +23,15 @@ typedef struct {
   mewo_runtime_t* runtime;
   mewo_surface_t* surface;
   mewo_project_t* project;
+  mewo_session_t* session;
 } state_t;
 
 static bool fill_surface_desc(state_t* state, mewo_surface_descriptor_t* desc) {
-  int w = 0;
-  int h = 0;
-  SDL_GetWindowSizeInPixels(state->window, &w, &h);
-  desc->initial_width = (uint32_t)w;
-  desc->initial_height = (uint32_t)h;
+  int window_width = 0;
+  int window_height = 0;
+  SDL_GetWindowSizeInPixels(state->window, &window_width, &window_height);
+  desc->initial_width = (uint32_t)window_width;
+  desc->initial_height = (uint32_t)window_height;
 
 #if defined(SDL_PLATFORM_MACOS)
   state->metal_view = SDL_Metal_CreateView(state->window);
@@ -88,6 +92,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
   if (mewo_project_create(&state->project) < 0)
     return SDL_APP_FAILURE;
 
+  SDL_Log("[info] created new project");
+
   mewo_runtime_request_device(state->runtime, state->surface);
 
   return SDL_APP_CONTINUE;
@@ -104,6 +110,22 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     switch (event.type) {
       case MEWO_EVENT_DEVICE_READY: {
         SDL_Log("[info] device is ready");
+
+        int window_width = 0;
+        int window_height = 0;
+        SDL_GetWindowSizeInPixels(state->window, &window_width, &window_height);
+
+        mewo_session_descriptor_t session_desc = {
+          .project = state->project,
+          .render_width = (uint32_t)window_width,
+          .render_height = (uint32_t)window_height,
+        };
+
+        if (mewo_session_create(state->runtime, &session_desc, &state->session) < 0)
+          return SDL_APP_FAILURE;
+
+        SDL_Log("[info] created new session");
+
         break;
       }
 
@@ -113,8 +135,30 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
         return SDL_APP_FAILURE;
       }
 
+      case MEWO_EVENT_DEVICE_LOST: {
+        mewo_string_view_t* message = &event.variant.device_lost.message;
+        SDL_Log("[error] device lost: %.*s", (int)message->length, message->data);
+        return SDL_APP_FAILURE;
+      }
+
+      case MEWO_EVENT_GPU_ERROR: {
+        mewo_string_view_t* message = &event.variant.gpu_error.message;
+        SDL_Log(
+          "[error] GPU error (%i): %.*s",
+          event.variant.gpu_error.type,
+          (int)message->length,
+          message->data
+        );
+        break;
+      }
+
       default: break;
     }
+  }
+
+  if (state->session) {
+    if (mewo_session_render(state->session, state->surface, SDL_GetTicksNS()) < 0)
+      return SDL_APP_FAILURE;
   }
 
   return SDL_APP_CONTINUE;
@@ -127,10 +171,17 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
     case SDL_EVENT_QUIT: return SDL_APP_SUCCESS;
 
     case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED: {
-      SDL_Log("[info] window resized to %ix%i", event->window.data1, event->window.data2);
-      mewo_surface_resize(
-        state->surface, (uint32_t)event->window.data1, (uint32_t)event->window.data2
-      );
+      uint32_t new_width = (uint32_t)event->window.data1;
+      uint32_t new_height = (uint32_t)event->window.data2;
+
+      SDL_Log("[info] window resized to %i×%i", event->window.data1, event->window.data2);
+
+      mewo_surface_resize(state->surface, new_width, new_height);
+
+      if (state->session && new_width != 0 && new_height != 0) {
+        if (mewo_session_set_render_size(state->session, new_width, new_height) < 0)
+          return SDL_APP_FAILURE;
+      }
       break;
     }
 
@@ -148,9 +199,11 @@ void SDL_AppQuit(void* appstate, SDL_AppResult result) {
 
   state_t* state = (state_t*)appstate;
 
+  mewo_session_destroy(state->session);
   mewo_project_destroy(state->project);
   mewo_surface_destroy(state->surface);
   mewo_runtime_destroy(state->runtime);
+
   if (state->metal_view)
     SDL_Metal_DestroyView(state->metal_view);
   SDL_DestroyWindow(state->window);

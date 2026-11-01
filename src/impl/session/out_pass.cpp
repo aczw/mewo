@@ -5,6 +5,7 @@
 
 #include <webgpu/webgpu.h>
 
+#include <string_view>
 #include <utility>
 
 namespace mewo::impl {

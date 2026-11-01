@@ -32,9 +32,12 @@ std::optional<std::unique_ptr<Session>> Session::create(
   if (!device)
     return std::nullopt;
 
+  OutPass out_pass = create_out_pass(device, render_size);
+  BlitPass blit_pass = create_blit_pass(device, out_pass.view);
+
   // Constructor is private so can't use `std::make_unique`
   return std::unique_ptr<Session>(
-    new Session(runtime, project, render_size, create_out_pass(device, render_size))
+    new Session(runtime, project, render_size, std::move(out_pass), std::move(blit_pass))
   );
 }
 
@@ -53,14 +56,15 @@ Session::Session(
   impl::Runtime& runtime,
   impl::Project& project,
   Dimensions render_size,
-  OutPass&& out_pass
+  OutPass&& out_pass,
+  BlitPass&& blit_pass
 )
     : runtime_(runtime),
       project_(project),
       render_size_(render_size),
       elapsed_(0),
       out_pass_(std::move(out_pass)),
-      blit_pass_(create_blit_pass(runtime.device(), out_pass_.view)) {}
+      blit_pass_(std::move(blit_pass)) {}
 
 void Session::render(impl::Surface* surface, uint64_t current_time) {
   const gpu::Queue& queue = runtime_.queue();
@@ -108,7 +112,7 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
 
     wgpuRenderPassEncoderSetPipeline(out_encoder.get(), out_pass_.rpl.get());
     wgpuRenderPassEncoderSetBindGroup(out_encoder.get(), 0, out_pass_.bg.get(), 0, nullptr);
-    wgpuRenderPassEncoderDraw(out_encoder.get(), 3, 0, 0, 0);
+    wgpuRenderPassEncoderDraw(out_encoder.get(), 3, 1, 0, 0);
     wgpuRenderPassEncoderEnd(out_encoder.get());
   }
 
@@ -140,7 +144,7 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
 
     wgpuRenderPassEncoderSetPipeline(blit_encoder.get(), blit_pass_.rpl.get());
     wgpuRenderPassEncoderSetBindGroup(blit_encoder.get(), 0, blit_pass_.bg.get(), 0, nullptr);
-    wgpuRenderPassEncoderDraw(blit_encoder.get(), 3, 0, 0, 0);
+    wgpuRenderPassEncoderDraw(blit_encoder.get(), 3, 1, 0, 0);
     wgpuRenderPassEncoderEnd(blit_encoder.get());
   }
 

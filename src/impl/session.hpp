@@ -35,7 +35,8 @@ class Session {
     impl::Runtime& runtime,
     impl::Project& project,
     Dimensions render_size,
-    OutPass&& out_pass
+    OutPass&& out_pass,
+    BlitPass&& blit_pass
   );
 
   impl::Runtime& runtime_;
