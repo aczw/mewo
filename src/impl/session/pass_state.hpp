@@ -35,8 +35,6 @@ class PassState {
   }
 
  private:
-  Pass::Id id_;
-
   gpu::RenderPipeline render_pipeline_;
   gpu::TexView view_;
   std::string label_;

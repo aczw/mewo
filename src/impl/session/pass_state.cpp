@@ -37,7 +37,7 @@ PassState::PassState(
   const Pass& pass,
   Dimensions render_size
 )
-    : id_(pass.id()), label_(std::format("render-pass (ID {})", pass.id())) {
+    : label_(std::format("render-pass (ID {})", pass.id())) {
   WGPUBindGroupLayout raw_common_unifs_bgl = common_unifs_bgl.get();
 
   WGPUPipelineLayoutDescriptor pipeline_layout_desc = WGPU_PIPELINE_LAYOUT_DESCRIPTOR_INIT;

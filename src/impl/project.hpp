@@ -17,6 +17,9 @@ class Project : private Pinned {
  private:
   explicit Project(std::vector<Pass>&& passes) : passes_(std::move(passes)) {}
 
+  /**
+   * Single source of truth for the order in which passes operate.
+   */
   std::vector<Pass> passes_;
 };
 
