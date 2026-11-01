@@ -33,8 +33,7 @@ class Runtime {
   void request_gfx_components(const gpu::Surface* compatible_surface);
 
  private:
-  explicit Runtime(gpu::Instance&& instance)
-      : instance_(std::move(instance)), adapter_(), device_() {}
+  explicit Runtime(gpu::Instance&& instance) : instance_(std::move(instance)) {}
 
   void request_device_and_queue();
 

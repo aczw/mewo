@@ -10,6 +10,8 @@ add_library(mewo STATIC
 
   impl/common/dimensions.hpp
 
+  impl/session/blit_pass.cpp
+  impl/session/blit_pass.hpp
   impl/session/out_pass.cpp
   impl/session/out_pass.hpp
   

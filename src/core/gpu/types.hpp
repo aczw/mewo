@@ -82,5 +82,6 @@ using PipelineLayout = RaiiHandle<WGPUPipelineLayout, wgpuPipelineLayoutRelease>
 using CmdEncoder = RaiiHandle<WGPUCommandEncoder, wgpuCommandEncoderRelease>;
 using RenderPassEncoder = RaiiHandle<WGPURenderPassEncoder, wgpuRenderPassEncoderRelease>;
 using CmdBuf = RaiiHandle<WGPUCommandBuffer, wgpuCommandBufferRelease>;
+using Sampler = RaiiHandle<WGPUSampler, wgpuSamplerRelease>;
 
 }  // namespace mewo::gpu

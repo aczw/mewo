@@ -3,6 +3,7 @@
 #include "impl/common/dimensions.hpp"
 #include "impl/project.hpp"
 #include "impl/runtime.hpp"
+#include "impl/session/blit_pass.hpp"
 #include "impl/session/out_pass.hpp"
 #include "impl/surface.hpp"
 
@@ -45,6 +46,7 @@ class Session {
   uint64_t elapsed_;
 
   OutPass out_pass_;
+  BlitPass blit_pass_;
 };
 
 }  // namespace mewo::impl
