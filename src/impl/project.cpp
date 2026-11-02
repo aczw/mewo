@@ -3,6 +3,8 @@
 #include "impl/project/pass.hpp"
 
 #include <memory>
+#include <string>
+#include <string_view>
 #include <vector>
 
 namespace mewo::impl {
@@ -16,6 +18,9 @@ struct Uniforms {
 };
 
 @group(0) @binding(0) var<uniform> mw: Uniforms;
+
+@group(1) @binding(0) var prev_tex: texture_2d<f32>;
+@group(1) @binding(1) var prev_smp: sampler;
 
 // Coordinates for drawing an oversized triangle (acts as a fullscreen quad)
 const kUvCoords = array(

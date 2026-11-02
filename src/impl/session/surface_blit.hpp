@@ -2,33 +2,34 @@
 
 #include "core/gpu/types.hpp"
 
+#include <webgpu/webgpu.h>
+
 namespace mewo::impl {
 
-struct SurfaceBlit {
-  gpu::BindGroupLayout bgl;
-  gpu::BindGroup bg;
-  gpu::RenderPipeline rpl;
-  WGPUTextureFormat surface_format;
-  gpu::Sampler smp;
+class SurfaceBlit {
+ public:
+  SurfaceBlit() = default;
+
+  SurfaceBlit(SurfaceBlit&&) = default;
+  SurfaceBlit& operator=(SurfaceBlit&&) = default;
+  SurfaceBlit(const SurfaceBlit&) = delete;
+  SurfaceBlit& operator=(const SurfaceBlit&) = delete;
+
+  const gpu::RenderPipeline& render_pipeline() const { return render_pipeline_; }
+
+  /**
+   * We only learn what the surface format is after configuring it, so we have to
+   * defer creating the render pipeline at construction.
+   */
+  void prepare(
+    const gpu::Device& device,
+    const gpu::BindGroupLayout& bind_group_layout,
+    WGPUTextureFormat surface_format
+  );
+
+ private:
+  gpu::RenderPipeline render_pipeline_;
+  WGPUTextureFormat current_surface_format_ = WGPUTextureFormat_Undefined;
 };
-
-gpu::BindGroup create_blit_bg(
-  const gpu::Device& device,
-  const gpu::BindGroupLayout& bgl,
-  const gpu::TexView& source,
-  const gpu::Sampler& smp
-);
-
-/**
- * We only learn what the surface format is after configuring it, so we have to defer
- * creating the render pipeline from everything else.
- */
-gpu::RenderPipeline create_blit_rpl(
-  const gpu::Device& device,
-  const gpu::BindGroupLayout& bgl,
-  WGPUTextureFormat surface_format
-);
-
-SurfaceBlit create_blit(const gpu::Device& device, const gpu::TexView& source);
 
 }  // namespace mewo::impl

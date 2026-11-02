@@ -6,6 +6,7 @@
 #include "impl/project.hpp"
 #include "impl/runtime.hpp"
 #include "impl/session/pass_state.hpp"
+#include "impl/session/pass_targets.hpp"
 #include "impl/session/surface_blit.hpp"
 #include "impl/surface.hpp"
 
@@ -48,7 +49,7 @@ class Session : private Pinned {
     gpu::BindGroupLayout&& common_unifs_bgl,
     gpu::BindGroup&& common_unifs_bg,
     PassIdStateMap&& pass_states,
-    SurfaceBlit&& blit
+    PassTargets&& pass_targets
   );
 
   impl::Runtime& runtime_;
@@ -63,6 +64,7 @@ class Session : private Pinned {
   gpu::BindGroup common_unifs_bg_;
 
   PassIdStateMap pass_states_;
+  PassTargets pass_targets_;
   SurfaceBlit blit_;
 };
 

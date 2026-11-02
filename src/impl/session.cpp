@@ -5,10 +5,12 @@
 #include "impl/common/dimensions.hpp"
 #include "impl/project/pass.hpp"
 #include "impl/session/pass_state.hpp"
+#include "impl/session/pass_targets.hpp"
 #include "impl/session/surface_blit.hpp"
 
 #include <webgpu/webgpu.h>
 
+#include <cassert>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -69,14 +71,16 @@ std::optional<std::unique_ptr<Session>> Session::create(
 
   gpu::BindGroup common_unifs_bg(wgpuDeviceCreateBindGroup(device.get(), &common_unifs_bg_desc));
 
+  PassTargets pass_targets(device, render_size);
+
   PassIdStateMap pass_states;
   pass_states.reserve(project.passes().size());
-  for (const Pass& pass : project.passes())
-    pass_states.try_emplace(pass.id(), device, common_unifs_bgl, pass, render_size);
 
-  const Pass& last_pass = project.passes().back();
-  auto it = pass_states.find(last_pass.id());
-  SurfaceBlit blit = create_blit(device, it->second.view());
+  for (const Pass& pass : project.passes()) {
+    pass_states.try_emplace(
+      pass.id(), device, common_unifs_bgl, pass_targets.bind_group_layout(), pass
+    );
+  }
 
   // Constructor is private so can't use `std::make_unique`
   return std::unique_ptr<Session>(new Session(
@@ -87,7 +91,7 @@ std::optional<std::unique_ptr<Session>> Session::create(
     std::move(common_unifs_bgl),
     std::move(common_unifs_bg),
     std::move(pass_states),
-    std::move(blit)
+    std::move(pass_targets)
   ));
 }
 
@@ -98,13 +102,7 @@ void Session::set_render_size(Dimensions render_size) {
   const gpu::Device& device = runtime_.device();
 
   render_size_ = render_size;
-
-  for (auto& [id, pass_state] : pass_states_)
-    pass_state.resize(device, render_size);
-
-  const Pass& last_pass = project_.passes().back();
-  auto it = pass_states_.find(last_pass.id());
-  blit_.bg = create_blit_bg(device, blit_.bgl, it->second.view(), blit_.smp);
+  pass_targets_.resize(device, render_size);
 }
 
 Session::Session(
@@ -115,7 +113,7 @@ Session::Session(
   gpu::BindGroupLayout&& common_unifs_bgl,
   gpu::BindGroup&& common_unifs_bg,
   PassIdStateMap&& pass_states,
-  SurfaceBlit&& blit
+  PassTargets&& pass_targets
 )
     : runtime_(runtime),
       project_(project),
@@ -125,7 +123,7 @@ Session::Session(
       common_unifs_bgl_(std::move(common_unifs_bgl)),
       common_unifs_bg_(std::move(common_unifs_bg)),
       pass_states_(std::move(pass_states)),
-      blit_(std::move(blit)) {}
+      pass_targets_(std::move(pass_targets)) {}
 
 void Session::render(impl::Surface* surface, uint64_t current_time) {
   const gpu::Queue& queue = runtime_.queue();
@@ -155,14 +153,18 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
 
   gpu::CmdEncoder cmd_encoder(wgpuDeviceCreateCommandEncoder(device.get(), &cmd_encoder_desc));
 
+  pass_targets_.clear(cmd_encoder);
+
   const std::vector<Pass>& passes = project_.passes();
+
   for (size_t idx = 0; idx < passes.size(); ++idx) {
     const Pass& pass = passes[idx];
     auto it = pass_states_.find(pass.id());
+    assert(it != pass_states_.end());
     const PassState& pass_state = it->second;
 
     WGPURenderPassColorAttachment pass_color_attachment = WGPU_RENDER_PASS_COLOR_ATTACHMENT_INIT;
-    pass_color_attachment.view = pass_state.view().get();
+    pass_color_attachment.view = pass_targets_.target_view(idx).get();
     pass_color_attachment.loadOp = WGPULoadOp_Clear;
     pass_color_attachment.storeOp = WGPUStoreOp_Store;
     WGPURenderPassDescriptor pass_desc = WGPU_RENDER_PASS_DESCRIPTOR_INIT;
@@ -176,6 +178,9 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
 
     wgpuRenderPassEncoderSetPipeline(pass_encoder.get(), pass_state.render_pipeline().get());
     wgpuRenderPassEncoderSetBindGroup(pass_encoder.get(), 0, common_unifs_bg_.get(), 0, nullptr);
+    wgpuRenderPassEncoderSetBindGroup(
+      pass_encoder.get(), 1, pass_targets_.prev_bind_group(idx).get(), 0, nullptr
+    );
     wgpuRenderPassEncoderDraw(pass_encoder.get(), 3, 1, 0, 0);
     wgpuRenderPassEncoderEnd(pass_encoder.get());
   }
@@ -188,10 +193,7 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
   if (surface_view) {
     WGPUTextureFormat surface_format = surface->format();
 
-    if (!blit_.rpl || blit_.surface_format != surface_format) {
-      blit_.rpl = create_blit_rpl(device, blit_.bgl, surface_format);
-      blit_.surface_format = surface_format;
-    }
+    blit_.prepare(device, pass_targets_.bind_group_layout(), surface_format);
 
     WGPURenderPassColorAttachment pass_color_attachment = WGPU_RENDER_PASS_COLOR_ATTACHMENT_INIT;
     pass_color_attachment.view = surface_view.value().get();
@@ -206,8 +208,10 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
       wgpuCommandEncoderBeginRenderPass(cmd_encoder.get(), &pass_desc)
     );
 
-    wgpuRenderPassEncoderSetPipeline(blit_encoder.get(), blit_.rpl.get());
-    wgpuRenderPassEncoderSetBindGroup(blit_encoder.get(), 0, blit_.bg.get(), 0, nullptr);
+    wgpuRenderPassEncoderSetPipeline(blit_encoder.get(), blit_.render_pipeline().get());
+    wgpuRenderPassEncoderSetBindGroup(
+      blit_encoder.get(), 0, pass_targets_.prev_bind_group(passes.size()).get(), 0, nullptr
+    );
     wgpuRenderPassEncoderDraw(blit_encoder.get(), 3, 1, 0, 0);
     wgpuRenderPassEncoderEnd(blit_encoder.get());
   }

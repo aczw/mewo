@@ -16,6 +16,8 @@ add_library(mewo STATIC
 
   impl/session/pass_state.cpp
   impl/session/pass_state.hpp
+  impl/session/pass_targets.cpp
+  impl/session/pass_targets.hpp
   impl/session/surface_blit.cpp
   impl/session/surface_blit.hpp
   
