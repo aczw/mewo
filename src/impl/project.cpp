@@ -49,7 +49,7 @@ fn fs_main(@builtin(position) position: vec4f) -> @location(0) vec4f {
 
 std::unique_ptr<Project> Project::create() {
   std::vector<Pass> passes;
-  passes.push_back(Pass(0, "Pass 1", std::string(kShaderSource)));
+  passes.push_back(Pass(1, "Pass 1", std::string(kShaderSource)));
 
   // Constructor is private so can't use `std::make_unique`
   return std::unique_ptr<Project>(new Project(std::move(passes)));

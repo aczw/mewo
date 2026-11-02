@@ -10,55 +10,73 @@
 namespace mewo::impl {
 namespace {
 
-std::array<gpu::TexView, 2> create_views(const gpu::Device& device, Dimensions render_size) {
-  std::array<gpu::Tex, 2> textures = {};
+constexpr std::array<std::string_view, PassTargets::kTargetCount> kTextureLabels = {
+  "pass-targets-tex-a",
+  "pass-targets-tex-b",
+};
+constexpr std::array<std::string_view, PassTargets::kTargetCount> kViewLabels = {
+  "pass-targets-view-a",
+  "pass-targets-view-b",
+};
+constexpr std::array<std::string_view, PassTargets::kTargetCount> kBindGroupLabels = {
+  "pass-targets-bg-a",
+  "pass-targets-bg-b",
+};
 
-  for (size_t idx = 0; idx < 2; ++idx) {
+std::array<gpu::TexView, PassTargets::kTargetCount> create_views(
+  const gpu::Device& device,
+  Dimensions render_size
+) {
+  std::array<gpu::TexView, PassTargets::kTargetCount> views = {};
+
+  for (size_t idx = 0; idx < PassTargets::kTargetCount; ++idx) {
     WGPUTextureDescriptor tex_desc = WGPU_TEXTURE_DESCRIPTOR_INIT;
+    tex_desc.label = gpu::to_string_view(kTextureLabels[idx]);
     tex_desc.usage = WGPUTextureUsage_RenderAttachment | WGPUTextureUsage_TextureBinding;
     tex_desc.format = PassTargets::kTexFormat;
     tex_desc.size.width = render_size.width;
     tex_desc.size.height = render_size.height;
 
-    textures[idx] = gpu::Tex(wgpuDeviceCreateTexture(device.get(), &tex_desc));
+    gpu::Tex tex(wgpuDeviceCreateTexture(device.get(), &tex_desc));
+
+    WGPUTextureViewDescriptor view_desc = WGPU_TEXTURE_VIEW_DESCRIPTOR_INIT;
+    view_desc.label = gpu::to_string_view(kViewLabels[idx]);
+
+    views[idx] = gpu::TexView(wgpuTextureCreateView(tex.get(), &view_desc));
   }
 
-  WGPUTextureViewDescriptor view_desc_a = WGPU_TEXTURE_VIEW_DESCRIPTOR_INIT;
-  view_desc_a.label = gpu::to_string_view("pass-targets-view-a");
-  WGPUTextureViewDescriptor view_desc_b = WGPU_TEXTURE_VIEW_DESCRIPTOR_INIT;
-  view_desc_b.label = gpu::to_string_view("pass-targets-view-b");
-
-  return {
-    gpu::TexView(wgpuTextureCreateView(textures[0].get(), &view_desc_a)),
-    gpu::TexView(wgpuTextureCreateView(textures[1].get(), &view_desc_b))
-  };
+  return views;
 }
 
-gpu::BindGroup create_bg(
+std::array<gpu::BindGroup, PassTargets::kTargetCount> create_bind_groups(
   const gpu::Device& device,
   const gpu::BindGroupLayout& bgl,
-  const gpu::TexView& source,
-  const gpu::Sampler& smp,
-  std::string_view label
+  const std::array<gpu::TexView, PassTargets::kTargetCount>& views,
+  const gpu::Sampler& smp
 ) {
-  std::array<WGPUBindGroupEntry, 2> bg_entries = {
-    WGPU_BIND_GROUP_ENTRY_INIT,
-    WGPU_BIND_GROUP_ENTRY_INIT,
-  };
+  std::array<gpu::BindGroup, PassTargets::kTargetCount> bind_groups = {};
 
-  bg_entries[0].binding = 0;
-  bg_entries[0].textureView = source.get();
+  for (size_t idx = 0; idx < PassTargets::kTargetCount; ++idx) {
+    std::array<WGPUBindGroupEntry, 2> bg_entries = {
+      WGPU_BIND_GROUP_ENTRY_INIT,
+      WGPU_BIND_GROUP_ENTRY_INIT,
+    };
 
-  bg_entries[1].binding = 1;
-  bg_entries[1].sampler = smp.get();
+    bg_entries[0].binding = 0;
+    bg_entries[0].textureView = views[idx].get();
+    bg_entries[1].binding = 1;
+    bg_entries[1].sampler = smp.get();
 
-  WGPUBindGroupDescriptor bg_desc = WGPU_BIND_GROUP_DESCRIPTOR_INIT;
-  bg_desc.label = gpu::to_string_view(label);
-  bg_desc.layout = bgl.get();
-  bg_desc.entryCount = bg_entries.size();
-  bg_desc.entries = bg_entries.data();
+    WGPUBindGroupDescriptor bg_desc = WGPU_BIND_GROUP_DESCRIPTOR_INIT;
+    bg_desc.label = gpu::to_string_view(kBindGroupLabels[idx]);
+    bg_desc.layout = bgl.get();
+    bg_desc.entryCount = bg_entries.size();
+    bg_desc.entries = bg_entries.data();
 
-  return gpu::BindGroup(wgpuDeviceCreateBindGroup(device.get(), &bg_desc));
+    bind_groups[idx] = gpu::BindGroup(wgpuDeviceCreateBindGroup(device.get(), &bg_desc));
+  }
+
+  return bind_groups;
 }
 
 }  // namespace
@@ -94,25 +112,20 @@ PassTargets::PassTargets(const gpu::Device& device, Dimensions render_size) {
 
   bind_group_layout_ =
     gpu::BindGroupLayout(wgpuDeviceCreateBindGroupLayout(device.get(), &bgl_desc));
-
-  bind_groups_ = {
-    create_bg(device, bind_group_layout_, views_[0], sampler_, "pass-targets-bg-a"),
-    create_bg(device, bind_group_layout_, views_[1], sampler_, "pass-targets-bg-b")
-  };
+  bind_groups_ = create_bind_groups(device, bind_group_layout_, views_, sampler_);
 }
 
 void PassTargets::resize(const gpu::Device& device, Dimensions new_render_size) {
   views_ = create_views(device, new_render_size);
-
-  bind_groups_ = {
-    create_bg(device, bind_group_layout_, views_[0], sampler_, "pass-targets-bg-a"),
-    create_bg(device, bind_group_layout_, views_[1], sampler_, "pass-targets-bg-b")
-  };
+  bind_groups_ = create_bind_groups(device, bind_group_layout_, views_, sampler_);
 }
 
-void PassTargets::clear(const gpu::CmdEncoder& cmd_encoder) const {
+void PassTargets::record_clear_pass(const gpu::CmdEncoder& cmd_encoder) const {
+  static_assert(target_idx(0) == kIdxA, "pass 0 writes to target view A");
+  static_assert(prev_idx(0) == kIdxB, "pass 0 reads from target view B");
+
   WGPURenderPassColorAttachment color_attachment = WGPU_RENDER_PASS_COLOR_ATTACHMENT_INIT;
-  color_attachment.view = views_[1].get();
+  color_attachment.view = views_[kIdxB].get();
   color_attachment.loadOp = WGPULoadOp_Clear;
   color_attachment.storeOp = WGPUStoreOp_Store;
   color_attachment.clearValue = {.r = 0.0, .g = 0.0, .b = 0.0, .a = 1.0};

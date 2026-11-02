@@ -71,16 +71,13 @@ std::optional<std::unique_ptr<Session>> Session::create(
 
   gpu::BindGroup common_unifs_bg(wgpuDeviceCreateBindGroup(device.get(), &common_unifs_bg_desc));
 
-  PassTargets pass_targets(device, render_size);
+  PassTargets targets(device, render_size);
 
   PassIdStateMap pass_states;
   pass_states.reserve(project.passes().size());
 
-  for (const Pass& pass : project.passes()) {
-    pass_states.try_emplace(
-      pass.id(), device, common_unifs_bgl, pass_targets.bind_group_layout(), pass
-    );
-  }
+  for (const Pass& pass : project.passes())
+    pass_states.try_emplace(pass.id(), device, common_unifs_bgl, targets.bind_group_layout(), pass);
 
   // Constructor is private so can't use `std::make_unique`
   return std::unique_ptr<Session>(new Session(
@@ -91,7 +88,7 @@ std::optional<std::unique_ptr<Session>> Session::create(
     std::move(common_unifs_bgl),
     std::move(common_unifs_bg),
     std::move(pass_states),
-    std::move(pass_targets)
+    std::move(targets)
   ));
 }
 
@@ -102,7 +99,7 @@ void Session::set_render_size(Dimensions render_size) {
   const gpu::Device& device = runtime_.device();
 
   render_size_ = render_size;
-  pass_targets_.resize(device, render_size);
+  targets_.resize(device, render_size);
 }
 
 Session::Session(
@@ -113,7 +110,7 @@ Session::Session(
   gpu::BindGroupLayout&& common_unifs_bgl,
   gpu::BindGroup&& common_unifs_bg,
   PassIdStateMap&& pass_states,
-  PassTargets&& pass_targets
+  PassTargets&& targets
 )
     : runtime_(runtime),
       project_(project),
@@ -123,7 +120,7 @@ Session::Session(
       common_unifs_bgl_(std::move(common_unifs_bgl)),
       common_unifs_bg_(std::move(common_unifs_bg)),
       pass_states_(std::move(pass_states)),
-      pass_targets_(std::move(pass_targets)) {}
+      targets_(std::move(targets)) {}
 
 void Session::render(impl::Surface* surface, uint64_t current_time) {
   const gpu::Queue& queue = runtime_.queue();
@@ -153,7 +150,7 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
 
   gpu::CmdEncoder cmd_encoder(wgpuDeviceCreateCommandEncoder(device.get(), &cmd_encoder_desc));
 
-  pass_targets_.clear(cmd_encoder);
+  targets_.record_clear_pass(cmd_encoder);
 
   const std::vector<Pass>& passes = project_.passes();
 
@@ -164,7 +161,7 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
     const PassState& pass_state = it->second;
 
     WGPURenderPassColorAttachment pass_color_attachment = WGPU_RENDER_PASS_COLOR_ATTACHMENT_INIT;
-    pass_color_attachment.view = pass_targets_.target_view(idx).get();
+    pass_color_attachment.view = targets_.target_view(idx).get();
     pass_color_attachment.loadOp = WGPULoadOp_Clear;
     pass_color_attachment.storeOp = WGPUStoreOp_Store;
     WGPURenderPassDescriptor pass_desc = WGPU_RENDER_PASS_DESCRIPTOR_INIT;
@@ -179,7 +176,7 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
     wgpuRenderPassEncoderSetPipeline(pass_encoder.get(), pass_state.render_pipeline().get());
     wgpuRenderPassEncoderSetBindGroup(pass_encoder.get(), 0, common_unifs_bg_.get(), 0, nullptr);
     wgpuRenderPassEncoderSetBindGroup(
-      pass_encoder.get(), 1, pass_targets_.prev_bind_group(idx).get(), 0, nullptr
+      pass_encoder.get(), 1, targets_.prev_bind_group(idx).get(), 0, nullptr
     );
     wgpuRenderPassEncoderDraw(pass_encoder.get(), 3, 1, 0, 0);
     wgpuRenderPassEncoderEnd(pass_encoder.get());
@@ -193,7 +190,7 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
   if (surface_view) {
     WGPUTextureFormat surface_format = surface->format();
 
-    blit_.prepare(device, pass_targets_.bind_group_layout(), surface_format);
+    blit_.prepare(device, targets_.bind_group_layout(), surface_format);
 
     WGPURenderPassColorAttachment pass_color_attachment = WGPU_RENDER_PASS_COLOR_ATTACHMENT_INIT;
     pass_color_attachment.view = surface_view.value().get();
@@ -210,7 +207,7 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
 
     wgpuRenderPassEncoderSetPipeline(blit_encoder.get(), blit_.render_pipeline().get());
     wgpuRenderPassEncoderSetBindGroup(
-      blit_encoder.get(), 0, pass_targets_.prev_bind_group(passes.size()).get(), 0, nullptr
+      blit_encoder.get(), 0, targets_.prev_bind_group(passes.size()).get(), 0, nullptr
     );
     wgpuRenderPassEncoderDraw(blit_encoder.get(), 3, 1, 0, 0);
     wgpuRenderPassEncoderEnd(blit_encoder.get());
