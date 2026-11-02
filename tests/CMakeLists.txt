@@ -1,5 +1,6 @@
 add_executable(mewo_tests
   project_tests.cpp
+  shader_uniform_data_tests.cpp
   shader_uniforms_tests.cpp
 )
 mewo_set_target_defaults(mewo_tests CXX)

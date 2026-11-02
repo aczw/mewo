@@ -14,13 +14,7 @@ namespace mewo::impl {
 namespace {
 
 constexpr std::string_view kDefaultPassSource = R"(
-struct Uniforms {
-  resolution: vec2f,
-  time: f32,
-  delta_time: f32,
-};
-
-@group(0) @binding(0) var<uniform> mw: Uniforms;
+var<private> mw: mw_Uniforms;
 
 @group(1) @binding(0) var prev_tex: texture_2d<f32>;
 @group(1) @binding(1) var prev_smp: sampler;
@@ -43,19 +37,14 @@ fn vs_main(@builtin(vertex_index) index: u32) -> @builtin(position) vec4f {
 
 @fragment
 fn fs_main(@builtin(position) position: vec4f) -> @location(0) vec4f {
+  mw = mw_uniforms;
   let uv = position.xy / mw.resolution;
   return vec4f(0.5 + 0.5 * cos(mw.time + uv.xyx + vec3f(0.0, 2.0, 4.0)), 1.0);
 }
 )";
 
 constexpr std::string_view kPassInvertSource = R"(
-struct Uniforms {
-  resolution: vec2f,
-  time: f32,
-  delta_time: f32,
-};
-
-@group(0) @binding(0) var<uniform> mw: Uniforms;
+var<private> mw: mw_Uniforms;
 
 @group(1) @binding(0) var prev_tex: texture_2d<f32>;
 @group(1) @binding(1) var prev_smp: sampler;
@@ -78,6 +67,7 @@ fn vs_main(@builtin(vertex_index) index: u32) -> @builtin(position) vec4f {
 
 @fragment
 fn fs_main(@builtin(position) position: vec4f) -> @location(0) vec4f {
+  mw = mw_uniforms;
   let uv = position.xy / mw.resolution;
   let color = textureSample(prev_tex, prev_smp, uv);
   return vec4(1.0 - color.xyz, 1.0);

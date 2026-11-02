@@ -10,7 +10,6 @@
 #include "impl/session/surface_blit.hpp"
 #include "impl/surface.hpp"
 
-#include <array>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -33,14 +32,6 @@ class Session : private Pinned {
  private:
   using PassIdStateMap = std::unordered_map<Pass::Id, PassState>;
 
-  struct alignas(16) CommonUnifs {
-    std::array<float, 2> resolution = {};
-    float time = {};
-    float delta_time = {};
-  };
-
-  static_assert(sizeof(CommonUnifs) == 16);
-
   Session(
     impl::Runtime& runtime,
     impl::Project& project,
@@ -58,6 +49,7 @@ class Session : private Pinned {
 
   std::optional<uint64_t> previous_time_;
   uint64_t elapsed_;
+  uint32_t frame_number_;
 
   gpu::Buf common_unifs_buf_;
   gpu::BindGroupLayout common_unifs_bgl_;

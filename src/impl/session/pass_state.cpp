@@ -2,6 +2,7 @@
 
 #include "core/gpu/string.hpp"
 #include "core/gpu/types.hpp"
+#include "core/shader/uniforms.hpp"
 #include "impl/session/pass_targets.hpp"
 
 #include <webgpu/webgpu.h>
@@ -33,7 +34,8 @@ PassState::PassState(
   );
 
   WGPUShaderSourceWGSL shader_source = WGPU_SHADER_SOURCE_WGSL_INIT;
-  shader_source.code = gpu::to_string_view(pass.source());
+  std::string shader_source_code = generate_wgsl_uniforms() + pass.source();
+  shader_source.code = gpu::to_string_view(shader_source_code);
   WGPUShaderModuleDescriptor shader_module_desc = WGPU_SHADER_MODULE_DESCRIPTOR_INIT;
   shader_module_desc.nextInChain = &shader_source.chain;
   std::string shader_module_label = std::format("pass-shader (ID {})", pass.id());

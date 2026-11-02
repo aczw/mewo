@@ -2,6 +2,8 @@
 
 #include "core/gpu/string.hpp"
 #include "core/gpu/types.hpp"
+#include "core/shader/uniform_data.hpp"
+#include "core/shader/uniforms.hpp"
 #include "impl/common/dimensions.hpp"
 #include "impl/project/pass.hpp"
 #include "impl/session/pass_state.hpp"
@@ -11,6 +13,7 @@
 #include <webgpu/webgpu.h>
 
 #include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -39,7 +42,7 @@ std::optional<std::unique_ptr<Session>> Session::create(
   WGPUBufferDescriptor common_unifs_buf_desc = WGPU_BUFFER_DESCRIPTOR_INIT;
   common_unifs_buf_desc.label = gpu::to_string_view("common-unifs-buf");
   common_unifs_buf_desc.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_Uniform;
-  common_unifs_buf_desc.size = sizeof(CommonUnifs);
+  common_unifs_buf_desc.size = kUniformsLayout.size;
 
   gpu::Buf common_unifs_buf(wgpuDeviceCreateBuffer(device.get(), &common_unifs_buf_desc));
 
@@ -47,7 +50,7 @@ std::optional<std::unique_ptr<Session>> Session::create(
   common_unifs_bgl_entry.binding = 0;
   common_unifs_bgl_entry.visibility = WGPUShaderStage_Fragment;
   common_unifs_bgl_entry.buffer.type = WGPUBufferBindingType_Uniform;
-  common_unifs_bgl_entry.buffer.minBindingSize = sizeof(CommonUnifs);
+  common_unifs_bgl_entry.buffer.minBindingSize = kUniformsLayout.size;
 
   WGPUBindGroupLayoutDescriptor common_unifs_bgl_desc = WGPU_BIND_GROUP_LAYOUT_DESCRIPTOR_INIT;
   common_unifs_bgl_desc.label = gpu::to_string_view("common-unifs-bgl");
@@ -61,7 +64,7 @@ std::optional<std::unique_ptr<Session>> Session::create(
   WGPUBindGroupEntry common_unifs_bg_entry = WGPU_BIND_GROUP_ENTRY_INIT;
   common_unifs_bg_entry.binding = 0;
   common_unifs_bg_entry.buffer = common_unifs_buf.get();
-  common_unifs_bg_entry.size = sizeof(CommonUnifs);
+  common_unifs_bg_entry.size = kUniformsLayout.size;
 
   WGPUBindGroupDescriptor common_unifs_bg_desc = WGPU_BIND_GROUP_DESCRIPTOR_INIT;
   common_unifs_bg_desc.label = gpu::to_string_view("common-unifs-bg");
@@ -117,6 +120,7 @@ Session::Session(
       project_(project),
       render_size_(render_size),
       elapsed_(0),
+      frame_number_(0),
       common_unifs_buf_(std::move(common_unifs_buf)),
       common_unifs_bgl_(std::move(common_unifs_bgl)),
       common_unifs_bg_(std::move(common_unifs_bg)),
@@ -135,16 +139,23 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
   previous_time_ = current_time;
   elapsed_ += delta_time;
 
-  CommonUnifs common_unifs = {
-    .resolution =
-      {
-        static_cast<float>(render_size_.width),
-        static_cast<float>(render_size_.height),
-      },
-    .time = ns_to_s(elapsed_),
-    .delta_time = ns_to_s(delta_time),
-  };
-  wgpuQueueWriteBuffer(queue.get(), common_unifs_buf_.get(), 0, &common_unifs, sizeof(CommonUnifs));
+  UniformData common;
+  common.set(
+    UniformMember::kResolution,
+    {static_cast<float>(render_size_.width), static_cast<float>(render_size_.height)}
+  );
+  common.set(UniformMember::kTime, ns_to_s(elapsed_));
+  common.set(UniformMember::kDeltaTime, ns_to_s(delta_time));
+  common.set(UniformMember::kFrameNumber, frame_number_);
+  common.set(UniformMember::kFrameRate, [&delta_time]() -> uint32_t {
+    if (delta_time == 0)
+      return 0;
+    return static_cast<uint32_t>(std::round(1.f / ns_to_s(delta_time)));
+  }());
+
+  wgpuQueueWriteBuffer(
+    queue.get(), common_unifs_buf_.get(), 0, common.bytes().data(), common.bytes().size()
+  );
 
   WGPUCommandEncoderDescriptor cmd_encoder_desc = WGPU_COMMAND_ENCODER_DESCRIPTOR_INIT;
   cmd_encoder_desc.label = gpu::to_string_view("session-cmd-encoder");
@@ -222,6 +233,8 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
 
   if (surface_view)
     surface->present();
+
+  frame_number_ += 1;
 }
 
 }  // namespace mewo::impl
