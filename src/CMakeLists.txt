@@ -3,6 +3,8 @@ add_library(mewo STATIC
   core/gpu/string.hpp
   core/gpu/types.hpp
 
+  core/shader/assembler.cpp
+  core/shader/assembler.hpp
   core/shader/uniform_data.cpp
   core/shader/uniform_data.hpp
   core/shader/uniforms.cpp

@@ -2,7 +2,7 @@
 
 #include "core/gpu/string.hpp"
 #include "core/gpu/types.hpp"
-#include "core/shader/uniforms.hpp"
+#include "core/shader/assembler.hpp"
 #include "impl/session/pass_targets.hpp"
 
 #include <webgpu/webgpu.h>
@@ -34,7 +34,7 @@ PassState::PassState(
   );
 
   WGPUShaderSourceWGSL shader_source = WGPU_SHADER_SOURCE_WGSL_INIT;
-  std::string shader_source_code = generate_wgsl_uniforms() + pass.source();
+  std::string shader_source_code = assemble_pass_source(pass.source());
   shader_source.code = gpu::to_string_view(shader_source_code);
   WGPUShaderModuleDescriptor shader_module_desc = WGPU_SHADER_MODULE_DESCRIPTOR_INIT;
   shader_module_desc.nextInChain = &shader_source.chain;
@@ -48,13 +48,13 @@ PassState::PassState(
   render_pipeline_desc.label = gpu::to_string_view(render_pipeline_label);
   render_pipeline_desc.layout = pipeline_layout.get();
   render_pipeline_desc.vertex.module = shader_module.get();
-  render_pipeline_desc.vertex.entryPoint = gpu::to_string_view("vs_main");
+  render_pipeline_desc.vertex.entryPoint = gpu::to_string_view(kVertexEntryPoint);
 
   WGPUColorTargetState color_target_state = WGPU_COLOR_TARGET_STATE_INIT;
   color_target_state.format = PassTargets::kTexFormat;
   WGPUFragmentState frag_state = WGPU_FRAGMENT_STATE_INIT;
   frag_state.module = shader_module.get();
-  frag_state.entryPoint = gpu::to_string_view("fs_main");
+  frag_state.entryPoint = gpu::to_string_view(kFragmentEntryPoint);
   frag_state.targetCount = 1;
   frag_state.targets = &color_target_state;
   render_pipeline_desc.fragment = &frag_state;
