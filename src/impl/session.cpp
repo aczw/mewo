@@ -76,8 +76,9 @@ std::optional<std::unique_ptr<Session>> Session::create(
   PassIdStateMap pass_states;
   pass_states.reserve(project.passes().size());
 
-  for (const Pass& pass : project.passes())
+  for (const Pass& pass : project.passes()) {
     pass_states.try_emplace(pass.id(), device, common_unifs_bgl, targets.bind_group_layout(), pass);
+  }
 
   // Constructor is private so can't use `std::make_unique`
   return std::unique_ptr<Session>(new Session(
@@ -155,8 +156,7 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
   const std::vector<Pass>& passes = project_.passes();
 
   for (size_t idx = 0; idx < passes.size(); ++idx) {
-    const Pass& pass = passes[idx];
-    auto it = pass_states_.find(pass.id());
+    auto it = pass_states_.find(passes[idx].id());
     assert(it != pass_states_.end());
     const PassState& pass_state = it->second;
 

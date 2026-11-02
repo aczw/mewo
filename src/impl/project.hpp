@@ -4,6 +4,7 @@
 #include "impl/project/pass.hpp"
 
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace mewo::impl {
@@ -14,13 +15,16 @@ class Project : private Pinned {
 
   const std::vector<Pass>& passes() const { return passes_; }
 
+  void add_pass(std::string name, std::string source);
+
  private:
-  explicit Project(std::vector<Pass>&& passes) : passes_(std::move(passes)) {}
+  Project() = default;
 
   /**
    * Single source of truth for the order in which passes operate.
    */
   std::vector<Pass> passes_;
+  Pass::Id next_pass_id_ = 1;
 };
 
 }  // namespace mewo::impl

@@ -2,15 +2,18 @@
 
 #include "impl/project/pass.hpp"
 
+#include <cassert>
+#include <limits>
 #include <memory>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace mewo::impl {
 namespace {
 
-constexpr std::string_view kShaderSource = R"(
+constexpr std::string_view kDefaultPassSource = R"(
 struct Uniforms {
   resolution: vec2f,
   time: f32,
@@ -45,14 +48,56 @@ fn fs_main(@builtin(position) position: vec4f) -> @location(0) vec4f {
 }
 )";
 
+constexpr std::string_view kPassInvertSource = R"(
+struct Uniforms {
+  resolution: vec2f,
+  time: f32,
+  delta_time: f32,
+};
+
+@group(0) @binding(0) var<uniform> mw: Uniforms;
+
+@group(1) @binding(0) var prev_tex: texture_2d<f32>;
+@group(1) @binding(1) var prev_smp: sampler;
+
+// Coordinates for drawing an oversized triangle (acts as a fullscreen quad)
+const kUvCoords = array(
+  vec2f(0.0, 0.0), vec2f(2.0, 0.0), vec2f(0.0, 2.0)
+);
+
+@vertex
+fn vs_main(@builtin(vertex_index) index: u32) -> @builtin(position) vec4f {
+  let uv = kUvCoords[index];
+
+  // Derive clip space positions from UV coords. This gives us
+  // [0] = (-1.0, -1.0), [1] = (3.0, -1.0), [2] = (-1.0, 3.0)
+  let position_xy = (2.0 * uv) - 1.0;
+
+  return vec4f(position_xy, 0.0, 1.0);
+}
+
+@fragment
+fn fs_main(@builtin(position) position: vec4f) -> @location(0) vec4f {
+  let uv = position.xy / mw.resolution;
+  let color = textureSample(prev_tex, prev_smp, uv);
+  return vec4(1.0 - color.xyz, 1.0);
+}
+)";
+
 }  // namespace
 
 std::unique_ptr<Project> Project::create() {
-  std::vector<Pass> passes;
-  passes.push_back(Pass(1, "Pass 1", std::string(kShaderSource)));
-
   // Constructor is private so can't use `std::make_unique`
-  return std::unique_ptr<Project>(new Project(std::move(passes)));
+  std::unique_ptr<Project> project(new Project());
+  project->add_pass("Pass 1", std::string(kDefaultPassSource));
+  project->add_pass("Pass 2", std::string(kPassInvertSource));
+  project->add_pass("Pass 3", std::string(kPassInvertSource));
+  return project;
+}
+
+void Project::add_pass(std::string name, std::string source) {
+  assert(next_pass_id_ != std::numeric_limits<Pass::Id>::max() && "pass IDs exhausted");
+  passes_.emplace_back(next_pass_id_++, std::move(name), std::move(source));
 }
 
 }  // namespace mewo::impl
