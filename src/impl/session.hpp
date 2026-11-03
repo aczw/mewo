@@ -25,6 +25,8 @@ class Session : private Pinned {
     Dimensions render_size
   );
 
+  ~Session();
+
   void set_render_size(Dimensions render_size);
 
   void render(impl::Surface* surface, uint64_t current_time);

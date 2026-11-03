@@ -115,16 +115,21 @@ CompileRequestId Runtime::start_compile_request(
                        void* userdata1,
                        void* userdata2
                      ) noexcept {
+    if (status == WGPUCreatePipelineAsyncStatus_CallbackCancelled)
+      return;
+
+    gpu::RenderPipeline owned_pipeline(pipeline);
     Runtime* runtime = static_cast<Runtime*>(userdata1);
     CompileRequestId request_id = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(userdata2));
 
+    if (runtime->discarded_compile_requests_.erase(request_id) != 0)
+      return;
+
     switch (status) {
       case WGPUCreatePipelineAsyncStatus_Success: {
-        runtime->finished_compile_requests_.try_emplace(request_id, gpu::RenderPipeline(pipeline));
+        runtime->finished_compile_requests_.try_emplace(request_id, std::move(owned_pipeline));
         break;
       }
-
-      case WGPUCreatePipelineAsyncStatus_CallbackCancelled: return;
 
       default: {
         runtime->finished_compile_requests_.try_emplace(
@@ -156,6 +161,13 @@ std::optional<CompileRequestResult> Runtime::take_compile_request(CompileRequest
     return std::nullopt;
 
   return std::optional(std::move(request_nh.mapped()));
+}
+
+void Runtime::discard_compile_request(CompileRequestId request_id) {
+  if (finished_compile_requests_.erase(request_id) != 0)
+    return;
+
+  discarded_compile_requests_.insert(request_id);
 }
 
 void Runtime::request_device_and_queue() {

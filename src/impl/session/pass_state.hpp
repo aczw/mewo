@@ -34,6 +34,8 @@ class PassState {
 
   void poll_compile_request(Runtime& runtime);
 
+  void discard_compile_request(Runtime& runtime);
+
   bool is_stale(const Pass& pass) const;
 
  private:
@@ -48,7 +50,7 @@ class PassState {
 
   /**
    * Revision number of the source code whose pipeline was last attempted
-   * to be built. Empty if never built.
+   * to be built. Empty if never requested.
    */
   std::optional<Pass::Revision> revision_;
   std::optional<CompileRequestId> current_compile_request_id_;

@@ -10,6 +10,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 namespace mewo::impl {
@@ -34,6 +35,8 @@ class Runtime : private Pinned {
 
   std::optional<CompileRequestResult> take_compile_request(CompileRequestId request_id);
 
+  void discard_compile_request(CompileRequestId request_id);
+
  private:
   explicit Runtime(gpu::Instance&& instance)
       : instance_(std::move(instance)), next_compile_request_id_(0) {}
@@ -49,6 +52,7 @@ class Runtime : private Pinned {
 
   CompileRequestId next_compile_request_id_;
   std::unordered_map<CompileRequestId, CompileRequestResult> finished_compile_requests_;
+  std::unordered_set<CompileRequestId> discarded_compile_requests_;
 };
 
 }  // namespace mewo::impl

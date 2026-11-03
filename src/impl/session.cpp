@@ -98,6 +98,11 @@ std::optional<std::unique_ptr<Session>> Session::create(
   ));
 }
 
+Session::~Session() {
+  for (PassState& state : states_)
+    state.discard_compile_request(runtime_);
+}
+
 void Session::set_render_size(Dimensions render_size) {
   if (render_size_ == render_size)
     return;

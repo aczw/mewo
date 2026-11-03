@@ -67,6 +67,9 @@ void PassState::request_render_pipeline_build(Runtime& runtime, const Pass& pass
   frag_state.targets = &color_target_state;
   render_pipeline_desc.fragment = &frag_state;
 
+  // Discard the previous compile request now that we've received a new one
+  discard_compile_request(runtime);
+
   revision_ = pass.revision();
   current_compile_request_id_ = runtime.start_compile_request(render_pipeline_desc);
 }
@@ -86,6 +89,14 @@ void PassState::poll_compile_request(Runtime& runtime) {
     // Error occurred while compiling
   }
 
+  current_compile_request_id_.reset();
+}
+
+void PassState::discard_compile_request(Runtime& runtime) {
+  if (!current_compile_request_id_)
+    return;
+
+  runtime.discard_compile_request(current_compile_request_id_.value());
   current_compile_request_id_.reset();
 }
 
