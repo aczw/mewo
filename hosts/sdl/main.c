@@ -4,7 +4,9 @@
 
 #include <SDL3/SDL_error.h>
 #include <SDL3/SDL_events.h>
+#include <SDL3/SDL_filesystem.h>
 #include <SDL3/SDL_init.h>
+#include <SDL3/SDL_iostream.h>
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL_metal.h>
@@ -22,6 +24,11 @@ typedef struct {
   mewo_surface_t* surface;
   mewo_project_t* project;
   mewo_session_t* session;
+
+  bool watch_mode;
+  const char* shader_path;
+  SDL_Time file_mod_time;
+  mewo_pass_id_t pass_id;
 } state_t;
 
 static bool fill_surface_desc(state_t* state, mewo_surface_descriptor_t* desc) {
@@ -49,10 +56,28 @@ static bool fill_surface_desc(state_t* state, mewo_surface_descriptor_t* desc) {
   return true;
 }
 
-SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
-  (void)argc;
-  (void)argv;
+static SDL_Time get_file_mod_time(const char* file) {
+  SDL_PathInfo info = {0};
 
+  if (!SDL_GetPathInfo(file, &info))
+    return -1;
+
+  return info.modify_time;
+}
+
+static mewo_string_view_t get_shader_source(const char* file) {
+  size_t size = 0;
+  void* source = SDL_LoadFile(file, &size);
+
+  if (!source) {
+    SDL_Log("[error] could not load shader file at %s because: %s", file, SDL_GetError());
+    return (mewo_string_view_t){.data = NULL, .length = MEWO_STRING_VIEW_SENTINEL};
+  }
+
+  return (mewo_string_view_t){.data = source, .length = size};
+}
+
+SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     SDL_Log("[error] failed to initialize SDL: %s", SDL_GetError());
     return SDL_APP_FAILURE;
@@ -91,6 +116,45 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     return SDL_APP_FAILURE;
 
   SDL_Log("[info] created new project");
+
+  state->pass_id = mewo_project_get_pass_id(state->project, 0);
+
+  if (argc == 1) {
+    state->watch_mode = false;
+    state->shader_path = NULL;
+    SDL_Log("[info] watch mode = false");
+  } else if (argc > 2) {
+    SDL_Log("usage: %s <shader.wgsl>", argv[0]);
+    return SDL_APP_FAILURE;
+  } else {
+    state->watch_mode = true;
+    SDL_Log("[info] watch mode = true");
+
+    const char* shader_path = argv[1];
+
+    state->shader_path = shader_path;
+
+    SDL_Time mod_time = get_file_mod_time(shader_path);
+
+    if (mod_time < 0)
+      return SDL_APP_FAILURE;
+
+    state->file_mod_time = mod_time;
+
+    SDL_Log("[info] observing %s...", shader_path);
+
+    mewo_string_view_t source = get_shader_source(shader_path);
+
+    if (source.data == NULL)
+      return SDL_APP_FAILURE;
+
+    if (mewo_project_set_pass_source(state->project, state->pass_id, source) < 0) {
+      SDL_Log("[error] failed to set pass (ID %u) source", state->pass_id);
+      return SDL_APP_FAILURE;
+    }
+
+    SDL_free((void*)source.data);
+  }
 
   mewo_runtime_request_device(state->runtime, state->surface);
 
@@ -151,6 +215,32 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
       }
 
       default: break;
+    }
+  }
+
+  if (state->watch_mode) {
+    SDL_Time mod_time = get_file_mod_time(state->shader_path);
+
+    if (mod_time > 0) {
+      if (state->file_mod_time != mod_time) {
+        mewo_string_view_t new_source = get_shader_source(state->shader_path);
+
+        if (new_source.data != NULL) {
+          SDL_Log("[info] reloading...");
+
+          mewo_result_t res =
+            mewo_project_set_pass_source(state->project, state->pass_id, new_source);
+
+          SDL_free((void*)new_source.data);
+
+          if (res < 0) {
+            SDL_Log("[error] failed to set pass (ID %u) source", state->pass_id);
+            return SDL_APP_FAILURE;
+          }
+
+          state->file_mod_time = mod_time;
+        }
+      }
     }
   }
 
