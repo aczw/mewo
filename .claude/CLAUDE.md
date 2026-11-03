@@ -8,6 +8,7 @@
 ## How we work
 - **Advise, don't edit.** The user writes the code themselves to learn. Give design guidance, explanations, reviews, and small illustrative snippets in chat. Only touch project files outside `.claude/` / `CLAUDE.md` when explicitly asked (the user has done this for mechanical config, e.g. writing `CMakePresets.json` entries).
 - **Reviews:** when the user asks "how am I doing?", read the actual files (don't assume earlier findings were fixed), group findings into "will break", "builds but undermines the intent", and "polish", and explain the *why*. Running read-only checks (configure, build, ctest, `cmake --list-presets`) to verify is fine.
+- **Small steps, used right away.** Each step builds directly on what's already in the codebase, and the next 1–2 steps use what it adds. It doesn't need a visible result in the host. Grow subsystems a slice at a time (only the part the next step needs), never a whole subsystem up front. When suggesting what to do next, say which upcoming step uses it. Why: building for distant steps left the user doing prep work without knowing why.
 
 ## C++ style
 - **Reference: the Google C++ Style Guide, with deliberate deviations.** Existing code reflects the chosen style; don't flag it as a violation. When something new comes up that the guide has a rule for (first enum, first constant, etc.), point out the guide's recommendation so the user can decide, then record the decision here.
@@ -135,10 +136,31 @@ Simplified for v1 (decided in step 3): a linear chain. The richer graph model is
 - **macOS:** Apple Clang (its libc++ lags upstream LLVM on C++23 features). Clone with `--recursive` or run `git submodule update --init`. Dawn's dependency fetch needs Python 3 on both machines.
 
 ## Roadmap
-1. Skeleton: CMake targets, presets, submodules, placeholder sources; `mewo_sdl` prints `mewo_get_version()` and one Catch2 test passes, on both machines.
-2. First vertical slice: `mewo_runtime_t` with async device init reported via the event queue, `mewo_surface_t` from SDL's native window handle (`gpu/` seam), a minimal session drawing one hardcoded shader, and the SDL host on SDL3 main callbacks (`SDL_AppInit`/`SDL_AppIterate`/...).
-3. Real project model: project data model, validation, shader assembly + segment map (in `src/impl/project.*` and related files, GPU-free by convention). Test-driven with the `<cfg>-tests` presets.
-4. Sessions render real projects: single pass, then the multi-pass chain.
+Ordered so each step builds on the previous one and is used by the next one or two (see "Small steps" under How we work). Each step says what uses it. Remove steps once they're done; split the coarse later steps when they come up.
+
+**Editing a pass live**
+1. Per-pass source revision on `Pass` plus `Project::set_pass_source(id, source)`, which bumps it. Unit-tested. → Step 2 compares it.
+2. Each `PassState` records the revision it was built from; `Session::render` rebuilds a pass whose revision changed (synchronously, before recording passes). → Step 3 triggers it.
+3. C API: `mewo_project_set_pass_source`, plus `mewo_project_get_pass_count` / `mewo_project_get_pass_id(project, index)` so the host can name a pass. SDL host hot-reloads one `.wgsl` file (`SDL_GetPathInfo` mtime poll + `SDL_LoadFile`). → Broken shaders now happen constantly, which motivates step 4.
+
+**Surviving broken shaders**
+4. Compile through `wgpuDeviceCreateRenderPipelineAsync`; keep the last good pipeline until the new one succeeds. The in-flight compile is a pinned object (its `this` is the callback userdata) and handles `CallbackCancelled`. → Step 5 reports its failures.
+5. `MEWO_EVENT_PASS_COMPILE_FAILED` (session, pass ID, message); the SDL host logs it. → Step 6 reuses the rebuild and error paths.
+
+**Common source**
+6. Project-level Common source + revision; the assembler includes it; a Common change rebuilds every pass; C API setter; host hot-reloads `common.wgsl`. → Errors in Common now report wrong lines, motivating step 7.
+7. The assembler returns a segment map (which lines came from pass / Common / generated). Unit-tested. → Step 8 uses it.
+8. `wgpuShaderModuleGetCompilationInfo` line/column, translated via the segment map, added to the compile event. Settle the diagnostics struct here (see Open questions), only as much as this event needs.
+
+**Changing the pass list**
+9. `Project::add_pass` returns the ID, `remove_pass` (fails on the last pass), `move_pass`, a structure revision; the default project becomes one pass. Unit-tested. → Step 10 reacts to the structure revision.
+10. Session reconcile creates/drops `PassState`s on structure changes (replaces the `assert` in `render`). → Step 11 drives it.
+11. C API for add/remove/move; the host maps a folder of ordered `.wgsl` files to passes (replaces the hardcoded chain in `Project::create`).
+
+**Later (split when reached)**
+12. Mouse: field-table entries, generated init filling a nested `mw.mouse`, `mewo_session_set_mouse`, host wiring. Independent; can move anywhere after step 3.
+13. Image inputs: host provides bytes, stb decode/upload, bind group 2 with `<name>_tex`/`<name>_smp`, black fallback, input-name validation.
+14. Save/load: JSON format, contract version, structural load errors.
 
 ## Learning list
 Topics the user wants to learn through this project (teach from first principles when they come up):
