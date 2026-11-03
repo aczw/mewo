@@ -2,10 +2,10 @@
 
 #include "core/gpu/string.hpp"
 #include "core/gpu/types.hpp"
+#include "core/pass.hpp"
 #include "core/shader/uniform_data.hpp"
 #include "core/shader/uniforms.hpp"
 #include "impl/common/dimensions.hpp"
-#include "impl/project/pass.hpp"
 #include "impl/session/pass_state.hpp"
 #include "impl/session/pass_targets.hpp"
 #include "impl/session/surface_blit.hpp"

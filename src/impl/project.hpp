@@ -1,7 +1,7 @@
 #pragma once
 
+#include "core/pass.hpp"
 #include "core/pinned.hpp"
-#include "impl/project/pass.hpp"
 
 #include <memory>
 #include <string>

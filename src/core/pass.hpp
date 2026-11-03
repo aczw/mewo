@@ -4,7 +4,7 @@
 #include <string>
 #include <utility>
 
-namespace mewo::impl {
+namespace mewo {
 
 class Pass {
  public:
@@ -37,4 +37,4 @@ class Pass {
   std::string source_;
 };
 
-}  // namespace mewo::impl
+}  // namespace mewo

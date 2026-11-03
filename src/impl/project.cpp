@@ -1,6 +1,6 @@
 #include "impl/project.hpp"
 
-#include "impl/project/pass.hpp"
+#include "core/pass.hpp"
 
 #include <algorithm>
 #include <cassert>

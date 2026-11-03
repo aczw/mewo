@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/gpu/types.hpp"
-#include "impl/project/pass.hpp"
+#include "core/pass.hpp"
 #include "impl/runtime.hpp"
 #include "impl/runtime/compile_request.hpp"
 

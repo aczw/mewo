@@ -1,5 +1,5 @@
+#include "core/pass.hpp"
 #include "impl/project.hpp"
-#include "impl/project/pass.hpp"
 
 #include <mewo/mewo.h>
 
@@ -20,7 +20,7 @@ TEST_CASE("project can be created and destroyed", "[project]") {
 }
 
 TEST_CASE("set_pass_source edits one pass and bumps its revision", "[project]") {
-  using mewo::impl::Pass;
+  using mewo::Pass;
   using mewo::impl::Project;
 
   std::unique_ptr<Project> project = Project::create();

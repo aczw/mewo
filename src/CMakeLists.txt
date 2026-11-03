@@ -14,14 +14,13 @@ add_library(mewo STATIC
 
   core/event.cpp
   core/event.hpp
+  core/pass.cpp
+  core/pass.hpp
   core/pinned.hpp
 
   impl/common/dimensions.hpp
   impl/common/string.cpp
   impl/common/string.hpp
-
-  impl/project/pass.cpp
-  impl/project/pass.hpp
 
   impl/runtime/compile_request.hpp
 

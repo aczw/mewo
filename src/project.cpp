@@ -1,7 +1,7 @@
 #include "impl/project.hpp"
 
+#include "core/pass.hpp"
 #include "impl/common/string.hpp"
-#include "impl/project/pass.hpp"
 #include "mewo/detail/project.h"
 
 #include <mewo/mewo.h>
@@ -12,7 +12,7 @@
 #include <utility>
 #include <vector>
 
-static_assert(std::is_same_v<mewo_pass_id_t, mewo::impl::Pass::Id>);
+static_assert(std::is_same_v<mewo_pass_id_t, mewo::Pass::Id>);
 
 extern "C" {
 mewo_result_t mewo_project_create(mewo_project_t** out) {
@@ -55,7 +55,7 @@ mewo_result_t mewo_project_set_pass_source(
 mewo_pass_id_t mewo_project_get_pass_id(mewo_project_t* project, uint32_t index) {
   assert(project);
 
-  const std::vector<mewo::impl::Pass>& passes = project->impl->passes();
+  const std::vector<mewo::Pass>& passes = project->impl->passes();
 
   if (index >= passes.size())
     return MEWO_PASS_ID_NONE;
