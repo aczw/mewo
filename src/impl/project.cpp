@@ -21,22 +21,12 @@ fn main(frag_coord: vec2f) -> vec4f {
 }
 )";
 
-constexpr std::string_view kPassInvertSource = R"(
-fn main(frag_coord: vec2f) -> vec4f {
-  let uv = frag_coord / mw.resolution;
-  let color = textureSample(prev_tex, prev_smp, uv);
-  return vec4(1.0 - color.xyz, 1.0);
-}
-)";
-
 }  // namespace
 
 std::unique_ptr<Project> Project::create() {
   // Constructor is private so can't use `std::make_unique`
   std::unique_ptr<Project> project(new Project());
   project->add_pass("Pass 1", std::string(kDefaultPassSource));
-  project->add_pass("Pass 2", std::string(kPassInvertSource));
-  project->add_pass("Pass 3", std::string(kPassInvertSource));
   return project;
 }
 

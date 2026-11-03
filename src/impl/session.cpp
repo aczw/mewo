@@ -78,6 +78,7 @@ std::optional<std::unique_ptr<Session>> Session::create(
   PassTargets targets(device, render_size);
 
   std::vector<PassState> states;
+  states.reserve(project.passes().size());
   for (const Pass& pass : project.passes())
     states.emplace_back(device, common_unifs_bgl, targets.bind_group_layout(), pass);
 

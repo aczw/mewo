@@ -1,8 +1,18 @@
 #include "impl/project.hpp"
 
+#include "impl/common/string.hpp"
+#include "impl/project/pass.hpp"
+#include "mewo/detail/project.h"
+
 #include <mewo/mewo.h>
 
 #include <cassert>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+static_assert(std::is_same_v<mewo_pass_id_t, mewo::impl::Pass::Id>);
 
 extern "C" {
 mewo_result_t mewo_project_create(mewo_project_t** out) {
@@ -19,4 +29,37 @@ mewo_result_t mewo_project_create(mewo_project_t** out) {
 }
 
 void mewo_project_destroy(mewo_project_t* project) { delete project; }
+
+mewo_result_t mewo_project_set_pass_source(
+  mewo_project_t* project,
+  mewo_pass_id_t pass_id,
+  mewo_string_view_t source
+) {
+  assert(project);
+
+  try {
+    auto code_opt = mewo::impl::to_string(source);
+
+    if (!code_opt)
+      return MEWO_ERROR_INVALID_ARGUMENT;
+
+    if (!project->impl->set_pass_source(pass_id, std::move(code_opt.value())))
+      return MEWO_ERROR_INVALID_ARGUMENT;
+  } catch (...) {
+    return MEWO_ERROR_INTERNAL;
+  }
+
+  return MEWO_SUCCESS;
+}
+
+mewo_pass_id_t mewo_project_get_pass_id(mewo_project_t* project, uint32_t index) {
+  assert(project);
+
+  const std::vector<mewo::impl::Pass>& passes = project->impl->passes();
+
+  if (index >= passes.size())
+    return MEWO_PASS_ID_NONE;
+
+  return passes[index].id();
+}
 }

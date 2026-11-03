@@ -136,15 +136,13 @@ Simplified for v1 (decided in step 3): a linear chain. The richer graph model is
 - **macOS:** Apple Clang (its libc++ lags upstream LLVM on C++23 features). Clone with `--recursive` or run `git submodule update --init`. Dawn's dependency fetch needs Python 3 on both machines.
 
 ## Roadmap
-Ordered so each step builds on the previous one and is used by the next one or two (see "Small steps" under How we work). Each step says what uses it. Remove steps once they're done; split the coarse later steps when they come up.
+Ordered so each step builds on the previous one and is used by the next one or two (see "Small steps" under How we work). Each step says what uses it. Remove steps once they're done, but don't renumber the rest (other notes refer to steps by number); split the coarse later steps when they come up.
 
 **Editing a pass live**
-1. Per-pass source revision on `Pass` plus `Project::set_pass_source(id, source)`, which bumps it. Unit-tested. → Step 2 compares it.
-2. Each `PassState` records the revision it was built from; `Session::render` rebuilds a pass whose revision changed (synchronously, before recording passes). → Step 3 triggers it.
-3. C API: `mewo_project_set_pass_source`, plus `mewo_project_get_pass_count` / `mewo_project_get_pass_id(project, index)` so the host can name a pass. SDL host hot-reloads one `.wgsl` file (`SDL_GetPathInfo` mtime poll + `SDL_LoadFile`). → Broken shaders now happen constantly, which motivates step 4.
+3. C API: `mewo_project_set_pass_source`, plus `mewo_project_get_pass_id(project, index)` so the host can name a pass (it reloads pass 0). SDL host hot-reloads one `.wgsl` file (`SDL_GetPathInfo` mtime poll + `SDL_LoadFile`). → Broken shaders now happen constantly, which motivates step 4.
 
 **Surviving broken shaders**
-4. Compile through `wgpuDeviceCreateRenderPipelineAsync`; keep the last good pipeline until the new one succeeds. The in-flight compile is a pinned object (its `this` is the callback userdata) and handles `CallbackCancelled`. → Step 5 reports its failures.
+4. Compile through `wgpuDeviceCreateRenderPipelineAsync`; keep the last good pipeline until the new one succeeds. `PassState` must then tell apart the revision in flight, the last *attempted* revision (only this one blocks retrying a broken source every frame), and the revision the current good pipeline came from. The in-flight compile is a pinned object (its `this` is the callback userdata) and handles `CallbackCancelled`. → Step 5 reports its failures.
 5. `MEWO_EVENT_PASS_COMPILE_FAILED` (session, pass ID, message); the SDL host logs it. → Step 6 reuses the rebuild and error paths.
 
 **Common source**
@@ -155,7 +153,7 @@ Ordered so each step builds on the previous one and is used by the next one or t
 **Changing the pass list**
 9. `Project::add_pass` returns the ID, `remove_pass` (fails on the last pass), `move_pass`, a structure revision; the default project becomes one pass. Unit-tested. → Step 10 reacts to the structure revision.
 10. Session reconcile creates/drops `PassState`s on structure changes (replaces the `assert` in `render`). → Step 11 drives it.
-11. C API for add/remove/move; the host maps a folder of ordered `.wgsl` files to passes (replaces the hardcoded chain in `Project::create`).
+11. C API for add/remove/move and `mewo_project_get_pass_count`; the host maps a folder of ordered `.wgsl` files to passes (replaces the hardcoded chain in `Project::create`).
 
 **Later (split when reached)**
 12. Mouse: field-table entries, generated init filling a nested `mw.mouse`, `mewo_session_set_mouse`, host wiring. Independent; can move anywhere after step 3.
@@ -175,5 +173,5 @@ Topics the user wants to learn through this project (teach from first principles
 ## Open questions
 - Frontend order. Suggested: the SDL3 reference host first (it runs on both dev machines), then SwiftUI on macOS. The Windows frontend can wait.
 - Built-in editor vs. external editor + hot reload.
-- Diagnostics design (settle in step 3). Leaning: `expected` for "couldn't produce the value", diagnostics for "value exists but has problems"; one diagnostic struct (severity, stable code, message, pass id, line/col) for validation, compile, and parse issues; diagnostics are pull-based state (`mewo_project_get_diagnostics`, per-pass compile diagnostics on the session) and events only signal changes; project load fails only on structural errors (not JSON, unsupported contract version), semantic problems load as invalid state. Open: string lifetime in the C struct, and where diagnostics from a failed load live (a report handle vs. an out-param buffer). Gotcha: nlohmann's non-throwing `parse` loses the error position; use `json::sax_parse` to get it.
+- Diagnostics design (settle in step 8). Leaning: `expected` for "couldn't produce the value", diagnostics for "value exists but has problems"; one diagnostic struct (severity, stable code, message, pass id, line/col) for validation, compile, and parse issues; diagnostics are pull-based state (`mewo_project_get_diagnostics`, per-pass compile diagnostics on the session) and events only signal changes; project load fails only on structural errors (not JSON, unsupported contract version), semantic problems load as invalid state. Open: string lifetime in the C struct, and where diagnostics from a failed load live (a report handle vs. an out-param buffer). Gotcha: nlohmann's non-throwing `parse` loses the error position; use `json::sax_parse` to get it.
 - Scope beyond Shadertoy (compute, audio, meshes).

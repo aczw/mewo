@@ -17,6 +17,8 @@ add_library(mewo STATIC
   core/pinned.hpp
 
   impl/common/dimensions.hpp
+  impl/common/string.cpp
+  impl/common/string.hpp
 
   impl/project/pass.cpp
   impl/project/pass.hpp
