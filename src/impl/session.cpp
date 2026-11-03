@@ -12,6 +12,7 @@
 
 #include <webgpu/webgpu.h>
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstdint>
@@ -76,12 +77,9 @@ std::optional<std::unique_ptr<Session>> Session::create(
 
   PassTargets targets(device, render_size);
 
-  PassIdStateMap states;
-  states.reserve(project.passes().size());
-
-  for (const Pass& pass : project.passes()) {
-    states.try_emplace(pass.id(), device, common_unifs_bgl, targets.bind_group_layout(), pass);
-  }
+  std::vector<PassState> states;
+  for (const Pass& pass : project.passes())
+    states.emplace_back(device, common_unifs_bgl, targets.bind_group_layout(), pass);
 
   // Constructor is private so can't use `std::make_unique`
   return std::unique_ptr<Session>(new Session(
@@ -113,7 +111,7 @@ Session::Session(
   gpu::Buf&& common_unifs_buf,
   gpu::BindGroupLayout&& common_unifs_bgl,
   gpu::BindGroup&& common_unifs_bg,
-  PassIdStateMap&& states,
+  std::vector<PassState>&& states,
   PassTargets&& targets
 )
     : runtime_(runtime),
@@ -169,9 +167,9 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
   for (size_t idx = 0; idx < passes.size(); ++idx) {
     const Pass& pass = passes[idx];
 
-    auto it = states_.find(pass.id());
-    assert(it != states_.end());
-    PassState& state = it->second;
+    auto state_it = std::ranges::find(states_, pass.id(), &PassState::pass_id);
+    assert(state_it != states_.end());
+    PassState& state = *state_it;
 
     if (state.is_stale(pass))
       state.rebuild_render_pipeline(device, pass);

@@ -13,7 +13,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <unordered_map>
+#include <vector>
 
 namespace mewo::impl {
 
@@ -30,8 +30,6 @@ class Session : private Pinned {
   void render(impl::Surface* surface, uint64_t current_time);
 
  private:
-  using PassIdStateMap = std::unordered_map<Pass::Id, PassState>;
-
   Session(
     impl::Runtime& runtime,
     impl::Project& project,
@@ -39,7 +37,7 @@ class Session : private Pinned {
     gpu::Buf&& common_unifs_buf,
     gpu::BindGroupLayout&& common_unifs_bgl,
     gpu::BindGroup&& common_unifs_bg,
-    PassIdStateMap&& states,
+    std::vector<PassState>&& states,
     PassTargets&& targets
   );
 
@@ -55,7 +53,7 @@ class Session : private Pinned {
   gpu::BindGroupLayout common_unifs_bgl_;
   gpu::BindGroup common_unifs_bg_;
 
-  PassIdStateMap states_;
+  std::vector<PassState> states_;
   PassTargets targets_;
   SurfaceBlit blit_;
 };
