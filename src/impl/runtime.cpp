@@ -3,19 +3,21 @@
 #include "core/event.hpp"
 #include "core/gpu/string.hpp"
 #include "core/gpu/types.hpp"
+#include "impl/runtime/compile_request.hpp"
 
 #include <webgpu/webgpu.h>
 
+#include <cstdint>
+#include <expected>
 #include <optional>
 #include <string_view>
+#include <utility>
 
 namespace mewo::impl {
 namespace {
 
-constexpr std::string_view kUnknownReason = "Unknown reason";
-
 std::string to_string_or_fallback(WGPUStringView view) {
-  return gpu::to_string(view).value_or(std::string(kUnknownReason));
+  return gpu::to_string(view).value_or("invalid message");
 }
 
 }  // namespace
@@ -95,6 +97,65 @@ void Runtime::request_gfx_components(const gpu::Surface* compatible_surface) {
   adapter_cb_info.userdata1 = static_cast<void*>(this);
 
   wgpuInstanceRequestAdapter(instance_.get(), &adapter_opts, adapter_cb_info);
+}
+
+CompileRequestId Runtime::start_compile_request(
+  const WGPURenderPipelineDescriptor& render_pipeline_desc
+) {
+  CompileRequestId request_id = next_compile_request_id_++;
+
+  WGPUCreateRenderPipelineAsyncCallbackInfo cb_info =
+    WGPU_CREATE_RENDER_PIPELINE_ASYNC_CALLBACK_INFO_INIT;
+  cb_info.mode = WGPUCallbackMode_AllowProcessEvents;
+
+  cb_info.callback = [](
+                       WGPUCreatePipelineAsyncStatus status,
+                       WGPURenderPipeline pipeline,
+                       WGPUStringView message,
+                       void* userdata1,
+                       void* userdata2
+                     ) noexcept {
+    Runtime* runtime = static_cast<Runtime*>(userdata1);
+    CompileRequestId request_id = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(userdata2));
+
+    switch (status) {
+      case WGPUCreatePipelineAsyncStatus_Success: {
+        runtime->finished_compile_requests_.try_emplace(request_id, gpu::RenderPipeline(pipeline));
+        break;
+      }
+
+      case WGPUCreatePipelineAsyncStatus_CallbackCancelled: return;
+
+      default: {
+        runtime->finished_compile_requests_.try_emplace(
+          request_id,
+          std::unexpected(
+            CompileRequestError{
+              .message = gpu::to_string(message).value_or("invalid message"),
+              .status = status,
+            }
+          )
+        );
+        break;
+      }
+    }
+  };
+
+  cb_info.userdata1 = static_cast<void*>(this);
+  cb_info.userdata2 = reinterpret_cast<void*>(static_cast<uintptr_t>(request_id));
+
+  wgpuDeviceCreateRenderPipelineAsync(device_.get(), &render_pipeline_desc, cb_info);
+
+  return request_id;
+}
+
+std::optional<CompileRequestResult> Runtime::take_compile_request(CompileRequestId request_id) {
+  auto request_nh = finished_compile_requests_.extract(request_id);
+
+  if (request_nh.empty())
+    return std::nullopt;
+
+  return std::optional(std::move(request_nh.mapped()));
 }
 
 void Runtime::request_device_and_queue() {

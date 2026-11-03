@@ -3,11 +3,13 @@
 #include "core/event.hpp"
 #include "core/gpu/types.hpp"
 #include "core/pinned.hpp"
+#include "impl/runtime/compile_request.hpp"
 
 #include <deque>
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 namespace mewo::impl {
@@ -28,8 +30,13 @@ class Runtime : private Pinned {
   void tick();
   void request_gfx_components(const gpu::Surface* compatible_surface);
 
+  CompileRequestId start_compile_request(const WGPURenderPipelineDescriptor& render_pipeline_desc);
+
+  std::optional<CompileRequestResult> take_compile_request(CompileRequestId request_id);
+
  private:
-  explicit Runtime(gpu::Instance&& instance) : instance_(std::move(instance)) {}
+  explicit Runtime(gpu::Instance&& instance)
+      : instance_(std::move(instance)), next_compile_request_id_(0) {}
 
   void request_device_and_queue();
 
@@ -39,6 +46,9 @@ class Runtime : private Pinned {
   gpu::Adapter adapter_;
   gpu::Device device_;
   gpu::Queue queue_;
+
+  CompileRequestId next_compile_request_id_;
+  std::unordered_map<CompileRequestId, CompileRequestResult> finished_compile_requests_;
 };
 
 }  // namespace mewo::impl

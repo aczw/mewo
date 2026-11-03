@@ -2,6 +2,8 @@
 
 #include "core/gpu/types.hpp"
 #include "impl/project/pass.hpp"
+#include "impl/runtime.hpp"
+#include "impl/runtime/compile_request.hpp"
 
 #include <optional>
 #include <string>
@@ -28,7 +30,9 @@ class PassState {
 
   const std::string& pass_label() const { return pass_label_; }
 
-  void rebuild_render_pipeline(const gpu::Device& device, const Pass& pass);
+  void request_render_pipeline_build(Runtime& runtime, const Pass& pass);
+
+  void poll_compile_request(Runtime& runtime);
 
   bool is_stale(const Pass& pass) const;
 
@@ -43,9 +47,11 @@ class PassState {
   std::string render_pipeline_label_;
 
   /**
-   * Revision number of the source the current pipeline was built from. Empty if never built.
+   * Revision number of the source code whose pipeline was last attempted
+   * to be built. Empty if never built.
    */
   std::optional<Pass::Revision> revision_;
+  std::optional<CompileRequestId> current_compile_request_id_;
 };
 
 }  // namespace mewo::impl

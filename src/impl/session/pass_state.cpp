@@ -3,6 +3,7 @@
 #include "core/gpu/string.hpp"
 #include "core/gpu/types.hpp"
 #include "core/shader/assembler.hpp"
+#include "impl/runtime/compile_request.hpp"
 #include "impl/session/pass_targets.hpp"
 
 #include <webgpu/webgpu.h>
@@ -35,11 +36,9 @@ PassState::PassState(
 
   pipeline_layout_ =
     gpu::PipelineLayout(wgpuDeviceCreatePipelineLayout(device.get(), &pipeline_layout_desc));
-
-  rebuild_render_pipeline(device, pass);
 }
 
-void PassState::rebuild_render_pipeline(const gpu::Device& device, const Pass& pass) {
+void PassState::request_render_pipeline_build(Runtime& runtime, const Pass& pass) {
   assert(pass_id_ == pass.id() && "PassState rebuilt from a different Pass");
 
   WGPUShaderSourceWGSL shader_source = WGPU_SHADER_SOURCE_WGSL_INIT;
@@ -49,7 +48,9 @@ void PassState::rebuild_render_pipeline(const gpu::Device& device, const Pass& p
   shader_module_desc.nextInChain = &shader_source.chain;
   shader_module_desc.label = gpu::to_string_view(shader_module_label_);
 
-  gpu::ShaderModule shader_module(wgpuDeviceCreateShaderModule(device.get(), &shader_module_desc));
+  gpu::ShaderModule shader_module(
+    wgpuDeviceCreateShaderModule(runtime.device().get(), &shader_module_desc)
+  );
 
   WGPURenderPipelineDescriptor render_pipeline_desc = WGPU_RENDER_PIPELINE_DESCRIPTOR_INIT;
   render_pipeline_desc.label = gpu::to_string_view(render_pipeline_label_);
@@ -66,9 +67,26 @@ void PassState::rebuild_render_pipeline(const gpu::Device& device, const Pass& p
   frag_state.targets = &color_target_state;
   render_pipeline_desc.fragment = &frag_state;
 
-  render_pipeline_ =
-    gpu::RenderPipeline(wgpuDeviceCreateRenderPipeline(device.get(), &render_pipeline_desc));
   revision_ = pass.revision();
+  current_compile_request_id_ = runtime.start_compile_request(render_pipeline_desc);
+}
+
+void PassState::poll_compile_request(Runtime& runtime) {
+  if (!current_compile_request_id_)
+    return;
+
+  auto request_opt = runtime.take_compile_request(*current_compile_request_id_);
+
+  if (!request_opt)
+    return;
+
+  if (CompileRequestResult& result = request_opt.value(); result.has_value()) {
+    render_pipeline_ = std::move(result.value());
+  } else {
+    // Error occurred while compiling
+  }
+
+  current_compile_request_id_.reset();
 }
 
 bool PassState::is_stale(const Pass& pass) const {

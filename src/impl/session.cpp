@@ -79,8 +79,11 @@ std::optional<std::unique_ptr<Session>> Session::create(
 
   std::vector<PassState> states;
   states.reserve(project.passes().size());
-  for (const Pass& pass : project.passes())
-    states.emplace_back(device, common_unifs_bgl, targets.bind_group_layout(), pass);
+  for (const Pass& pass : project.passes()) {
+    PassState& inserted_state =
+      states.emplace_back(device, common_unifs_bgl, targets.bind_group_layout(), pass);
+    inserted_state.request_render_pipeline_build(runtime, pass);
+  }
 
   // Constructor is private so can't use `std::make_unique`
   return std::unique_ptr<Session>(new Session(
@@ -156,6 +159,9 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
     queue.get(), common_unifs_buf_.get(), 0, common.bytes().data(), common.bytes().size()
   );
 
+  for (PassState& state : states_)
+    state.poll_compile_request(runtime_);
+
   WGPUCommandEncoderDescriptor cmd_encoder_desc = WGPU_COMMAND_ENCODER_DESCRIPTOR_INIT;
   cmd_encoder_desc.label = gpu::to_string_view("session-cmd-encoder");
 
@@ -173,7 +179,7 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
     PassState& state = *state_it;
 
     if (state.is_stale(pass))
-      state.rebuild_render_pipeline(device, pass);
+      state.request_render_pipeline_build(runtime_, pass);
 
     WGPURenderPassColorAttachment pass_color_attachment = WGPU_RENDER_PASS_COLOR_ATTACHMENT_INIT;
     pass_color_attachment.view = targets_.target_view(idx).get();
@@ -188,12 +194,16 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
       wgpuCommandEncoderBeginRenderPass(cmd_encoder.get(), &pass_desc)
     );
 
-    wgpuRenderPassEncoderSetPipeline(pass_encoder.get(), state.render_pipeline().get());
-    wgpuRenderPassEncoderSetBindGroup(pass_encoder.get(), 0, common_unifs_bg_.get(), 0, nullptr);
-    wgpuRenderPassEncoderSetBindGroup(
-      pass_encoder.get(), 1, targets_.prev_bind_group(idx).get(), 0, nullptr
-    );
-    wgpuRenderPassEncoderDraw(pass_encoder.get(), 3, 1, 0, 0);
+    // Pipeline may not be ready yet because it's compiling asynchronously
+    if (const auto& render_pipeline = state.render_pipeline(); render_pipeline) {
+      wgpuRenderPassEncoderSetPipeline(pass_encoder.get(), render_pipeline.get());
+      wgpuRenderPassEncoderSetBindGroup(pass_encoder.get(), 0, common_unifs_bg_.get(), 0, nullptr);
+      wgpuRenderPassEncoderSetBindGroup(
+        pass_encoder.get(), 1, targets_.prev_bind_group(idx).get(), 0, nullptr
+      );
+      wgpuRenderPassEncoderDraw(pass_encoder.get(), 3, 1, 0, 0);
+    }
+
     wgpuRenderPassEncoderEnd(pass_encoder.get());
   }
 

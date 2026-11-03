@@ -23,6 +23,8 @@ add_library(mewo STATIC
   impl/project/pass.cpp
   impl/project/pass.hpp
 
+  impl/runtime/compile_request.hpp
+
   impl/session/pass_state.cpp
   impl/session/pass_state.hpp
   impl/session/pass_targets.cpp
