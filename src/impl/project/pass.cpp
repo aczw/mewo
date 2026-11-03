@@ -5,7 +5,9 @@
 
 namespace mewo::impl {
 
-Pass::Pass(Id id, std::string name, std::string source)
-    : id_(id), name_(std::move(name)), source_(std::move(source)) {}
+void Pass::set_source(std::string new_source) {
+  revision_ += 1;
+  source_ = std::move(new_source);
+}
 
 }  // namespace mewo::impl

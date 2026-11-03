@@ -17,6 +17,13 @@ class Project : private Pinned {
 
   void add_pass(std::string name, std::string source);
 
+  /**
+   * Replaces the pass' source and bumps its revision, even if the text has not changed.
+   *
+   * @return True if the operation succeeded, false if the pass with the given ID was not found.
+   */
+  bool set_pass_source(Pass::Id pass_id, std::string new_source);
+
  private:
   Project() = default;
 

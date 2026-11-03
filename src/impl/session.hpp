@@ -39,7 +39,7 @@ class Session : private Pinned {
     gpu::Buf&& common_unifs_buf,
     gpu::BindGroupLayout&& common_unifs_bgl,
     gpu::BindGroup&& common_unifs_bg,
-    PassIdStateMap&& pass_states,
+    PassIdStateMap&& states,
     PassTargets&& targets
   );
 
@@ -55,7 +55,7 @@ class Session : private Pinned {
   gpu::BindGroupLayout common_unifs_bgl_;
   gpu::BindGroup common_unifs_bg_;
 
-  PassIdStateMap pass_states_;
+  PassIdStateMap states_;
   PassTargets targets_;
   SurfaceBlit blit_;
 };

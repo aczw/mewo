@@ -2,14 +2,17 @@
 
 #include <cstdint>
 #include <string>
+#include <utility>
 
 namespace mewo::impl {
 
 class Pass {
  public:
   using Id = uint32_t;
+  using Revision = uint64_t;
 
-  Pass(Id id, std::string name, std::string source);
+  Pass(Id id, std::string name, std::string source)
+      : id_(id), revision_(0), name_(std::move(name)), source_(std::move(source)) {}
 
   Pass(Pass&&) = default;
   Pass& operator=(Pass&&) = default;
@@ -18,12 +21,17 @@ class Pass {
 
   Id id() const { return id_; }
 
+  Revision revision() const { return revision_; }
+
   const std::string& name() const { return name_; }
 
   const std::string& source() const { return source_; }
 
+  void set_source(std::string new_source);
+
  private:
   Id id_;
+  Revision revision_;
 
   std::string name_;
   std::string source_;

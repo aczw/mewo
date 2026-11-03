@@ -76,11 +76,11 @@ std::optional<std::unique_ptr<Session>> Session::create(
 
   PassTargets targets(device, render_size);
 
-  PassIdStateMap pass_states;
-  pass_states.reserve(project.passes().size());
+  PassIdStateMap states;
+  states.reserve(project.passes().size());
 
   for (const Pass& pass : project.passes()) {
-    pass_states.try_emplace(pass.id(), device, common_unifs_bgl, targets.bind_group_layout(), pass);
+    states.try_emplace(pass.id(), device, common_unifs_bgl, targets.bind_group_layout(), pass);
   }
 
   // Constructor is private so can't use `std::make_unique`
@@ -91,7 +91,7 @@ std::optional<std::unique_ptr<Session>> Session::create(
     std::move(common_unifs_buf),
     std::move(common_unifs_bgl),
     std::move(common_unifs_bg),
-    std::move(pass_states),
+    std::move(states),
     std::move(targets)
   ));
 }
@@ -113,7 +113,7 @@ Session::Session(
   gpu::Buf&& common_unifs_buf,
   gpu::BindGroupLayout&& common_unifs_bgl,
   gpu::BindGroup&& common_unifs_bg,
-  PassIdStateMap&& pass_states,
+  PassIdStateMap&& states,
   PassTargets&& targets
 )
     : runtime_(runtime),
@@ -124,7 +124,7 @@ Session::Session(
       common_unifs_buf_(std::move(common_unifs_buf)),
       common_unifs_bgl_(std::move(common_unifs_bgl)),
       common_unifs_bg_(std::move(common_unifs_bg)),
-      pass_states_(std::move(pass_states)),
+      states_(std::move(states)),
       targets_(std::move(targets)) {}
 
 void Session::render(impl::Surface* surface, uint64_t current_time) {
@@ -167,16 +167,21 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
   const std::vector<Pass>& passes = project_.passes();
 
   for (size_t idx = 0; idx < passes.size(); ++idx) {
-    auto it = pass_states_.find(passes[idx].id());
-    assert(it != pass_states_.end());
-    const PassState& pass_state = it->second;
+    const Pass& pass = passes[idx];
+
+    auto it = states_.find(pass.id());
+    assert(it != states_.end());
+    PassState& state = it->second;
+
+    if (state.is_stale(pass))
+      state.rebuild_render_pipeline(device, pass);
 
     WGPURenderPassColorAttachment pass_color_attachment = WGPU_RENDER_PASS_COLOR_ATTACHMENT_INIT;
     pass_color_attachment.view = targets_.target_view(idx).get();
     pass_color_attachment.loadOp = WGPULoadOp_Clear;
     pass_color_attachment.storeOp = WGPUStoreOp_Store;
     WGPURenderPassDescriptor pass_desc = WGPU_RENDER_PASS_DESCRIPTOR_INIT;
-    pass_desc.label = gpu::to_string_view(pass_state.label());
+    pass_desc.label = gpu::to_string_view(state.pass_label());
     pass_desc.colorAttachmentCount = 1;
     pass_desc.colorAttachments = &pass_color_attachment;
 
@@ -184,7 +189,7 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
       wgpuCommandEncoderBeginRenderPass(cmd_encoder.get(), &pass_desc)
     );
 
-    wgpuRenderPassEncoderSetPipeline(pass_encoder.get(), pass_state.render_pipeline().get());
+    wgpuRenderPassEncoderSetPipeline(pass_encoder.get(), state.render_pipeline().get());
     wgpuRenderPassEncoderSetBindGroup(pass_encoder.get(), 0, common_unifs_bg_.get(), 0, nullptr);
     wgpuRenderPassEncoderSetBindGroup(
       pass_encoder.get(), 1, targets_.prev_bind_group(idx).get(), 0, nullptr

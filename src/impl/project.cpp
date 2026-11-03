@@ -2,6 +2,7 @@
 
 #include "impl/project/pass.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <limits>
 #include <memory>
@@ -42,6 +43,15 @@ std::unique_ptr<Project> Project::create() {
 void Project::add_pass(std::string name, std::string source) {
   assert(next_pass_id_ != std::numeric_limits<Pass::Id>::max() && "pass IDs exhausted");
   passes_.emplace_back(next_pass_id_++, std::move(name), std::move(source));
+}
+
+bool Project::set_pass_source(Pass::Id pass_id, std::string new_source) {
+  if (auto pass_it = std::ranges::find(passes_, pass_id, &Pass::id); pass_it != passes_.end()) {
+    pass_it->set_source(std::move(new_source));
+    return true;
+  }
+
+  return false;
 }
 
 }  // namespace mewo::impl
