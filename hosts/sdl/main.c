@@ -89,6 +89,24 @@ static bool watched_file_poll(watched_file_t* file, mewo_string_view_t* out) {
   return true;
 }
 
+static const char* severity_name(mewo_diagnostic_severity_t severity) {
+  switch (severity) {
+    case MEWO_DIAGNOSTIC_SEVERITY_ERROR: return "error";
+    case MEWO_DIAGNOSTIC_SEVERITY_WARNING: return "warning";
+    case MEWO_DIAGNOSTIC_SEVERITY_INFO: return "info";
+    default: return "unknown";
+  }
+}
+
+static const char* source_name(mewo_diagnostic_source_t source) {
+  switch (source) {
+    case MEWO_DIAGNOSTIC_SOURCE_PASS: return "pass";
+    case MEWO_DIAGNOSTIC_SOURCE_COMMON: return "common";
+    case MEWO_DIAGNOSTIC_SOURCE_GENERATED: return "generated";
+    default: return "unknown";
+  }
+}
+
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     SDL_Log("[error] failed to initialize SDL: %s", SDL_GetError());
@@ -251,14 +269,44 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
   if (status_revision != state->last_status_revision) {
     uint32_t pass_count = mewo_project_get_pass_count(state->project);
 
-    for (uint32_t idx = 0; idx < pass_count; ++idx) {
-      mewo_pass_id_t pass_id = mewo_project_get_pass_id(state->project, idx);
+    for (uint32_t pass_idx = 0; pass_idx < pass_count; ++pass_idx) {
+      mewo_pass_id_t pass_id = mewo_project_get_pass_id(state->project, pass_idx);
       mewo_pass_compile_status_t pass_compile_status = MEWO_PASS_COMPILE_STATUS_PENDING;
       mewo_session_get_pass_compile_status(state->session, pass_id, &pass_compile_status);
 
       switch (pass_compile_status) {
-        case MEWO_PASS_COMPILE_STATUS_ERROR: {
-          SDL_Log("[error] Pass (ID %u) failed to compile", pass_id);
+        case MEWO_PASS_COMPILE_STATUS_ERROR:
+        case MEWO_PASS_COMPILE_STATUS_SUCCESS: {
+          uint32_t diagnostic_count = 0;
+          mewo_session_get_pass_diagnostic_count(state->session, pass_id, &diagnostic_count);
+
+          for (uint32_t diag_idx = 0; diag_idx < diagnostic_count; ++diag_idx) {
+            mewo_diagnostic_t diagnostic = {0};
+            mewo_session_get_pass_diagnostic(state->session, pass_id, diag_idx, &diagnostic);
+
+            if (diagnostic.source == MEWO_DIAGNOSTIC_SOURCE_NONE) {
+              SDL_Log(
+                "[diag][%s][%s] Pass %u: %.*s",
+                severity_name(diagnostic.severity),
+                source_name(diagnostic.source),
+                pass_id,
+                (int)diagnostic.message.length,
+                diagnostic.message.data
+              );
+            } else {
+              SDL_Log(
+                "[diag][%s][%s] Pass %u (%" SDL_PRIu64 ":%" SDL_PRIu64 "): %.*s",
+                severity_name(diagnostic.severity),
+                source_name(diagnostic.source),
+                pass_id,
+                diagnostic.line,
+                diagnostic.column,
+                (int)diagnostic.message.length,
+                diagnostic.message.data
+              );
+            }
+          }
+
           break;
         }
 
