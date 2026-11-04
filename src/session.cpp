@@ -116,7 +116,7 @@ mewo_result_t mewo_session_get_pass_compile_status(
         };
       },
 
-      [](const mewo::impl::CompileRequestError& variant) {
+      [](const mewo::impl::CompileError& variant) {
         return mewo_pass_compile_status_t{
           .type = MEWO_PASS_COMPILE_STATUS_ERROR,
           .variant = {

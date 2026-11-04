@@ -82,7 +82,7 @@ void PassState::request_render_pipeline_build(
   pass_revision_ = pass.revision();
   common_revision_ = common_revision;
 
-  current_compile_request_id_ = runtime.start_compile_request(render_pipeline_desc);
+  current_compile_request_id_ = runtime.start_compile_request(render_pipeline_desc, shader_module);
   compile_status_ = Pending{};
 }
 
@@ -95,7 +95,7 @@ bool PassState::poll_compile_request(Runtime& runtime) {
   if (!request_opt)
     return false;
 
-  if (CompileRequestResult& result = request_opt.value(); result.has_value()) {
+  if (CompileResult& result = request_opt.value(); result.has_value()) {
     render_pipeline_ = std::move(result.value());
     compile_status_ = Success{};
   } else {

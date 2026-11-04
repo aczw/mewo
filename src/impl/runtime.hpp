@@ -31,9 +31,12 @@ class Runtime : private Pinned {
   void tick();
   void request_gfx_components(const gpu::Surface* compatible_surface);
 
-  CompileRequestId start_compile_request(const WGPURenderPipelineDescriptor& render_pipeline_desc);
+  CompileRequestId start_compile_request(
+    const WGPURenderPipelineDescriptor& render_pipeline_desc,
+    const gpu::ShaderModule& shader_module
+  );
 
-  std::optional<CompileRequestResult> take_compile_request(CompileRequestId request_id);
+  std::optional<CompileResult> take_compile_request(CompileRequestId request_id);
 
   void discard_compile_request(CompileRequestId request_id);
 
@@ -51,7 +54,7 @@ class Runtime : private Pinned {
   gpu::Queue queue_;
 
   CompileRequestId next_compile_request_id_;
-  std::unordered_map<CompileRequestId, CompileRequestResult> finished_compile_requests_;
+  std::unordered_map<CompileRequestId, CompileResult> compile_requests_;
   std::unordered_set<CompileRequestId> discarded_compile_requests_;
 };
 

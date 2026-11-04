@@ -1,4 +1,5 @@
 add_library(mewo STATIC
+  core/compilation/diagnostic.hpp
   core/compilation/line.hpp
 
   core/gpu/string.cpp

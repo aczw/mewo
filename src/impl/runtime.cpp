@@ -100,7 +100,8 @@ void Runtime::request_gfx_components(const gpu::Surface* compatible_surface) {
 }
 
 CompileRequestId Runtime::start_compile_request(
-  const WGPURenderPipelineDescriptor& render_pipeline_desc
+  const WGPURenderPipelineDescriptor& render_pipeline_desc,
+  const gpu::ShaderModule& shader_module
 ) {
   CompileRequestId request_id = next_compile_request_id_++;
 
@@ -127,15 +128,15 @@ CompileRequestId Runtime::start_compile_request(
 
     switch (status) {
       case WGPUCreatePipelineAsyncStatus_Success: {
-        runtime->finished_compile_requests_.try_emplace(request_id, std::move(owned_pipeline));
+        runtime->compile_requests_.try_emplace(request_id, std::move(owned_pipeline));
         break;
       }
 
       default: {
-        runtime->finished_compile_requests_.try_emplace(
+        runtime->compile_requests_.try_emplace(
           request_id,
           std::unexpected(
-            CompileRequestError{
+            CompileError{
               .message = gpu::to_string(message).value_or("invalid message"),
               .status = status,
             }
@@ -154,8 +155,8 @@ CompileRequestId Runtime::start_compile_request(
   return request_id;
 }
 
-std::optional<CompileRequestResult> Runtime::take_compile_request(CompileRequestId request_id) {
-  auto request_nh = finished_compile_requests_.extract(request_id);
+std::optional<CompileResult> Runtime::take_compile_request(CompileRequestId request_id) {
+  auto request_nh = compile_requests_.extract(request_id);
 
   if (request_nh.empty())
     return std::nullopt;
@@ -164,7 +165,7 @@ std::optional<CompileRequestResult> Runtime::take_compile_request(CompileRequest
 }
 
 void Runtime::discard_compile_request(CompileRequestId request_id) {
-  if (finished_compile_requests_.erase(request_id) != 0)
+  if (compile_requests_.erase(request_id) != 0)
     return;
 
   discarded_compile_requests_.insert(request_id);

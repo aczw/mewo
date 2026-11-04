@@ -20,7 +20,7 @@ class PassState {
 
   struct Success {};
 
-  using CompileStatus = std::variant<Pending, Success, CompileRequestError>;
+  using CompileStatus = std::variant<Pending, Success, CompileError>;
 
   PassState(
     const gpu::Device& device,
