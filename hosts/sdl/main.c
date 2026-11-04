@@ -17,6 +17,11 @@
 #include <stdbool.h>
 
 typedef struct {
+  const char* path;
+  SDL_Time mod_time;
+} watched_file_t;
+
+typedef struct {
   SDL_Window* window;
   SDL_MetalView metal_view;
 
@@ -26,9 +31,9 @@ typedef struct {
   mewo_session_t* session;
 
   bool watch_mode;
-  const char* shader_path;
-  SDL_Time file_mod_time;
-  mewo_pass_id_t pass_id;
+  watched_file_t pass_1;
+  mewo_pass_id_t pass_1_id;
+  watched_file_t common;
   uint64_t last_status_revision;
 } state_t;
 
@@ -66,14 +71,22 @@ static SDL_Time get_file_mod_time(const char* file) {
   return info.modify_time;
 }
 
-static mewo_string_view_t get_shader_source(const char* file) {
+static bool watched_file_poll(watched_file_t* file, mewo_string_view_t* out) {
+  SDL_Time mod_time = get_file_mod_time(file->path);
+
+  if (mod_time <= 0 || mod_time == file->mod_time)
+    return false;
+
   size_t size = 0;
-  void* source = SDL_LoadFile(file, &size);
+  void* data = SDL_LoadFile(file->path, &size);
 
-  if (!source)
-    return (mewo_string_view_t){.data = NULL, .length = MEWO_STRING_VIEW_SENTINEL};
+  if (!data)
+    return false;
 
-  return (mewo_string_view_t){.data = source, .length = size};
+  file->mod_time = mod_time;
+  *out = (mewo_string_view_t){.data = data, .length = size};
+
+  return true;
 }
 
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
@@ -116,43 +129,31 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 
   SDL_Log("[info] created new project");
 
-  state->pass_id = mewo_project_get_pass_id(state->project, 0);
+  state->pass_1_id = mewo_project_get_pass_id(state->project, 0);
 
   if (argc == 1) {
     state->watch_mode = false;
-    state->shader_path = NULL;
     SDL_Log("[info] watch mode = false");
   } else if (argc > 3) {
-    SDL_Log("usage: %s <shader.wgsl>", argv[0]);
+    SDL_Log("usage: %s <shader.wgsl> [<common.wgsl>]", argv[0]);
     return SDL_APP_FAILURE;
   } else {
     state->watch_mode = true;
     SDL_Log("[info] watch mode = true");
 
-    const char* shader_path = argv[1];
+    state->pass_1.path = argv[1];
+    state->pass_1.mod_time = 0;
 
-    state->shader_path = shader_path;
+    SDL_Log("[info] observing %s...", state->pass_1.path);
 
-    SDL_Time mod_time = get_file_mod_time(shader_path);
+    if (argc == 3) {
+      state->common.path = argv[2];
+      state->common.mod_time = 0;
 
-    if (mod_time < 0)
-      return SDL_APP_FAILURE;
-
-    state->file_mod_time = mod_time;
-
-    SDL_Log("[info] observing %s...", shader_path);
-
-    mewo_string_view_t source = get_shader_source(shader_path);
-
-    if (source.data == NULL)
-      return SDL_APP_FAILURE;
-
-    if (mewo_project_set_pass_source(state->project, state->pass_id, source) < 0) {
-      SDL_Log("[error] failed to set pass (ID %u) source", state->pass_id);
-      return SDL_APP_FAILURE;
+      SDL_Log("[info] common source: %s", state->common.path);
+    } else {
+      state->common.path = NULL;
     }
-
-    SDL_free((void*)source.data);
   }
 
   mewo_runtime_request_device(state->runtime, state->surface);
@@ -214,61 +215,63 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
     }
   }
 
+  if (state->watch_mode) {
+    mewo_string_view_t pass_1_source = {0};
+    if (watched_file_poll(&state->pass_1, &pass_1_source)) {
+      if (mewo_project_set_pass_source(state->project, state->pass_1_id, pass_1_source) < 0) {
+        SDL_Log("[error] failed to set pass (ID %u) source", state->pass_1_id);
+        SDL_free((void*)pass_1_source.data);
+        return SDL_APP_FAILURE;
+      }
+
+      SDL_Log("[info] reloaded %s", state->pass_1.path);
+      SDL_free((void*)pass_1_source.data);
+    }
+
+    if (state->common.path) {
+      mewo_string_view_t common_source = {0};
+      if (watched_file_poll(&state->common, &common_source)) {
+        if (mewo_project_set_common_source(state->project, common_source) < 0) {
+          SDL_Log("[error] failed to set common source");
+          SDL_free((void*)common_source.data);
+          return SDL_APP_FAILURE;
+        }
+
+        SDL_Log("[info] reloaded %s", state->common.path);
+        SDL_free((void*)common_source.data);
+      }
+    }
+  }
+
   if (!state->session)
     return SDL_APP_CONTINUE;
 
-  if (state->watch_mode) {
-    SDL_Time mod_time = get_file_mod_time(state->shader_path);
+  uint64_t status_revision = mewo_session_get_status_revision(state->session);
 
-    if (mod_time > 0) {
-      if (state->file_mod_time != mod_time) {
-        mewo_string_view_t new_source = get_shader_source(state->shader_path);
+  if (status_revision != state->last_status_revision) {
+    uint32_t pass_count = mewo_project_get_pass_count(state->project);
 
-        if (new_source.data != NULL) {
-          SDL_Log("[info] reloading...");
+    for (uint32_t idx = 0; idx < pass_count; ++idx) {
+      mewo_pass_id_t pass_id = mewo_project_get_pass_id(state->project, idx);
+      mewo_pass_compile_status_t pass_compile_status = {0};
+      mewo_session_get_pass_compile_status(state->session, pass_id, &pass_compile_status);
 
-          mewo_result_t res =
-            mewo_project_set_pass_source(state->project, state->pass_id, new_source);
-
-          SDL_free((void*)new_source.data);
-
-          if (res < 0) {
-            SDL_Log("[error] failed to set pass (ID %u) source", state->pass_id);
-            return SDL_APP_FAILURE;
-          }
-
-          state->file_mod_time = mod_time;
+      switch (pass_compile_status.type) {
+        case MEWO_PASS_COMPILE_STATUS_ERROR: {
+          SDL_Log(
+            "[error] Pass (ID %u) failed to compile: %.*s",
+            pass_id,
+            (int)pass_compile_status.variant.compile_error.message.length,
+            pass_compile_status.variant.compile_error.message.data
+          );
+          break;
         }
+
+        default: break;
       }
     }
 
-    uint64_t status_revision = mewo_session_get_status_revision(state->session);
-
-    if (status_revision != state->last_status_revision) {
-      uint32_t pass_count = mewo_project_get_pass_count(state->project);
-
-      for (uint32_t idx = 0; idx < pass_count; ++idx) {
-        mewo_pass_id_t pass_id = mewo_project_get_pass_id(state->project, idx);
-        mewo_pass_compile_status_t pass_compile_status = {0};
-        mewo_session_get_pass_compile_status(state->session, pass_id, &pass_compile_status);
-
-        switch (pass_compile_status.type) {
-          case MEWO_PASS_COMPILE_STATUS_ERROR: {
-            SDL_Log(
-              "[error] Pass (ID %u) failed to compile: %.*s",
-              pass_id,
-              (int)pass_compile_status.variant.compile_error.message.length,
-              pass_compile_status.variant.compile_error.message.data
-            );
-            break;
-          }
-
-          default: break;
-        }
-      }
-
-      state->last_status_revision = status_revision;
-    }
+    state->last_status_revision = status_revision;
   }
 
   if (mewo_session_render(state->session, state->surface, SDL_GetTicksNS()) < 0)

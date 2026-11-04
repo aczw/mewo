@@ -1,3 +1,5 @@
+// IWYU pragma: private, include <mewo/mewo.h>
+
 #ifndef MEWO_SURFACE_H
 #define MEWO_SURFACE_H
 

@@ -1,3 +1,5 @@
+// IWYU pragma: private, include <mewo/mewo.h>
+
 #ifndef MEWO_SESSION_H
 #define MEWO_SESSION_H
 

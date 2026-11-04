@@ -1,3 +1,5 @@
+// IWYU pragma: private, include <mewo/mewo.h>
+
 #ifndef MEWO_RUNTIME_H
 #define MEWO_RUNTIME_H
 
