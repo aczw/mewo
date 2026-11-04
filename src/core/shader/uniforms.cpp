@@ -19,7 +19,7 @@ std::string_view to_string(WgslType type) {
 
 }  // namespace
 
-std::string generate_wgsl_uniforms() {
+std::string generate_prelude_wgsl_uniforms() {
   std::string source = "struct mw_Uniforms {\n";
 
   for (size_t idx = 0; idx < kUniformFields.size(); ++idx) {

@@ -14,12 +14,10 @@
 namespace mewo::impl {
 namespace {
 
-constexpr std::string_view kDefaultPassSource = R"(
-fn main(frag_coord: vec2f) -> vec4f {
+constexpr std::string_view kDefaultPassSource = R"wgsl(fn main(frag_coord: vec2f) -> vec4f {
   let uv = frag_coord / mw.resolution;
   return vec4f(0.5 + 0.5 * cos(mw.time + uv.xyx + vec3f(0.0, 2.0, 4.0)), 1.0);
-}
-)";
+})wgsl";
 
 }  // namespace
 

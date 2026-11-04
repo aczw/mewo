@@ -36,4 +36,9 @@ add_subdirectory(json EXCLUDE_FROM_ALL SYSTEM)
 #
 if(MEWO_BUILD_TESTS)
   add_subdirectory(Catch2 EXCLUDE_FROM_ALL SYSTEM)
+  set_target_properties(Catch2 Catch2WithMain PROPERTIES
+    CXX_STANDARD 23
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+  )
 endif()

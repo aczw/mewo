@@ -3,6 +3,7 @@
 #include "core/common.hpp"
 #include "core/gpu/types.hpp"
 #include "core/pass.hpp"
+#include "core/shader/assembler.hpp"
 #include "impl/runtime.hpp"
 #include "impl/runtime/compile_request.hpp"
 
@@ -59,16 +60,14 @@ class PassState {
 
  private:
   Pass::Id pass_id_;
+  std::string pass_label_;
 
   gpu::PipelineLayout pipeline_layout_;
   gpu::RenderPipeline render_pipeline_;
 
-  std::string pass_label_;
-  std::string shader_module_label_;
-  std::string render_pipeline_label_;
-
   std::optional<Revision> pass_revision_;
   std::optional<Revision> common_revision_;
+  std::optional<SegmentMap> segments_;
 
   std::optional<CompileRequestId> current_compile_request_id_;
   CompileStatus compile_status_;

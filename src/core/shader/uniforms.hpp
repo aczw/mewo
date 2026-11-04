@@ -102,6 +102,6 @@ static_assert(kUniformsLayout.offsets[std::to_underlying(UniformMember::kFrameRa
 
 static_assert(kUniformsLayout.size == 24);
 
-std::string generate_wgsl_uniforms();
+std::string generate_prelude_wgsl_uniforms();
 
 }  // namespace mewo

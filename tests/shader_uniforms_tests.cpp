@@ -15,5 +15,5 @@ TEST_CASE("uniform WGSL matches the uniform field table", "[shader][uniforms]") 
 @group(0) @binding(0) var<uniform> mw_uniforms: mw_Uniforms;
 )wgsl";
 
-  REQUIRE(mewo::generate_wgsl_uniforms() == expected);
+  REQUIRE(mewo::generate_prelude_wgsl_uniforms() == expected);
 }

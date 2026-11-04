@@ -25,8 +25,6 @@ PassState::PassState(
 )
     : pass_id_(pass.id()),
       pass_label_(std::format("render-pass (ID {})", pass.id())),
-      shader_module_label_(std::format("pass-shader (ID {})", pass.id())),
-      render_pipeline_label_(std::format("pass-render-pipeline (ID {})", pass.id())),
       compile_status_(Pending{}) {
   std::array<WGPUBindGroupLayout, 2> bgl_entries = {common_unifs_bgl.get(), prev_bgl.get()};
 
@@ -48,19 +46,23 @@ void PassState::request_render_pipeline_build(
 ) {
   assert(pass_id_ == pass.id() && "PassState rebuilt from a different Pass");
 
+  AssembledSource assembled_source = assemble_pass_source(pass.source(), common_source);
+  segments_ = assembled_source.segments;
+
   WGPUShaderSourceWGSL shader_source = WGPU_SHADER_SOURCE_WGSL_INIT;
-  std::string shader_source_code = assemble_pass_source(pass.source(), common_source);
-  shader_source.code = gpu::to_string_view(shader_source_code);
+  shader_source.code = gpu::to_string_view(assembled_source.code);
   WGPUShaderModuleDescriptor shader_module_desc = WGPU_SHADER_MODULE_DESCRIPTOR_INIT;
   shader_module_desc.nextInChain = &shader_source.chain;
-  shader_module_desc.label = gpu::to_string_view(shader_module_label_);
+  std::string shader_module_label = std::format("pass-shader (ID {})", pass.id());
+  shader_module_desc.label = gpu::to_string_view(shader_module_label);
 
   gpu::ShaderModule shader_module(
     wgpuDeviceCreateShaderModule(runtime.device().get(), &shader_module_desc)
   );
 
   WGPURenderPipelineDescriptor render_pipeline_desc = WGPU_RENDER_PIPELINE_DESCRIPTOR_INIT;
-  render_pipeline_desc.label = gpu::to_string_view(render_pipeline_label_);
+  std::string render_pipeline_label = std::format("pass-render-pipeline (ID {})", pass.id());
+  render_pipeline_desc.label = gpu::to_string_view(render_pipeline_label);
   render_pipeline_desc.layout = pipeline_layout_.get();
   render_pipeline_desc.vertex.module = shader_module.get();
   render_pipeline_desc.vertex.entryPoint = gpu::to_string_view(kVertexEntryPoint);
