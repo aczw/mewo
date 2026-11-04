@@ -82,7 +82,9 @@ std::optional<std::unique_ptr<Session>> Session::create(
   for (const Pass& pass : project.passes()) {
     PassState& inserted_state =
       states.emplace_back(device, common_unifs_bgl, targets.bind_group_layout(), pass);
-    inserted_state.request_render_pipeline_build(runtime, pass);
+    inserted_state.request_render_pipeline_build(
+      runtime, pass, project.common_source(), project.common_revision()
+    );
   }
 
   // Constructor is private so can't use `std::make_unique`
@@ -136,8 +138,10 @@ Session::Session(
       status_revision_(0) {}
 
 PassState* Session::get_state(Pass::Id pass_id) {
-  if (auto state_it = std::ranges::find(states_, pass_id, &PassState::pass_id);
-      state_it != states_.end()) {
+  if (
+    auto state_it = std::ranges::find(states_, pass_id, &PassState::pass_id);
+    state_it != states_.end()
+  ) {
     return std::to_address(state_it);
   }
 
@@ -193,8 +197,10 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
     PassState* state = get_state(pass.id());
     assert(state);
 
-    if (state->is_stale(pass)) {
-      state->request_render_pipeline_build(runtime_, pass);
+    if (auto common_revision = project_.common_revision(); state->is_stale(pass, common_revision)) {
+      state->request_render_pipeline_build(
+        runtime_, pass, project_.common_source(), common_revision
+      );
       status_revision_ += 1;
     }
 

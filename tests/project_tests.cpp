@@ -82,3 +82,106 @@ TEST_CASE("set_pass_source edits one pass and bumps its revision", "[project]") 
     CHECK(project->passes().back().revision() == other_revision);
   }
 }
+
+TEST_CASE("common source starts empty at revision 0", "[project][common]") {
+  std::unique_ptr<mewo::impl::Project> project = mewo::impl::Project::create();
+
+  CHECK(project->common_source().empty());
+  CHECK(project->common_revision() == 0);
+}
+
+TEST_CASE("set_common_source replaces the source and bumps the revision", "[project][common]") {
+  using mewo::Pass;
+  using mewo::impl::Project;
+
+  std::unique_ptr<Project> project = Project::create();
+  const std::string common = "fn helper() -> f32 { return 1.0; }";
+
+  SECTION("the new source is stored and the revision moves") {
+    const auto revision = project->common_revision();
+    project->set_common_source(common);
+
+    CHECK(project->common_source() == common);
+    CHECK(project->common_revision() == revision + 1);
+  }
+
+  SECTION("every edit bumps the revision, even with identical source") {
+    const auto revision = project->common_revision();
+    project->set_common_source(common);
+    project->set_common_source(common);
+
+    CHECK(project->common_revision() == revision + 2);
+  }
+
+  SECTION("setting it back to empty is an edit too") {
+    project->set_common_source(common);
+    const auto revision = project->common_revision();
+    project->set_common_source("");
+
+    CHECK(project->common_source().empty());
+    CHECK(project->common_revision() == revision + 1);
+  }
+
+  SECTION("passes are untouched") {
+    const Pass::Id id = project->passes().front().id();
+    const std::string source = project->passes().front().source();
+    const auto revision = project->passes().front().revision();
+
+    project->set_common_source(common);
+
+    CHECK(project->passes().front().id() == id);
+    CHECK(project->passes().front().source() == source);
+    CHECK(project->passes().front().revision() == revision);
+  }
+
+  SECTION("pass edits don't move the common revision") {
+    project->set_common_source(common);
+    const auto revision = project->common_revision();
+
+    REQUIRE(project->set_pass_source(project->passes().front().id(), "fn main() {}"));
+
+    CHECK(project->common_source() == common);
+    CHECK(project->common_revision() == revision);
+  }
+}
+
+TEST_CASE("mewo_project_set_common_source converts the C string", "[project][common][c_api]") {
+  mewo_project_t* project = nullptr;
+  REQUIRE(mewo_project_create(&project) == MEWO_SUCCESS);
+
+  const mewo::impl::Project& impl = *project->impl;
+  const auto revision = impl.common_revision();
+
+  SECTION("explicit length uses exactly that many bytes") {
+    const char text[] = "fn a() {}EXTRA";
+    REQUIRE(mewo_project_set_common_source(project, {text, 9}) == MEWO_SUCCESS);
+
+    CHECK(impl.common_source() == "fn a() {}");
+    CHECK(impl.common_revision() == revision + 1);
+  }
+
+  SECTION("sentinel length reads up to the NUL") {
+    REQUIRE(
+      mewo_project_set_common_source(project, {"fn b() {}", MEWO_STRING_VIEW_SENTINEL}) ==
+      MEWO_SUCCESS
+    );
+
+    CHECK(impl.common_source() == "fn b() {}");
+  }
+
+  SECTION("null data with zero length is an empty source") {
+    REQUIRE(mewo_project_set_common_source(project, {nullptr, 0}) == MEWO_SUCCESS);
+
+    CHECK(impl.common_source().empty());
+    CHECK(impl.common_revision() == revision + 1);
+  }
+
+  SECTION("null data with a non-zero length is rejected and changes nothing") {
+    CHECK(mewo_project_set_common_source(project, {nullptr, 4}) == MEWO_ERROR_INVALID_ARGUMENT);
+
+    CHECK(impl.common_source().empty());
+    CHECK(impl.common_revision() == revision);
+  }
+
+  mewo_project_destroy(project);
+}

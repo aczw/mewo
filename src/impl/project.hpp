@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/common.hpp"
 #include "core/pass.hpp"
 #include "core/pinned.hpp"
 
@@ -15,6 +16,10 @@ class Project : private Pinned {
 
   const std::vector<Pass>& passes() const { return passes_; }
 
+  const std::string& common_source() const { return common_source_; }
+
+  Revision common_revision() const { return common_revision_; }
+
   void add_pass(std::string name, std::string source);
 
   /**
@@ -24,6 +29,8 @@ class Project : private Pinned {
    */
   bool set_pass_source(Pass::Id pass_id, std::string new_source);
 
+  void set_common_source(std::string new_source);
+
  private:
   Project() = default;
 
@@ -32,6 +39,9 @@ class Project : private Pinned {
    */
   std::vector<Pass> passes_;
   Pass::Id next_pass_id_ = 1;
+
+  std::string common_source_;
+  Revision common_revision_ = 0;
 };
 
 }  // namespace mewo::impl

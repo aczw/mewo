@@ -12,6 +12,7 @@ add_library(mewo STATIC
 
   core/utility/match.hpp
 
+  core/common.hpp
   core/event.cpp
   core/event.hpp
   core/pass.cpp

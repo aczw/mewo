@@ -38,6 +38,7 @@ mewo_result_t mewo_project_set_pass_source(
 ) {
   assert(project);
 
+  // We're attempting to allocate a new `std::string`
   try {
     auto code_opt = mewo::impl::to_string(source);
 
@@ -46,6 +47,24 @@ mewo_result_t mewo_project_set_pass_source(
 
     if (!project->impl->set_pass_source(pass_id, std::move(code_opt.value())))
       return MEWO_ERROR_INVALID_ARGUMENT;
+  } catch (...) {
+    return MEWO_ERROR_INTERNAL;
+  }
+
+  return MEWO_SUCCESS;
+}
+
+mewo_result_t mewo_project_set_common_source(mewo_project_t* project, mewo_string_view_t source) {
+  assert(project);
+
+  // We're attempting to allocate a new `std::string`
+  try {
+    auto code_opt = mewo::impl::to_string(source);
+
+    if (!code_opt)
+      return MEWO_ERROR_INVALID_ARGUMENT;
+
+    project->impl->set_common_source(std::move(code_opt.value()));
   } catch (...) {
     return MEWO_ERROR_INTERNAL;
   }

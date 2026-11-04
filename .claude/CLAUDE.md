@@ -139,9 +139,6 @@ Simplified for v1 (decided in step 3): a linear chain. The richer graph model is
 ## Roadmap
 Ordered so each step builds on the previous one and is used by the next one or two (see "Small steps" under How we work). Each step says what uses it. Remove steps once they're done, but don't renumber the rest (other notes refer to steps by number); split the coarse later steps when they come up.
 
-**Surviving broken shaders**
-5. Pull-based pass status: `PassState` keeps its latest compile status (ok / failed + message; `poll_compile_request` returns the error and `Session` stores it), `Session` bumps a status revision when any status changes, and C getters `mewo_session_get_status_revision(session)` + `mewo_session_get_pass_status(session, pass_id, &out)` (string valid until the next call/render), plus `mewo_project_get_pass_count(project)` (pulled forward from step 11) so the host can iterate passes. The SDL host logs failures when the revision changes. → Step 6 reuses the rebuild and status paths.
-
 **Common source**
 6. Project-level Common source + revision; the assembler includes it; a Common change rebuilds every pass; C API setter; host hot-reloads `common.wgsl`. → Errors in Common now report wrong lines, motivating step 7.
 7. The assembler returns a segment map (which lines came from pass / Common / generated). Unit-tested. → Step 8 uses it.

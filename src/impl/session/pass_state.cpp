@@ -1,5 +1,6 @@
 #include "impl/session/pass_state.hpp"
 
+#include "core/common.hpp"
 #include "core/gpu/string.hpp"
 #include "core/gpu/types.hpp"
 #include "core/shader/assembler.hpp"
@@ -39,11 +40,16 @@ PassState::PassState(
     gpu::PipelineLayout(wgpuDeviceCreatePipelineLayout(device.get(), &pipeline_layout_desc));
 }
 
-void PassState::request_render_pipeline_build(Runtime& runtime, const Pass& pass) {
+void PassState::request_render_pipeline_build(
+  Runtime& runtime,
+  const Pass& pass,
+  std::string_view common_source,
+  Revision common_revision
+) {
   assert(pass_id_ == pass.id() && "PassState rebuilt from a different Pass");
 
   WGPUShaderSourceWGSL shader_source = WGPU_SHADER_SOURCE_WGSL_INIT;
-  std::string shader_source_code = assemble_pass_source(pass.source());
+  std::string shader_source_code = assemble_pass_source(pass.source(), common_source);
   shader_source.code = gpu::to_string_view(shader_source_code);
   WGPUShaderModuleDescriptor shader_module_desc = WGPU_SHADER_MODULE_DESCRIPTOR_INIT;
   shader_module_desc.nextInChain = &shader_source.chain;
@@ -71,7 +77,9 @@ void PassState::request_render_pipeline_build(Runtime& runtime, const Pass& pass
   // Discard the previous compile request now that we've received a new one
   discard_compile_request(runtime);
 
-  revision_ = pass.revision();
+  pass_revision_ = pass.revision();
+  common_revision_ = common_revision;
+
   current_compile_request_id_ = runtime.start_compile_request(render_pipeline_desc);
   compile_status_ = Pending{};
 }
@@ -104,9 +112,10 @@ void PassState::discard_compile_request(Runtime& runtime) {
   current_compile_request_id_.reset();
 }
 
-bool PassState::is_stale(const Pass& pass) const {
+bool PassState::is_stale(const Pass& pass, Revision common_revision) const {
   assert(pass_id_ == pass.id() && "PassState compared against a different Pass");
-  return revision_ != pass.revision();
+
+  return pass_revision_ != pass.revision() || common_revision_ != common_revision;
 }
 
 }  // namespace mewo::impl

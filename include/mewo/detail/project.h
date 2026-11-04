@@ -30,6 +30,16 @@ mewo_result_t mewo_project_set_pass_source(
 );
 
 /**
+ * Sets the common source code shared by all passes. Bumps the revision even if the text is
+ * unchanged, and causes every pass to recompile on the next render.
+ *
+ * @param project Pointer to the project.
+ * @param source Source code.
+ * @return `MEWO_SUCCESS` if the operation was successful.
+ */
+mewo_result_t mewo_project_set_common_source(mewo_project_t* project, mewo_string_view_t source);
+
+/**
  * @param project Pointer to the project.
  * @return The number of passes currently in this project. A project always has at least
  * 1 pass, so the result is always >= 1.

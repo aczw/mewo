@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/common.hpp"
 #include "core/gpu/types.hpp"
 #include "core/pass.hpp"
 #include "impl/runtime.hpp"
@@ -7,6 +8,7 @@
 
 #include <optional>
 #include <string>
+#include <string_view>
 #include <variant>
 
 namespace mewo::impl {
@@ -39,7 +41,12 @@ class PassState {
 
   const CompileStatus& compile_status() const { return compile_status_; }
 
-  void request_render_pipeline_build(Runtime& runtime, const Pass& pass);
+  void request_render_pipeline_build(
+    Runtime& runtime,
+    const Pass& pass,
+    std::string_view common_source,
+    Revision common_revision
+  );
 
   /**
    * @return True if the status of this pass state has changed, and false otherwise.
@@ -48,7 +55,7 @@ class PassState {
 
   void discard_compile_request(Runtime& runtime);
 
-  bool is_stale(const Pass& pass) const;
+  bool is_stale(const Pass& pass, Revision common_revision) const;
 
  private:
   Pass::Id pass_id_;
@@ -60,13 +67,10 @@ class PassState {
   std::string shader_module_label_;
   std::string render_pipeline_label_;
 
-  /**
-   * Revision number of the source code whose pipeline was last attempted
-   * to be built. Empty if never requested.
-   */
-  std::optional<Pass::Revision> revision_;
-  std::optional<CompileRequestId> current_compile_request_id_;
+  std::optional<Revision> pass_revision_;
+  std::optional<Revision> common_revision_;
 
+  std::optional<CompileRequestId> current_compile_request_id_;
   CompileStatus compile_status_;
 };
 

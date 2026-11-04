@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/common.hpp"
+
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -9,7 +11,6 @@ namespace mewo {
 class Pass {
  public:
   using Id = uint32_t;
-  using Revision = uint64_t;
 
   Pass(Id id, std::string name, std::string source)
       : id_(id), revision_(0), name_(std::move(name)), source_(std::move(source)) {}

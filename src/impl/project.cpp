@@ -44,4 +44,9 @@ bool Project::set_pass_source(Pass::Id pass_id, std::string new_source) {
   return false;
 }
 
+void Project::set_common_source(std::string new_source) {
+  common_source_ = std::move(new_source);
+  common_revision_ += 1;
+}
+
 }  // namespace mewo::impl

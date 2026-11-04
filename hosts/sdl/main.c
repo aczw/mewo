@@ -122,7 +122,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     state->watch_mode = false;
     state->shader_path = NULL;
     SDL_Log("[info] watch mode = false");
-  } else if (argc > 2) {
+  } else if (argc > 3) {
     SDL_Log("usage: %s <shader.wgsl>", argv[0]);
     return SDL_APP_FAILURE;
   } else {

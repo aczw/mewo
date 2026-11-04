@@ -37,8 +37,10 @@ fn mw_fs_main(@builtin(position) position: vec4f) -> @location(0) vec4f {
 
 }  // namespace
 
-std::string assemble_pass_source(std::string_view pass_source) {
+std::string assemble_pass_source(std::string_view pass_source, std::string_view common_source) {
   std::string code(pass_source);
+  code += '\n';
+  code += common_source;
   code += '\n';
   code += generate_wgsl_uniforms();
   code += kPreludeSource;
