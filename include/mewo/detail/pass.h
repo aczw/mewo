@@ -21,23 +21,15 @@ extern "C" {
  */
 typedef uint32_t mewo_pass_id_t;
 
-typedef enum mewo_pass_compile_status_type {
+/**
+ * The outcome of a pass' most recent compile. Details are stored in diagnostics
+ * available via `mewo_session_get_pass_diagnostic()`.
+ */
+typedef enum mewo_pass_compile_status {
   MEWO_PASS_COMPILE_STATUS_PENDING = 0,
   MEWO_PASS_COMPILE_STATUS_SUCCESS,
   MEWO_PASS_COMPILE_STATUS_ERROR,
   MEWO_PASS_COMPILE_STATUS_FORCE_INT = MEWO_ENUM_FORCE_INT,
-} mewo_pass_compile_status_type_t;
-
-typedef struct mewo_pass_compile_status {
-  mewo_pass_compile_status_type_t type;
-
-  union {
-    struct {
-      mewo_string_view_t message;
-    } compile_error;
-
-    uint8_t reserved[32];
-  } variant;
 } mewo_pass_compile_status_t;
 
 #ifdef __cplusplus

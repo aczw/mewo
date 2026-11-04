@@ -85,8 +85,8 @@ mewo_result_t mewo_session_render(
 uint64_t mewo_session_get_status_revision(mewo_session_t* session);
 
 /**
- * If the pass status is currently an error, `mewo_pass_compile_status_t` will contain a
- * message that is valid until the next call to `mewo_session_render()`.
+ * Gets whether the pass's most recent compile is still pending, succeeded, or failed. For the
+ * reasons behind a failure (and warnings on success), use `mewo_session_get_pass_diagnostic()`.
  *
  * @param session Pointer to the session.
  * @param pass_id The ID of the pass to check the status for.

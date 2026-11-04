@@ -253,17 +253,12 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 
     for (uint32_t idx = 0; idx < pass_count; ++idx) {
       mewo_pass_id_t pass_id = mewo_project_get_pass_id(state->project, idx);
-      mewo_pass_compile_status_t pass_compile_status = {0};
+      mewo_pass_compile_status_t pass_compile_status = MEWO_PASS_COMPILE_STATUS_PENDING;
       mewo_session_get_pass_compile_status(state->session, pass_id, &pass_compile_status);
 
-      switch (pass_compile_status.type) {
+      switch (pass_compile_status) {
         case MEWO_PASS_COMPILE_STATUS_ERROR: {
-          SDL_Log(
-            "[error] Pass (ID %u) failed to compile: %.*s",
-            pass_id,
-            (int)pass_compile_status.variant.compile_error.message.length,
-            pass_compile_status.variant.compile_error.message.data
-          );
+          SDL_Log("[error] Pass (ID %u) failed to compile", pass_id);
           break;
         }
 

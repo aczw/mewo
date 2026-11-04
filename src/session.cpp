@@ -1,19 +1,20 @@
 #include "impl/session.hpp"
 
+#include "core/compilation/diagnostic.hpp"
+#include "core/compilation/line.hpp"
 #include "core/utility/match.hpp"
 #include "impl/common/dimensions.hpp"
 #include "impl/common/string.hpp"
-#include "impl/runtime/compile_request.hpp"
 #include "impl/session/pass_state.hpp"
 
 #include <mewo/mewo.h>
 
-#include <webgpu/webgpu.h>
-
 #include <cassert>
+#include <cstdint>
 #include <optional>
 #include <utility>
 #include <variant>
+#include <vector>
 
 extern "C" {
 mewo_result_t mewo_session_create(
@@ -102,30 +103,82 @@ mewo_result_t mewo_session_get_pass_compile_status(
 
   *out = std::visit(
     mewo::Match{
-      [](const mewo::impl::PassState::Pending&) {
-        return mewo_pass_compile_status_t{
-          .type = MEWO_PASS_COMPILE_STATUS_PENDING,
-          .variant = {},
-        };
-      },
-
-      [](const mewo::impl::PassState::Success&) {
-        return mewo_pass_compile_status_t{
-          .type = MEWO_PASS_COMPILE_STATUS_SUCCESS,
-          .variant = {},
-        };
-      },
-
-      [](const mewo::impl::PassState::Error&) {
-        return mewo_pass_compile_status_t{
-          // TODO
-          .type = MEWO_PASS_COMPILE_STATUS_ERROR,
-          .variant = {},
-        };
-      }
+      [](const mewo::impl::PassState::Pending&) { return MEWO_PASS_COMPILE_STATUS_PENDING; },
+      [](const mewo::impl::PassState::Success&) { return MEWO_PASS_COMPILE_STATUS_SUCCESS; },
+      [](const mewo::impl::PassState::Error&) { return MEWO_PASS_COMPILE_STATUS_ERROR; },
     },
     state->compile_status()
   );
+
+  return MEWO_SUCCESS;
+}
+
+mewo_result_t mewo_session_get_pass_diagnostic_count(
+  mewo_session_t* session,
+  mewo_pass_id_t pass_id,
+  uint32_t* out
+) {
+  assert(session);
+  assert(out);
+
+  const mewo::impl::PassState* state = session->impl->get_state(pass_id);
+
+  if (!state)
+    return MEWO_ERROR_INVALID_ARGUMENT;
+
+  *out = static_cast<uint32_t>(state->diagnostics().size());
+  return MEWO_SUCCESS;
+}
+
+mewo_result_t mewo_session_get_pass_diagnostic(
+  mewo_session_t* session,
+  mewo_pass_id_t pass_id,
+  uint32_t index,
+  mewo_diagnostic_t* out
+) {
+  assert(session);
+  assert(out);
+
+  const mewo::impl::PassState* state = session->impl->get_state(pass_id);
+
+  if (!state)
+    return MEWO_ERROR_INVALID_ARGUMENT;
+
+  const std::vector<mewo::Diagnostic>& diagnostics = state->diagnostics();
+
+  if (index >= diagnostics.size())
+    return MEWO_ERROR_INVALID_ARGUMENT;
+
+  const mewo::Diagnostic& diagnostic = diagnostics[index];
+
+  *out = mewo_diagnostic_t{
+    .severity =
+      [&diagnostic] {
+        switch (diagnostic.severity) {
+          case mewo::Severity::kError: return MEWO_DIAGNOSTIC_SEVERITY_ERROR;
+          case mewo::Severity::kWarning: return MEWO_DIAGNOSTIC_SEVERITY_WARNING;
+          case mewo::Severity::kInfo: return MEWO_DIAGNOSTIC_SEVERITY_INFO;
+        }
+        std::unreachable();
+      }(),
+    .message = mewo::impl::to_string_view(diagnostic.message),
+    .source = MEWO_DIAGNOSTIC_SOURCE_NONE,
+    .line = 0,
+    .column = 0,
+  };
+
+  if (diagnostic.location) {
+    out->source = [&diagnostic] {
+      switch (diagnostic.location->line.kind) {
+        case mewo::RelativeLine::Kind::kPass: return MEWO_DIAGNOSTIC_SOURCE_PASS;
+        case mewo::RelativeLine::Kind::kCommon: return MEWO_DIAGNOSTIC_SOURCE_COMMON;
+        case mewo::RelativeLine::Kind::kPrelude: return MEWO_DIAGNOSTIC_SOURCE_GENERATED;
+      }
+      std::unreachable();
+    }();
+    out->line = diagnostic.location->line.number;
+    out->column = diagnostic.location->column;
+  }
 
   return MEWO_SUCCESS;
 }
