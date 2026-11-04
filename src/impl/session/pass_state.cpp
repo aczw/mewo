@@ -50,6 +50,7 @@ void PassState::request_render_pipeline_build(
 ) {
   assert(pass_id_ == pass.id() && "PassState rebuilt from a different Pass");
 
+  const gpu::Device& device = runtime.device();
   AssembledSource assembled_source = assemble_pass_source(pass.source(), common_source);
 
   WGPUShaderSourceWGSL shader_source = WGPU_SHADER_SOURCE_WGSL_INIT;
@@ -59,9 +60,17 @@ void PassState::request_render_pipeline_build(
   std::string shader_module_label = std::format("pass-shader (ID {})", pass.id());
   shader_module_desc.label = gpu::to_string_view(shader_module_label);
 
-  gpu::ShaderModule shader_module(
-    wgpuDeviceCreateShaderModule(runtime.device().get(), &shader_module_desc)
-  );
+  // Validation errors are handled by diagnostics so filter them out here
+  wgpuDevicePushErrorScope(device.get(), WGPUErrorFilter_Validation);
+
+  gpu::ShaderModule shader_module(wgpuDeviceCreateShaderModule(device.get(), &shader_module_desc));
+
+  WGPUPopErrorScopeCallbackInfo pop_cb_info = WGPU_POP_ERROR_SCOPE_CALLBACK_INFO_INIT;
+  pop_cb_info.mode = WGPUCallbackMode_AllowProcessEvents;
+  // Swallow validation errors in the callback
+  pop_cb_info.callback =
+    [](WGPUPopErrorScopeStatus, WGPUErrorType, WGPUStringView, void*, void*) noexcept {};
+  wgpuDevicePopErrorScope(device.get(), pop_cb_info);
 
   WGPURenderPipelineDescriptor render_pipeline_desc = WGPU_RENDER_PIPELINE_DESCRIPTOR_INIT;
   std::string render_pipeline_label = std::format("pass-render-pipeline (ID {})", pass.id());

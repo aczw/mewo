@@ -286,9 +286,8 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 
             if (diagnostic.source == MEWO_DIAGNOSTIC_SOURCE_NONE) {
               SDL_Log(
-                "[diag][%s][%s] Pass %u: %.*s",
+                "[diag][%s] Pass %u: %.*s",
                 severity_name(diagnostic.severity),
-                source_name(diagnostic.source),
                 pass_id,
                 (int)diagnostic.message.length,
                 diagnostic.message.data
