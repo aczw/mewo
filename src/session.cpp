@@ -116,17 +116,11 @@ mewo_result_t mewo_session_get_pass_compile_status(
         };
       },
 
-      [](const mewo::impl::CompileError& variant) {
+      [](const mewo::impl::PassState::Error&) {
         return mewo_pass_compile_status_t{
+          // TODO
           .type = MEWO_PASS_COMPILE_STATUS_ERROR,
-          .variant = {
-            .compile_error = {
-              .type = variant.status == WGPUCreatePipelineAsyncStatus_ValidationError
-                        ? MEWO_PASS_COMPILE_ERROR_VALIDATION
-                        : MEWO_PASS_COMPILE_ERROR_INTERNAL,
-              .message = mewo::impl::to_string_view(variant.message),
-            }
-          },
+          .variant = {},
         };
       }
     },

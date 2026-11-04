@@ -3,6 +3,7 @@
 #include "core/compilation/diagnostic.hpp"
 #include "core/compilation/line.hpp"
 #include "core/gpu/types.hpp"
+#include "core/shader/assembler.hpp"
 
 #include <cstdint>
 #include <expected>
@@ -18,9 +19,7 @@ namespace mewo::impl {
  */
 using CompileRequestId = uint32_t;
 
-/**
- * Maps to WebGPU's `WGPUCompilationMessage` type.
- */
+/** Maps to WebGPU's `WGPUCompilationMessage` type. */
 struct CompileMessage {
   Severity severity;
   std::string message;
@@ -28,29 +27,19 @@ struct CompileMessage {
   LineCol line_column;
 };
 
-struct CompileError {
+struct PipelineError {
   std::string message;
-  WGPUCreatePipelineAsyncStatus status;
 };
 
-using CompileResult = std::expected<gpu::RenderPipeline, CompileError>;
+using PipelineResult = std::expected<gpu::RenderPipeline, PipelineError>;
 
 struct CompileEntry {
-  /**
-   * Filled in by `wgpuDeviceCreateRenderPipelineAsync`.
-   */
-  std::optional<CompileResult> result;
-
-  /**
-   * Filled in by `wgpuShaderModuleGetCompilationInfo`.
-   */
+  /** Filled in by `wgpuDeviceCreateRenderPipelineAsync`. */
+  std::optional<PipelineResult> pipeline_result;
+  /** Filled in by `wgpuShaderModuleGetCompilationInfo`. */
   std::optional<std::vector<CompileMessage>> messages;
-
-  /**
-   * A compilation can be discarded if it was in-flight when the user changed the shader.
-   * In this case, this compilation has become outdated and won't be used anymore.
-   */
-  bool discarded;
+  /** This compilation's mapping of line number ranges to the shader's respective sections. */
+  SegmentMap segments;
 };
 
 }  // namespace mewo::impl

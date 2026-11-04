@@ -3,6 +3,7 @@
 #include "core/event.hpp"
 #include "core/gpu/types.hpp"
 #include "core/pinned.hpp"
+#include "core/shader/assembler.hpp"
 #include "impl/runtime/compile_request.hpp"
 
 #include <deque>
@@ -10,7 +11,6 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 
 namespace mewo::impl {
@@ -33,12 +33,13 @@ class Runtime : private Pinned {
 
   CompileRequestId start_compile_request(
     const WGPURenderPipelineDescriptor& render_pipeline_desc,
-    const gpu::ShaderModule& shader_module
+    const gpu::ShaderModule& shader_module,
+    SegmentMap segments
   );
 
-  std::optional<CompileResult> take_compile_request(CompileRequestId request_id);
+  std::optional<CompileEntry> take_compile_request(CompileRequestId request_id);
 
-  void discard_compile_request(CompileRequestId request_id);
+  void discard_compile_request(CompileRequestId request_id) { compile_requests_.erase(request_id); }
 
  private:
   explicit Runtime(gpu::Instance&& instance)
@@ -54,8 +55,7 @@ class Runtime : private Pinned {
   gpu::Queue queue_;
 
   CompileRequestId next_compile_request_id_;
-  std::unordered_map<CompileRequestId, CompileResult> compile_requests_;
-  std::unordered_set<CompileRequestId> discarded_compile_requests_;
+  std::unordered_map<CompileRequestId, CompileEntry> compile_requests_;
 };
 
 }  // namespace mewo::impl

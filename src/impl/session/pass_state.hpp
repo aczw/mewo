@@ -1,9 +1,9 @@
 #pragma once
 
 #include "core/common.hpp"
+#include "core/compilation/diagnostic.hpp"
 #include "core/gpu/types.hpp"
 #include "core/pass.hpp"
-#include "core/shader/assembler.hpp"
 #include "impl/runtime.hpp"
 #include "impl/runtime/compile_request.hpp"
 
@@ -11,6 +11,7 @@
 #include <string>
 #include <string_view>
 #include <variant>
+#include <vector>
 
 namespace mewo::impl {
 
@@ -18,9 +19,15 @@ class PassState {
  public:
   struct Pending {};
 
-  struct Success {};
+  struct Success {
+    std::vector<Diagnostic> diagnostics;
+  };
 
-  using CompileStatus = std::variant<Pending, Success, CompileError>;
+  struct Error {
+    std::vector<Diagnostic> diagnostics;
+  };
+
+  using CompileStatus = std::variant<Pending, Success, Error>;
 
   PassState(
     const gpu::Device& device,
@@ -67,7 +74,6 @@ class PassState {
 
   std::optional<Revision> pass_revision_;
   std::optional<Revision> common_revision_;
-  std::optional<SegmentMap> segments_;
 
   std::optional<CompileRequestId> current_compile_request_id_;
   CompileStatus compile_status_;

@@ -1,5 +1,6 @@
 #include "impl/runtime.hpp"
 
+#include "core/compilation/diagnostic.hpp"
 #include "core/event.hpp"
 #include "core/gpu/string.hpp"
 #include "core/gpu/types.hpp"
@@ -12,6 +13,7 @@
 #include <optional>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 namespace mewo::impl {
 namespace {
@@ -101,74 +103,123 @@ void Runtime::request_gfx_components(const gpu::Surface* compatible_surface) {
 
 CompileRequestId Runtime::start_compile_request(
   const WGPURenderPipelineDescriptor& render_pipeline_desc,
-  const gpu::ShaderModule& shader_module
+  const gpu::ShaderModule& shader_module,
+  SegmentMap segments
 ) {
   CompileRequestId request_id = next_compile_request_id_++;
+  compile_requests_.try_emplace(request_id, CompileEntry{.segments = segments});
 
-  WGPUCreateRenderPipelineAsyncCallbackInfo cb_info =
-    WGPU_CREATE_RENDER_PIPELINE_ASYNC_CALLBACK_INFO_INIT;
-  cb_info.mode = WGPUCallbackMode_AllowProcessEvents;
+  {
+    WGPUCreateRenderPipelineAsyncCallbackInfo cb_info =
+      WGPU_CREATE_RENDER_PIPELINE_ASYNC_CALLBACK_INFO_INIT;
+    cb_info.mode = WGPUCallbackMode_AllowProcessEvents;
+    cb_info.callback = [](
+                         WGPUCreatePipelineAsyncStatus status,
+                         WGPURenderPipeline pipeline,
+                         WGPUStringView message,
+                         void* userdata1,
+                         void* userdata2
+                       ) noexcept {
+      if (status == WGPUCreatePipelineAsyncStatus_CallbackCancelled)
+        return;
 
-  cb_info.callback = [](
-                       WGPUCreatePipelineAsyncStatus status,
-                       WGPURenderPipeline pipeline,
-                       WGPUStringView message,
-                       void* userdata1,
-                       void* userdata2
-                     ) noexcept {
-    if (status == WGPUCreatePipelineAsyncStatus_CallbackCancelled)
-      return;
+      gpu::RenderPipeline owned_pipeline(pipeline);
 
-    gpu::RenderPipeline owned_pipeline(pipeline);
-    Runtime* runtime = static_cast<Runtime*>(userdata1);
-    CompileRequestId request_id = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(userdata2));
+      Runtime* runtime = static_cast<Runtime*>(userdata1);
+      CompileRequestId request_id = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(userdata2));
 
-    if (runtime->discarded_compile_requests_.erase(request_id) != 0)
-      return;
+      auto request_it = runtime->compile_requests_.find(request_id);
+      if (request_it == runtime->compile_requests_.end())
+        return;
 
-    switch (status) {
-      case WGPUCreatePipelineAsyncStatus_Success: {
-        runtime->compile_requests_.try_emplace(request_id, std::move(owned_pipeline));
-        break;
+      CompileEntry& entry = request_it->second;
+
+      switch (status) {
+        case WGPUCreatePipelineAsyncStatus_Success: {
+          entry.pipeline_result = std::move(owned_pipeline);
+          break;
+        }
+
+        default: {
+          entry.pipeline_result = std::unexpected(
+            PipelineError{.message = gpu::to_string(message).value_or("invalid message")}
+          );
+          break;
+        }
       }
+    };
+    cb_info.userdata1 = static_cast<void*>(this);
+    cb_info.userdata2 = reinterpret_cast<void*>(static_cast<uintptr_t>(request_id));
 
-      default: {
-        runtime->compile_requests_.try_emplace(
-          request_id,
-          std::unexpected(
-            CompileError{
-              .message = gpu::to_string(message).value_or("invalid message"),
-              .status = status,
-            }
-          )
+    wgpuDeviceCreateRenderPipelineAsync(device_.get(), &render_pipeline_desc, cb_info);
+  }
+
+  {
+    WGPUCompilationInfoCallbackInfo cb_info = WGPU_COMPILATION_INFO_CALLBACK_INFO_INIT;
+    cb_info.mode = WGPUCallbackMode_AllowProcessEvents;
+    cb_info.callback = [](
+                         WGPUCompilationInfoRequestStatus status,
+                         struct WGPUCompilationInfo const* compilationInfo,
+                         void* userdata1,
+                         void* userdata2
+                       ) noexcept {
+      if (status == WGPUCompilationInfoRequestStatus_CallbackCancelled)
+        return;
+
+      Runtime* runtime = static_cast<Runtime*>(userdata1);
+      CompileRequestId request_id = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(userdata2));
+
+      auto request_it = runtime->compile_requests_.find(request_id);
+      if (request_it == runtime->compile_requests_.end())
+        return;
+
+      CompileEntry& entry = request_it->second;
+      std::vector<CompileMessage> messages;
+
+      for (size_t idx = 0; idx < compilationInfo->messageCount; ++idx) {
+        const WGPUCompilationMessage& message = compilationInfo->messages[idx];
+
+        messages.push_back(
+          CompileMessage{
+            .severity = [&message]() -> Severity {
+              switch (message.type) {
+                case WGPUCompilationMessageType_Error: return Severity::kError;
+                case WGPUCompilationMessageType_Warning: return Severity::kWarning;
+                case WGPUCompilationMessageType_Info: return Severity::kInfo;
+                default: return Severity::kError;
+              }
+            }(),
+            .message = gpu::to_string(message.message).value_or("invalid message"),
+            .line_number = message.lineNum,
+            .line_column = message.linePos,
+          }
         );
-        break;
       }
-    }
-  };
 
-  cb_info.userdata1 = static_cast<void*>(this);
-  cb_info.userdata2 = reinterpret_cast<void*>(static_cast<uintptr_t>(request_id));
+      entry.messages = std::move(messages);
+    };
+    cb_info.userdata1 = static_cast<void*>(this);
+    cb_info.userdata2 = reinterpret_cast<void*>(static_cast<uintptr_t>(request_id));
 
-  wgpuDeviceCreateRenderPipelineAsync(device_.get(), &render_pipeline_desc, cb_info);
+    wgpuShaderModuleGetCompilationInfo(shader_module.get(), cb_info);
+  }
 
   return request_id;
 }
 
-std::optional<CompileResult> Runtime::take_compile_request(CompileRequestId request_id) {
-  auto request_nh = compile_requests_.extract(request_id);
+std::optional<CompileEntry> Runtime::take_compile_request(CompileRequestId request_id) {
+  auto request_it = compile_requests_.find(request_id);
 
-  if (request_nh.empty())
+  if (request_it == compile_requests_.end())
     return std::nullopt;
 
+  CompileEntry& entry = request_it->second;
+
+  if (!entry.pipeline_result || !entry.messages)
+    return std::nullopt;
+
+  auto request_nh = compile_requests_.extract(request_it);
   return std::optional(std::move(request_nh.mapped()));
-}
-
-void Runtime::discard_compile_request(CompileRequestId request_id) {
-  if (compile_requests_.erase(request_id) != 0)
-    return;
-
-  discarded_compile_requests_.insert(request_id);
 }
 
 void Runtime::request_device_and_queue() {

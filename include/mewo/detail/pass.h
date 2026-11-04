@@ -28,18 +28,11 @@ typedef enum mewo_pass_compile_status_type {
   MEWO_PASS_COMPILE_STATUS_FORCE_INT = MEWO_ENUM_FORCE_INT,
 } mewo_pass_compile_status_type_t;
 
-typedef enum mewo_pass_compile_error {
-  MEWO_PASS_COMPILE_ERROR_VALIDATION = 0,
-  MEWO_PASS_COMPILE_ERROR_INTERNAL,
-  MEWO_PASS_COMPILE_ERROR_FORCE_INT = MEWO_ENUM_FORCE_INT,
-} mewo_pass_compile_error_t;
-
 typedef struct mewo_pass_compile_status {
   mewo_pass_compile_status_type_t type;
 
   union {
     struct {
-      mewo_pass_compile_error_t type;
       mewo_string_view_t message;
     } compile_error;
 

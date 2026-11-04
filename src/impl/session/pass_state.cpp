@@ -1,6 +1,7 @@
 #include "impl/session/pass_state.hpp"
 
 #include "core/common.hpp"
+#include "core/compilation/diagnostic.hpp"
 #include "core/gpu/string.hpp"
 #include "core/gpu/types.hpp"
 #include "core/shader/assembler.hpp"
@@ -9,11 +10,14 @@
 
 #include <webgpu/webgpu.h>
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <format>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 namespace mewo::impl {
 
@@ -47,7 +51,6 @@ void PassState::request_render_pipeline_build(
   assert(pass_id_ == pass.id() && "PassState rebuilt from a different Pass");
 
   AssembledSource assembled_source = assemble_pass_source(pass.source(), common_source);
-  segments_ = assembled_source.segments;
 
   WGPUShaderSourceWGSL shader_source = WGPU_SHADER_SOURCE_WGSL_INIT;
   shader_source.code = gpu::to_string_view(assembled_source.code);
@@ -82,7 +85,8 @@ void PassState::request_render_pipeline_build(
   pass_revision_ = pass.revision();
   common_revision_ = common_revision;
 
-  current_compile_request_id_ = runtime.start_compile_request(render_pipeline_desc, shader_module);
+  current_compile_request_id_ =
+    runtime.start_compile_request(render_pipeline_desc, shader_module, assembled_source.segments);
   compile_status_ = Pending{};
 }
 
@@ -95,11 +99,43 @@ bool PassState::poll_compile_request(Runtime& runtime) {
   if (!request_opt)
     return false;
 
-  if (CompileResult& result = request_opt.value(); result.has_value()) {
-    render_pipeline_ = std::move(result.value());
-    compile_status_ = Success{};
+  std::vector<CompileMessage>& messages = request_opt->messages.value();
+  const SegmentMap& segments = request_opt->segments;
+  std::vector<Diagnostic> diagnostics;
+  diagnostics.reserve(messages.size());
+  for (CompileMessage& message : messages) {
+    auto relative_line_opt = segments.find_relative_line(message.line_number);
+
+    diagnostics.push_back(
+      Diagnostic{
+        .severity = message.severity,
+        .message = std::move(message.message),
+        .location = relative_line_opt.transform([&message](const auto& relative_line) {
+          return Diagnostic::Location{.line = relative_line, .column = message.line_column};
+        }),
+      }
+    );
+  }
+
+  if (
+    PipelineResult& pipeline_result = request_opt->pipeline_result.value();
+    pipeline_result.has_value()
+  ) {
+    render_pipeline_ = std::move(pipeline_result.value());
+    compile_status_ = Success{.diagnostics = std::move(diagnostics)};
   } else {
-    compile_status_ = std::move(result.error());
+    if (std::ranges::none_of(diagnostics, [](const auto& diagnostic) {
+          return diagnostic.severity == Severity::kError;
+        })) {
+      diagnostics.push_back(
+        Diagnostic{
+          .severity = Severity::kError,
+          .message = std::move(pipeline_result.error().message),
+        }
+      );
+    }
+
+    compile_status_ = Error{.diagnostics = std::move(diagnostics)};
   }
 
   current_compile_request_id_.reset();
