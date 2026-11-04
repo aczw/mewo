@@ -133,12 +133,12 @@ Session::Session(
       common_unifs_bg_(std::move(common_unifs_bg)),
       states_(std::move(states)),
       targets_(std::move(targets)),
-      state_status_revision_(0) {}
+      status_revision_(0) {}
 
 PassState* Session::get_state(Pass::Id pass_id) {
   if (auto state_it = std::ranges::find(states_, pass_id, &PassState::pass_id);
       state_it != states_.end()) {
-    return state_it.base();
+    return std::to_address(state_it);
   }
 
   return nullptr;
@@ -176,7 +176,7 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
 
   for (PassState& state : states_) {
     if (state.poll_compile_request(runtime_))
-      state_status_revision_ += 1;
+      status_revision_ += 1;
   }
 
   WGPUCommandEncoderDescriptor cmd_encoder_desc = WGPU_COMMAND_ENCODER_DESCRIPTOR_INIT;
@@ -193,8 +193,10 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
     PassState* state = get_state(pass.id());
     assert(state);
 
-    if (state->is_stale(pass))
+    if (state->is_stale(pass)) {
       state->request_render_pipeline_build(runtime_, pass);
+      status_revision_ += 1;
+    }
 
     WGPURenderPassColorAttachment pass_color_attachment = WGPU_RENDER_PASS_COLOR_ATTACHMENT_INIT;
     pass_color_attachment.view = targets_.target_view(idx).get();

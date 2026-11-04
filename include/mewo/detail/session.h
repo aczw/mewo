@@ -73,18 +73,27 @@ mewo_result_t mewo_session_render(
 );
 
 /**
- * For each pass that has updated since the previous render, the revision count is incremented.
+ * Each time the compile status of a pass changes, the revision count is incremented.
  * Use this to check if the status of any pass in the session has changed.
  *
  * @param session Pointer to the session.
- * @return The current revision count of the session. Updated between renders.
+ * @return The current revision count of the session.
  */
-uint64_t mewo_session_get_revision(mewo_session_t* session);
+uint64_t mewo_session_get_status_revision(mewo_session_t* session);
 
-mewo_result_t mewo_session_get_pass_status(
+/**
+ * If the pass status is currently an error, `mewo_pass_compile_status_t` will contain a
+ * message that is valid until the next call to `mewo_session_render()`.
+ *
+ * @param session Pointer to the session.
+ * @param pass_id The ID of the pass to check the status for.
+ * @param out Out parameter where the pass status will be stored.
+ * @return `MEWO_ERROR_INVALID_ARGUMENT` if the pass ID is invalid, and `MEWO_SUCCESS` otherwise.
+ */
+mewo_result_t mewo_session_get_pass_compile_status(
   mewo_session_t* session,
   mewo_pass_id_t pass_id,
-  mewo_pass_status_t* out
+  mewo_pass_compile_status_t* out
 );
 
 #ifdef __cplusplus

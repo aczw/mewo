@@ -12,7 +12,7 @@ namespace mewo::impl {
 
 class PassState {
  public:
-  enum class Status { kRunning, kCompiling, kCompileSuccess, kCompileError };
+  enum class CompileStatus { kPending, kSuccess, kError };
 
   PassState(
     const gpu::Device& device,
@@ -32,7 +32,7 @@ class PassState {
 
   const std::string& pass_label() const { return pass_label_; }
 
-  Status status() const { return status_; }
+  CompileStatus status() const { return status_; }
 
   const CompileRequestError* current_compile_error() const {
     if (current_compile_error_)
@@ -69,7 +69,7 @@ class PassState {
   std::optional<Pass::Revision> revision_;
   std::optional<CompileRequestId> current_compile_request_id_;
 
-  Status status_;
+  CompileStatus status_;
   std::optional<CompileRequestError> current_compile_error_;
 };
 

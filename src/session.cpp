@@ -4,7 +4,6 @@
 #include "impl/common/string.hpp"
 #include "impl/runtime/compile_request.hpp"
 #include "impl/session/pass_state.hpp"
-#include "mewo/detail/pass.h"
 
 #include <mewo/mewo.h>
 
@@ -81,15 +80,15 @@ mewo_result_t mewo_session_render(
   return MEWO_SUCCESS;
 }
 
-uint64_t mewo_session_get_revision(mewo_session_t* session) {
+uint64_t mewo_session_get_status_revision(mewo_session_t* session) {
   assert(session);
-  return session->impl->state_status_revision();
+  return session->impl->status_revision();
 }
 
-mewo_result_t mewo_session_get_pass_status(
+mewo_result_t mewo_session_get_pass_compile_status(
   mewo_session_t* session,
   mewo_pass_id_t pass_id,
-  mewo_pass_status_t* out
+  mewo_pass_compile_status_t* out
 ) {
   assert(session);
   assert(out);
@@ -99,23 +98,20 @@ mewo_result_t mewo_session_get_pass_status(
   if (!state)
     return MEWO_ERROR_INVALID_ARGUMENT;
 
-  *out = [&state]() noexcept -> mewo_pass_status_t {
+  *out = [&state]() noexcept -> mewo_pass_compile_status_t {
     switch (state->status()) {
-      case mewo::impl::PassState::Status::kRunning:
-        return {.type = MEWO_PASS_STATUS_RUNNING, .variant = {}};
+      case mewo::impl::PassState::CompileStatus::kPending:
+        return {.type = MEWO_PASS_COMPILE_STATUS_PENDING, .variant = {}};
 
-      case mewo::impl::PassState::Status::kCompiling:
-        return {.type = MEWO_PASS_STATUS_COMPILING, .variant = {}};
+      case mewo::impl::PassState::CompileStatus::kSuccess:
+        return {.type = MEWO_PASS_COMPILE_STATUS_SUCCESS, .variant = {}};
 
-      case mewo::impl::PassState::Status::kCompileSuccess:
-        return {.type = MEWO_PASS_STATUS_COMPILE_SUCCESS, .variant = {}};
-
-      case mewo::impl::PassState::Status::kCompileError: {
+      case mewo::impl::PassState::CompileStatus::kError: {
         const mewo::impl::CompileRequestError* error = state->current_compile_error();
         assert(error);
 
         return {
-          .type = MEWO_PASS_STATUS_COMPILE_ERROR,
+          .type = MEWO_PASS_COMPILE_STATUS_ERROR,
           .variant = {
             .compile_error = {
               .type = error->status == WGPUCreatePipelineAsyncStatus_ValidationError

@@ -57,7 +57,7 @@ uint32_t mewo_project_get_pass_count(mewo_project_t* project) {
   assert(project);
 
   size_t pass_count = project->impl->passes().size();
-  assert(pass_count < std::numeric_limits<uint32_t>::max());
+  assert(pass_count <= std::numeric_limits<uint32_t>::max());
 
   // Cast to match the type of `index` in `mewo_project_get_pass_id()`
   return static_cast<uint32_t>(pass_count);

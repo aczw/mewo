@@ -29,7 +29,7 @@ class Session : private Pinned {
 
   void set_render_size(Dimensions render_size);
 
-  uint64_t state_status_revision() const { return state_status_revision_; }
+  uint64_t status_revision() const { return status_revision_; }
 
   PassState* get_state(Pass::Id pass_id);
 
@@ -62,7 +62,7 @@ class Session : private Pinned {
   std::vector<PassState> states_;
   PassTargets targets_;
   SurfaceBlit blit_;
-  uint64_t state_status_revision_;
+  uint64_t status_revision_;
 };
 
 }  // namespace mewo::impl
