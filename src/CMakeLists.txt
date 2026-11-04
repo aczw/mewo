@@ -1,4 +1,6 @@
 add_library(mewo STATIC
+  core/compilation/line.hpp
+
   core/gpu/string.cpp
   core/gpu/string.hpp
   core/gpu/types.hpp

@@ -1,6 +1,7 @@
 #pragma once
 
-#include <cstdint>
+#include "core/compilation/line.hpp"
+
 #include <optional>
 #include <string>
 #include <string_view>
@@ -10,15 +11,8 @@ namespace mewo {
 inline constexpr std::string_view kVertexEntryPoint = "mw_vs_main";
 inline constexpr std::string_view kFragmentEntryPoint = "mw_fs_main";
 
-struct RelativeLine {
-  enum class Kind { kPass, kCommon, kPrelude };
-
-  Kind kind;
-  uint32_t number;
-};
-
 /**
- * Line numbers are counted as starting at 1, and segments contain at least 1 line.
+ * Segments contain at least 1 line.
  */
 class SegmentMap {
  public:
@@ -26,8 +20,8 @@ class SegmentMap {
    * `start` and `end` are inclusive.
    */
   struct Range {
-    uint32_t start;
-    uint32_t end;
+    LineNum start;
+    LineNum end;
   };
 
   SegmentMap(Range pass, Range common, Range prelude);
@@ -41,7 +35,7 @@ class SegmentMap {
    * Line numbers start at 1. If 0 or an out-of-bounds line number is passed,
    * we return `std::nullopt`.
    */
-  std::optional<RelativeLine> find_relative_line(uint32_t line_number) const;
+  std::optional<RelativeLine> find_relative_line(LineNum line_number) const;
 
  private:
   Range pass_;

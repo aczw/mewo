@@ -1,15 +1,16 @@
+#include "core/compilation/line.hpp"
 #include "core/shader/assembler.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>
-#include <cstdint>
 #include <optional>
 #include <string>
 #include <string_view>
 
 namespace {
 
+using mewo::LineNum;
 using Kind = mewo::RelativeLine::Kind;
 
 constexpr std::string_view kPassSource = "fn main(frag_coord: vec2f) -> vec4f { return helper(); }";
@@ -19,15 +20,15 @@ constexpr std::string_view kCommonSource = "fn helper() -> vec4f { return vec4f(
  * Every segment ends in a '\n' added by the assembler, so an assembled module has exactly as many
  * lines as newlines.
  */
-uint32_t count_lines(std::string_view code) {
-  return static_cast<uint32_t>(std::ranges::count(code, '\n'));
+LineNum count_lines(std::string_view code) {
+  return static_cast<LineNum>(std::ranges::count(code, '\n'));
 }
 
 /**
  * Returns the text of 1-based line `number` in `text`, without its '\n'. Empty if out of range.
  */
-std::string_view line_at(std::string_view text, uint32_t number) {
-  for (uint32_t line = 1; line < number; ++line) {
+std::string_view line_at(std::string_view text, LineNum number) {
+  for (LineNum line = 1; line < number; ++line) {
     const auto newline = text.find('\n');
     if (newline == std::string_view::npos) {
       return {};
@@ -40,7 +41,7 @@ std::string_view line_at(std::string_view text, uint32_t number) {
 /**
  * Checks that module line `line` maps to line `number` of the segment `kind`.
  */
-void check_line(const mewo::SegmentMap& segments, uint32_t line, Kind kind, uint32_t number) {
+void check_line(const mewo::SegmentMap& segments, LineNum line, Kind kind, LineNum number) {
   INFO("module line " << line);
   const std::optional<mewo::RelativeLine> relative = segments.find_relative_line(line);
   REQUIRE(relative.has_value());
@@ -111,9 +112,12 @@ TEST_CASE("segment map: Common lines are 1-based within Common", "[shader][assem
   check_line(assembled.segments, 5, Kind::kCommon, 2);
 }
 
-TEST_CASE("segment map: prelude lines are 1-based within the prelude", "[shader][assembler][segments]") {
+TEST_CASE(
+  "segment map: prelude lines are 1-based within the prelude",
+  "[shader][assembler][segments]"
+) {
   const auto assembled = mewo::assemble_pass_source("a\nb\nc", "x\ny");
-  const uint32_t last_line = count_lines(assembled.code);
+  const LineNum last_line = count_lines(assembled.code);
 
   check_line(assembled.segments, 6, Kind::kPrelude, 1);
   check_line(assembled.segments, last_line, Kind::kPrelude, last_line - 5);
@@ -135,9 +139,12 @@ TEST_CASE("segment map: empty Common is a single line", "[shader][assembler][seg
   check_line(assembled.segments, 3, Kind::kPrelude, 1);
 }
 
-TEST_CASE("segment map: lines outside the module have no position", "[shader][assembler][segments]") {
+TEST_CASE(
+  "segment map: lines outside the module have no position",
+  "[shader][assembler][segments]"
+) {
   const auto assembled = mewo::assemble_pass_source(kPassSource, kCommonSource);
-  const uint32_t line_count = count_lines(assembled.code);
+  const LineNum line_count = count_lines(assembled.code);
 
   // WebGPU reports line 0 for compilation messages without a source position.
   CHECK_FALSE(assembled.segments.find_relative_line(0).has_value());
@@ -151,13 +158,13 @@ TEST_CASE("segment map: every line maps back to its source text", "[shader][asse
   constexpr std::string_view kCommon = "\nfn helper() -> vec4f {\n  return vec4f(1.0);\n}";
 
   const auto assembled = mewo::assemble_pass_source(kPass, kCommon);
-  const uint32_t line_count = count_lines(assembled.code);
+  const LineNum line_count = count_lines(assembled.code);
 
   bool saw_pass = false;
   bool saw_common = false;
   bool saw_prelude = false;
 
-  for (uint32_t line = 1; line <= line_count; ++line) {
+  for (LineNum line = 1; line <= line_count; ++line) {
     INFO("module line " << line);
     const auto relative = assembled.segments.find_relative_line(line);
     REQUIRE(relative.has_value());

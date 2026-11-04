@@ -24,7 +24,7 @@
   - File-local definitions in a `.cpp` (helpers, constants) go in an unnamed namespace inside `namespace mewo`, closed with `}  // namespace`; not `static`.
   - Constants shared from a header are `inline constexpr` (not needed in a `.cpp`'s unnamed namespace). String constants are `constexpr std::string_view kName = "..."`; convert with `std::string(kName)` where a `std::string` is needed, never via `.data()` (a `string_view` isn't guaranteed NUL-terminated).
   - WebGPU structs are always initialized with their `WGPU_*_INIT` macro, then fields assigned (e.g. `WGPUDeviceDescriptor desc = WGPU_DEVICE_DESCRIPTOR_INIT;`), never `= {}` or bare designated initializers. Remind the user in reviews when one is missed. Why: the macros set non-zero defaults correctly and keep up with header changes.
-  - Abbreviations: existing ones are accepted as-is (e.g. `Tex`, `TexView`, `Caps`, `Raii`, `Cmd` (`CmdEncoder`, `CmdBuf`), `desc`, `cb_info`, `idx` / `Idx` (`pass_idx`, `kIdxA`)); don't question them. When the user introduces a *new* abbreviation, point it out (Google's guide says not to abbreviate by deleting letters inside words) so they can decide.
+  - Abbreviations: existing ones are accepted as-is (e.g. `Tex`, `TexView`, `Caps`, `Raii`, `Cmd` (`CmdEncoder`, `CmdBuf`), `desc`, `cb_info`, `idx` / `Idx` (`pass_idx`, `kIdxA`), `LineNum` (matches WebGPU's `lineNum`)); don't question them. When the user introduces a *new* abbreviation, point it out (Google's guide says not to abbreviate by deleting letters inside words) so they can decide.
   - Single-statement `if`/loop bodies may omit braces (used throughout the codebase); don't flag them.
   - Doc comments use `/** ... */` (Javadoc style, matching `mewo.h`), not `//`.
   - Every namespace closes with `}  // namespace name` (`.clang-format`: `FixNamespaceComments`, `ShortNamespaceLines: 0`).
@@ -148,8 +148,10 @@ Simplified for v1 (decided in step 3): a linear chain. The richer graph model is
 Ordered so each step builds on the previous one and is used by the next one or two (see "Small steps" under How we work). Each step says what uses it. Remove steps once they're done, but don't renumber the rest (other notes refer to steps by number); split the coarse later steps when they come up.
 
 **Common source**
-7. The assembler returns a segment map (which lines came from pass / Common / generated). Unit-tested. → Step 8 uses it.
-8. `wgpuShaderModuleGetCompilationInfo` line/column, translated via the segment map, added to the pass status. Settle the diagnostics struct here (see Open questions), only as much as the pass status needs.
+8. Compile diagnostics (the segment map from `assemble_pass_source` / `SegmentMap::find_relative_line` is in place). Settle the diagnostics struct here (see Open questions), only as much as the pass status needs.
+   - 8a. Core: `wgpuShaderModuleGetCompilationInfo` messages travel with the compile result through the runtime's ticket inbox; `PassState` translates each `lineNum` through the segment map when the result arrives and stores a list of internal diagnostics (severity, message, `std::optional<RelativeLine>`, column). → 8b exposes them.
+   - 8b. C API: per-pass diagnostic count + get-by-index on the session, strings valid until the next `mewo_session_render` (same rule as the compile status message). → 8c uses it.
+   - 8c. SDL host prints diagnostics on status-revision change, e.g. `pass 2, Common 3:5: error: ...`.
 
 **Changing the pass list**
 9. `Project::add_pass` returns the ID, `remove_pass` (fails on the last pass), `move_pass`, a structure revision; the default project becomes one pass. Unit-tested. → Step 10 reacts to the structure revision.

@@ -1,10 +1,10 @@
 #include "core/shader/assembler.hpp"
 
+#include "core/compilation/line.hpp"
 #include "core/shader/uniforms.hpp"
 
 #include <algorithm>
 #include <cassert>
-#include <cstdint>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -48,7 +48,7 @@ SegmentMap::SegmentMap(Range pass, Range common, Range prelude)
   assert(prelude_.start == common_.end + 1);
 }
 
-std::optional<RelativeLine> SegmentMap::find_relative_line(uint32_t line_number) const {
+std::optional<RelativeLine> SegmentMap::find_relative_line(LineNum line_number) const {
   if (line_number == 0 || line_number > prelude_.end)
     return std::nullopt;
 
@@ -69,13 +69,13 @@ std::optional<RelativeLine> SegmentMap::find_relative_line(uint32_t line_number)
 
 AssembledSource assemble_pass_source(std::string_view pass_source, std::string_view common_source) {
   std::string code;
-  uint32_t next_line = 1;
+  LineNum next_line = 1;
 
   auto append_segment = [&code, &next_line](std::string_view piece) -> SegmentMap::Range {
-    uint32_t start = next_line;
+    LineNum start = next_line;
     code += piece;
     code += '\n';
-    next_line += static_cast<uint32_t>(std::ranges::count(piece, '\n') + 1);
+    next_line += static_cast<LineNum>(std::ranges::count(piece, '\n') + 1);
 
     return {.start = start, .end = next_line - 1};
   };
