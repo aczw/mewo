@@ -29,6 +29,7 @@ typedef struct {
   const char* shader_path;
   SDL_Time file_mod_time;
   mewo_pass_id_t pass_id;
+  uint64_t last_status_revision;
 } state_t;
 
 static bool fill_surface_desc(state_t* state, mewo_surface_descriptor_t* desc) {
@@ -69,10 +70,8 @@ static mewo_string_view_t get_shader_source(const char* file) {
   size_t size = 0;
   void* source = SDL_LoadFile(file, &size);
 
-  if (!source) {
-    SDL_Log("[error] could not load shader file at %s because: %s", file, SDL_GetError());
+  if (!source)
     return (mewo_string_view_t){.data = NULL, .length = MEWO_STRING_VIEW_SENTINEL};
-  }
 
   return (mewo_string_view_t){.data = source, .length = size};
 }
@@ -186,6 +185,8 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
         if (mewo_session_create(state->runtime, &session_desc, &state->session) < 0)
           return SDL_APP_FAILURE;
 
+        state->last_status_revision = 0;
+
         SDL_Log("[info] created new session");
 
         break;
@@ -205,18 +206,16 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 
       case MEWO_EVENT_GPU_ERROR: {
         mewo_string_view_t* message = &event.variant.gpu_error.message;
-        SDL_Log(
-          "[error] GPU error (%i): %.*s",
-          event.variant.gpu_error.type,
-          (int)message->length,
-          message->data
-        );
+        SDL_Log("[error] GPU error: %.*s", (int)message->length, message->data);
         break;
       }
 
       default: break;
     }
   }
+
+  if (!state->session)
+    return SDL_APP_CONTINUE;
 
   if (state->watch_mode) {
     SDL_Time mod_time = get_file_mod_time(state->shader_path);
@@ -242,12 +241,38 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
         }
       }
     }
+
+    uint64_t status_revision = mewo_session_get_status_revision(state->session);
+
+    if (status_revision != state->last_status_revision) {
+      uint32_t pass_count = mewo_project_get_pass_count(state->project);
+
+      for (uint32_t idx = 0; idx < pass_count; ++idx) {
+        mewo_pass_id_t pass_id = mewo_project_get_pass_id(state->project, idx);
+        mewo_pass_compile_status_t pass_compile_status = {0};
+        mewo_session_get_pass_compile_status(state->session, pass_id, &pass_compile_status);
+
+        switch (pass_compile_status.type) {
+          case MEWO_PASS_COMPILE_STATUS_ERROR: {
+            SDL_Log(
+              "[error] Pass (ID %u) failed to compile: %.*s",
+              pass_id,
+              (int)pass_compile_status.variant.compile_error.message.length,
+              pass_compile_status.variant.compile_error.message.data
+            );
+            break;
+          }
+
+          default: break;
+        }
+      }
+
+      state->last_status_revision = status_revision;
+    }
   }
 
-  if (state->session) {
-    if (mewo_session_render(state->session, state->surface, SDL_GetTicksNS()) < 0)
-      return SDL_APP_FAILURE;
-  }
+  if (mewo_session_render(state->session, state->surface, SDL_GetTicksNS()) < 0)
+    return SDL_APP_FAILURE;
 
   return SDL_APP_CONTINUE;
 }

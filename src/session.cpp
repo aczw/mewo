@@ -1,5 +1,6 @@
 #include "impl/session.hpp"
 
+#include "core/utility/match.hpp"
 #include "impl/common/dimensions.hpp"
 #include "impl/common/string.hpp"
 #include "impl/runtime/compile_request.hpp"
@@ -12,6 +13,7 @@
 #include <cassert>
 #include <optional>
 #include <utility>
+#include <variant>
 
 extern "C" {
 mewo_result_t mewo_session_create(
@@ -98,32 +100,38 @@ mewo_result_t mewo_session_get_pass_compile_status(
   if (!state)
     return MEWO_ERROR_INVALID_ARGUMENT;
 
-  *out = [&state]() noexcept -> mewo_pass_compile_status_t {
-    switch (state->status()) {
-      case mewo::impl::PassState::CompileStatus::kPending:
-        return {.type = MEWO_PASS_COMPILE_STATUS_PENDING, .variant = {}};
+  *out = std::visit(
+    mewo::Match{
+      [](const mewo::impl::PassState::Pending&) {
+        return mewo_pass_compile_status_t{
+          .type = MEWO_PASS_COMPILE_STATUS_PENDING,
+          .variant = {},
+        };
+      },
 
-      case mewo::impl::PassState::CompileStatus::kSuccess:
-        return {.type = MEWO_PASS_COMPILE_STATUS_SUCCESS, .variant = {}};
+      [](const mewo::impl::PassState::Success&) {
+        return mewo_pass_compile_status_t{
+          .type = MEWO_PASS_COMPILE_STATUS_SUCCESS,
+          .variant = {},
+        };
+      },
 
-      case mewo::impl::PassState::CompileStatus::kError: {
-        const mewo::impl::CompileRequestError* error = state->current_compile_error();
-        assert(error);
-
-        return {
+      [](const mewo::impl::CompileRequestError& variant) {
+        return mewo_pass_compile_status_t{
           .type = MEWO_PASS_COMPILE_STATUS_ERROR,
           .variant = {
             .compile_error = {
-              .type = error->status == WGPUCreatePipelineAsyncStatus_ValidationError
+              .type = variant.status == WGPUCreatePipelineAsyncStatus_ValidationError
                         ? MEWO_PASS_COMPILE_ERROR_VALIDATION
                         : MEWO_PASS_COMPILE_ERROR_INTERNAL,
-              .message = mewo::impl::to_string_view(error->message),
+              .message = mewo::impl::to_string_view(variant.message),
             }
           },
         };
       }
-    }
-  }();
+    },
+    state->compile_status()
+  );
 
   return MEWO_SUCCESS;
 }

@@ -26,7 +26,7 @@ PassState::PassState(
       pass_label_(std::format("render-pass (ID {})", pass.id())),
       shader_module_label_(std::format("pass-shader (ID {})", pass.id())),
       render_pipeline_label_(std::format("pass-render-pipeline (ID {})", pass.id())),
-      status_(CompileStatus::kPending) {
+      compile_status_(Pending{}) {
   std::array<WGPUBindGroupLayout, 2> bgl_entries = {common_unifs_bgl.get(), prev_bgl.get()};
 
   WGPUPipelineLayoutDescriptor pipeline_layout_desc = WGPU_PIPELINE_LAYOUT_DESCRIPTOR_INIT;
@@ -73,8 +73,7 @@ void PassState::request_render_pipeline_build(Runtime& runtime, const Pass& pass
 
   revision_ = pass.revision();
   current_compile_request_id_ = runtime.start_compile_request(render_pipeline_desc);
-  status_ = CompileStatus::kPending;
-  current_compile_error_.reset();
+  compile_status_ = Pending{};
 }
 
 bool PassState::poll_compile_request(Runtime& runtime) {
@@ -88,11 +87,9 @@ bool PassState::poll_compile_request(Runtime& runtime) {
 
   if (CompileRequestResult& result = request_opt.value(); result.has_value()) {
     render_pipeline_ = std::move(result.value());
-    status_ = CompileStatus::kSuccess;
-    current_compile_error_.reset();
+    compile_status_ = Success{};
   } else {
-    status_ = CompileStatus::kError;
-    current_compile_error_ = std::move(result.error());
+    compile_status_ = std::move(result.error());
   }
 
   current_compile_request_id_.reset();

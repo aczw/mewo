@@ -7,12 +7,17 @@
 
 #include <optional>
 #include <string>
+#include <variant>
 
 namespace mewo::impl {
 
 class PassState {
  public:
-  enum class CompileStatus { kPending, kSuccess, kError };
+  struct Pending {};
+
+  struct Success {};
+
+  using CompileStatus = std::variant<Pending, Success, CompileRequestError>;
 
   PassState(
     const gpu::Device& device,
@@ -32,14 +37,7 @@ class PassState {
 
   const std::string& pass_label() const { return pass_label_; }
 
-  CompileStatus status() const { return status_; }
-
-  const CompileRequestError* current_compile_error() const {
-    if (current_compile_error_)
-      return &current_compile_error_.value();
-
-    return nullptr;
-  }
+  const CompileStatus& compile_status() const { return compile_status_; }
 
   void request_render_pipeline_build(Runtime& runtime, const Pass& pass);
 
@@ -69,8 +67,7 @@ class PassState {
   std::optional<Pass::Revision> revision_;
   std::optional<CompileRequestId> current_compile_request_id_;
 
-  CompileStatus status_;
-  std::optional<CompileRequestError> current_compile_error_;
+  CompileStatus compile_status_;
 };
 
 }  // namespace mewo::impl
