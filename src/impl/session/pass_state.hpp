@@ -19,13 +19,9 @@ class PassState {
  public:
   struct Pending {};
 
-  struct Success {
-    std::vector<Diagnostic> diagnostics;
-  };
+  struct Success {};
 
-  struct Error {
-    std::vector<Diagnostic> diagnostics;
-  };
+  struct Error {};
 
   using CompileStatus = std::variant<Pending, Success, Error>;
 
@@ -49,6 +45,8 @@ class PassState {
 
   const CompileStatus& compile_status() const { return compile_status_; }
 
+  const std::vector<Diagnostic>& diagnostics() const { return diagnostics_; }
+
   void request_render_pipeline_build(
     Runtime& runtime,
     const Pass& pass,
@@ -56,9 +54,7 @@ class PassState {
     Revision common_revision
   );
 
-  /**
-   * @return True if the status of this pass state has changed, and false otherwise.
-   */
+  /** @return True if the status of this pass state has changed, and false otherwise. */
   bool poll_compile_request(Runtime& runtime);
 
   void discard_compile_request(Runtime& runtime);
@@ -77,6 +73,8 @@ class PassState {
 
   std::optional<CompileRequestId> current_compile_request_id_;
   CompileStatus compile_status_;
+  /** Diagnostics from the last completed compile. */
+  std::vector<Diagnostic> diagnostics_;
 };
 
 }  // namespace mewo::impl

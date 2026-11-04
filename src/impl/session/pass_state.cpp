@@ -99,14 +99,14 @@ bool PassState::poll_compile_request(Runtime& runtime) {
   if (!request_opt)
     return false;
 
+  diagnostics_.clear();
   std::vector<CompileMessage>& messages = request_opt->messages.value();
   const SegmentMap& segments = request_opt->segments;
-  std::vector<Diagnostic> diagnostics;
-  diagnostics.reserve(messages.size());
+
   for (CompileMessage& message : messages) {
     auto relative_line_opt = segments.find_relative_line(message.line_number);
 
-    diagnostics.push_back(
+    diagnostics_.push_back(
       Diagnostic{
         .severity = message.severity,
         .message = std::move(message.message),
@@ -122,12 +122,12 @@ bool PassState::poll_compile_request(Runtime& runtime) {
     pipeline_result.has_value()
   ) {
     render_pipeline_ = std::move(pipeline_result.value());
-    compile_status_ = Success{.diagnostics = std::move(diagnostics)};
+    compile_status_ = Success{};
   } else {
-    if (std::ranges::none_of(diagnostics, [](const auto& diagnostic) {
+    if (std::ranges::none_of(diagnostics_, [](const auto& diagnostic) {
           return diagnostic.severity == Severity::kError;
         })) {
-      diagnostics.push_back(
+      diagnostics_.push_back(
         Diagnostic{
           .severity = Severity::kError,
           .message = std::move(pipeline_result.error().message),
@@ -135,7 +135,7 @@ bool PassState::poll_compile_request(Runtime& runtime) {
       );
     }
 
-    compile_status_ = Error{.diagnostics = std::move(diagnostics)};
+    compile_status_ = Error{};
   }
 
   current_compile_request_id_.reset();
