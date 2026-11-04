@@ -4,6 +4,7 @@
 #define MEWO_SESSION_H
 
 #include <mewo/detail/pass.h>
+#include <mewo/detail/project.h>
 #include <mewo/detail/types.h>
 
 #include <stdint.h>
@@ -75,7 +76,7 @@ mewo_result_t mewo_session_render(
 );
 
 /**
- * Each time the compile status of a pass changes, the revision count is incremented.
+ * Each time the compile status or diagnostics of a pass change, the revision count is incremented.
  * Use this to check if the status of any pass in the session has changed.
  *
  * @param session Pointer to the session.
@@ -96,6 +97,40 @@ mewo_result_t mewo_session_get_pass_compile_status(
   mewo_session_t* session,
   mewo_pass_id_t pass_id,
   mewo_pass_compile_status_t* out
+);
+
+/**
+ * Gets the number of diagnostics from the pass' last completed compile. While a recompile is
+ * pending, the previous diagnostics stay available.
+ *
+ * A pass that failed to compile always has at least one diagnostic with error severity.
+ *
+ * @param session Pointer to the session.
+ * @param pass_id The ID of the pass.
+ * @param out Out parameter where the number of diagnostics will be stored.
+ * @return `MEWO_ERROR_INVALID_ARGUMENT` if the pass ID is invalid, and `MEWO_SUCCESS` otherwise.
+ */
+mewo_result_t mewo_session_get_pass_diagnostic_count(
+  mewo_session_t* session,
+  mewo_pass_id_t pass_id,
+  uint32_t* out
+);
+
+/**
+ * Gets one diagnostic from the pass. The message is valid until the next render.
+ *
+ * @param session Pointer to the session.
+ * @param pass_id The ID of the pass.
+ * @param index Index of the diagnostic.
+ * @param out Out parameter where the diagnostic will be stored.
+ * @return `MEWO_ERROR_INVALID_ARGUMENT` if the pass ID or index is invalid, and `MEWO_SUCCESS`
+ * otherwise.
+ */
+mewo_result_t mewo_session_get_pass_diagnostic(
+  mewo_session_t* session,
+  mewo_pass_id_t pass_id,
+  uint32_t index,
+  mewo_diagnostic_t* out
 );
 
 #ifdef __cplusplus
