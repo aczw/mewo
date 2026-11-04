@@ -29,6 +29,10 @@ class Session : private Pinned {
 
   void set_render_size(Dimensions render_size);
 
+  uint64_t state_status_revision() const { return state_status_revision_; }
+
+  PassState* get_state(Pass::Id pass_id);
+
   void render(impl::Surface* surface, uint64_t current_time);
 
  private:
@@ -58,6 +62,7 @@ class Session : private Pinned {
   std::vector<PassState> states_;
   PassTargets targets_;
   SurfaceBlit blit_;
+  uint64_t state_status_revision_;
 };
 
 }  // namespace mewo::impl

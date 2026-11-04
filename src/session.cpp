@@ -1,8 +1,14 @@
 #include "impl/session.hpp"
 
 #include "impl/common/dimensions.hpp"
+#include "impl/common/string.hpp"
+#include "impl/runtime/compile_request.hpp"
+#include "impl/session/pass_state.hpp"
+#include "mewo/detail/pass.h"
 
 #include <mewo/mewo.h>
+
+#include <webgpu/webgpu.h>
 
 #include <cassert>
 #include <optional>
@@ -71,6 +77,57 @@ mewo_result_t mewo_session_render(
   } catch (...) {
     return MEWO_ERROR_INTERNAL;
   }
+
+  return MEWO_SUCCESS;
+}
+
+uint64_t mewo_session_get_revision(mewo_session_t* session) {
+  assert(session);
+  return session->impl->state_status_revision();
+}
+
+mewo_result_t mewo_session_get_pass_status(
+  mewo_session_t* session,
+  mewo_pass_id_t pass_id,
+  mewo_pass_status_t* out
+) {
+  assert(session);
+  assert(out);
+
+  mewo::impl::PassState* state = session->impl->get_state(pass_id);
+
+  if (!state)
+    return MEWO_ERROR_INVALID_ARGUMENT;
+
+  *out = [&state]() noexcept -> mewo_pass_status_t {
+    switch (state->status()) {
+      case mewo::impl::PassState::Status::kRunning:
+        return {.type = MEWO_PASS_STATUS_RUNNING, .variant = {}};
+
+      case mewo::impl::PassState::Status::kCompiling:
+        return {.type = MEWO_PASS_STATUS_COMPILING, .variant = {}};
+
+      case mewo::impl::PassState::Status::kCompileSuccess:
+        return {.type = MEWO_PASS_STATUS_COMPILE_SUCCESS, .variant = {}};
+
+      case mewo::impl::PassState::Status::kCompileError: {
+        const mewo::impl::CompileRequestError* error = state->current_compile_error();
+        assert(error);
+
+        return {
+          .type = MEWO_PASS_STATUS_COMPILE_ERROR,
+          .variant = {
+            .compile_error = {
+              .type = error->status == WGPUCreatePipelineAsyncStatus_ValidationError
+                        ? MEWO_PASS_COMPILE_ERROR_VALIDATION
+                        : MEWO_PASS_COMPILE_ERROR_INTERNAL,
+              .message = mewo::impl::to_string_view(error->message),
+            }
+          },
+        };
+      }
+    }
+  }();
 
   return MEWO_SUCCESS;
 }

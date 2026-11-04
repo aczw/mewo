@@ -2,6 +2,7 @@
 
 #include "core/event.hpp"
 #include "core/utility/match.hpp"
+#include "impl/common/string.hpp"
 #include "impl/surface.hpp"
 
 #include <mewo/mewo.h>
@@ -54,10 +55,7 @@ bool mewo_runtime_poll_event(mewo_runtime_t* runtime, mewo_event_t* out) {
   }
 
   auto convert_to_view = [&runtime]() -> mewo_string_view_t {
-    return {
-      .data = runtime->current_message.data(),
-      .length = runtime->current_message.length(),
-    };
+    return mewo::impl::to_string_view(runtime->current_message);
   };
 
   *out = std::visit(

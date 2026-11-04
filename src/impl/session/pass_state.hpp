@@ -12,6 +12,8 @@ namespace mewo::impl {
 
 class PassState {
  public:
+  enum class Status { kRunning, kCompiling, kCompileSuccess, kCompileError };
+
   PassState(
     const gpu::Device& device,
     const gpu::BindGroupLayout& common_unifs_bgl,
@@ -30,9 +32,21 @@ class PassState {
 
   const std::string& pass_label() const { return pass_label_; }
 
+  Status status() const { return status_; }
+
+  const CompileRequestError* current_compile_error() const {
+    if (current_compile_error_)
+      return &current_compile_error_.value();
+
+    return nullptr;
+  }
+
   void request_render_pipeline_build(Runtime& runtime, const Pass& pass);
 
-  void poll_compile_request(Runtime& runtime);
+  /**
+   * @return True if the status of this pass state has changed, and false otherwise.
+   */
+  bool poll_compile_request(Runtime& runtime);
 
   void discard_compile_request(Runtime& runtime);
 
@@ -54,6 +68,9 @@ class PassState {
    */
   std::optional<Pass::Revision> revision_;
   std::optional<CompileRequestId> current_compile_request_id_;
+
+  Status status_;
+  std::optional<CompileRequestError> current_compile_error_;
 };
 
 }  // namespace mewo::impl

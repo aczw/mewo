@@ -25,7 +25,8 @@ PassState::PassState(
     : pass_id_(pass.id()),
       pass_label_(std::format("render-pass (ID {})", pass.id())),
       shader_module_label_(std::format("pass-shader (ID {})", pass.id())),
-      render_pipeline_label_(std::format("pass-render-pipeline (ID {})", pass.id())) {
+      render_pipeline_label_(std::format("pass-render-pipeline (ID {})", pass.id())),
+      status_(Status::kCompiling) {
   std::array<WGPUBindGroupLayout, 2> bgl_entries = {common_unifs_bgl.get(), prev_bgl.get()};
 
   WGPUPipelineLayoutDescriptor pipeline_layout_desc = WGPU_PIPELINE_LAYOUT_DESCRIPTOR_INIT;
@@ -74,22 +75,37 @@ void PassState::request_render_pipeline_build(Runtime& runtime, const Pass& pass
   current_compile_request_id_ = runtime.start_compile_request(render_pipeline_desc);
 }
 
-void PassState::poll_compile_request(Runtime& runtime) {
-  if (!current_compile_request_id_)
-    return;
+bool PassState::poll_compile_request(Runtime& runtime) {
+  current_compile_error_.reset();
+
+  if (!current_compile_request_id_) {
+    if (status_ != Status::kRunning) {
+      status_ = Status::kRunning;
+      return true;
+    }
+    return false;
+  }
 
   auto request_opt = runtime.take_compile_request(*current_compile_request_id_);
 
-  if (!request_opt)
-    return;
+  if (!request_opt) {
+    if (status_ != Status::kCompiling) {
+      status_ = Status::kCompiling;
+      return true;
+    }
+    return false;
+  }
 
   if (CompileRequestResult& result = request_opt.value(); result.has_value()) {
     render_pipeline_ = std::move(result.value());
+    status_ = Status::kCompileSuccess;
   } else {
-    // Error occurred while compiling
+    current_compile_error_ = std::move(result.error());
+    status_ = Status::kCompileError;
   }
 
   current_compile_request_id_.reset();
+  return true;
 }
 
 void PassState::discard_compile_request(Runtime& runtime) {

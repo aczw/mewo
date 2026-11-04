@@ -139,11 +139,8 @@ Simplified for v1 (decided in step 3): a linear chain. The richer graph model is
 ## Roadmap
 Ordered so each step builds on the previous one and is used by the next one or two (see "Small steps" under How we work). Each step says what uses it. Remove steps once they're done, but don't renumber the rest (other notes refer to steps by number); split the coarse later steps when they come up.
 
-**Editing a pass live**
-3. C API: `mewo_project_set_pass_source`, plus `mewo_project_get_pass_id(project, index)` so the host can name a pass (it reloads pass 0). SDL host hot-reloads one `.wgsl` file (`SDL_GetPathInfo` mtime poll + `SDL_LoadFile`). → Broken shaders now happen constantly, which motivates step 4.
-
 **Surviving broken shaders**
-5. Pull-based pass status: `PassState` keeps its latest compile status (ok / failed + message; `poll_compile_request` returns the error and `Session` stores it), `Session` bumps a status revision when any status changes, and C getters `mewo_session_get_status_revision(session)` + `mewo_session_get_pass_status(session, pass_id, &out)` (string valid until the next call/render). The SDL host logs failures when the revision changes. → Step 6 reuses the rebuild and status paths.
+5. Pull-based pass status: `PassState` keeps its latest compile status (ok / failed + message; `poll_compile_request` returns the error and `Session` stores it), `Session` bumps a status revision when any status changes, and C getters `mewo_session_get_status_revision(session)` + `mewo_session_get_pass_status(session, pass_id, &out)` (string valid until the next call/render), plus `mewo_project_get_pass_count(project)` (pulled forward from step 11) so the host can iterate passes. The SDL host logs failures when the revision changes. → Step 6 reuses the rebuild and status paths.
 
 **Common source**
 6. Project-level Common source + revision; the assembler includes it; a Common change rebuilds every pass; C API setter; host hot-reloads `common.wgsl`. → Errors in Common now report wrong lines, motivating step 7.
@@ -153,7 +150,7 @@ Ordered so each step builds on the previous one and is used by the next one or t
 **Changing the pass list**
 9. `Project::add_pass` returns the ID, `remove_pass` (fails on the last pass), `move_pass`, a structure revision; the default project becomes one pass. Unit-tested. → Step 10 reacts to the structure revision.
 10. Session reconcile creates/drops `PassState`s on structure changes (replaces the `assert` in `render`). → Step 11 drives it.
-11. C API for add/remove/move and `mewo_project_get_pass_count`; the host maps a folder of ordered `.wgsl` files to passes (replaces the hardcoded chain in `Project::create`).
+11. C API for add/remove/move; the host maps a folder of ordered `.wgsl` files to passes (replaces the hardcoded chain in `Project::create`).
 
 **Later (split when reached)**
 12. Mouse: field-table entries, generated init filling a nested `mw.mouse`, `mewo_session_set_mouse`, host wiring. Independent; can move anywhere after step 3.

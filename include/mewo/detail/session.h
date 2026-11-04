@@ -1,6 +1,7 @@
 #ifndef MEWO_SESSION_H
 #define MEWO_SESSION_H
 
+#include <mewo/detail/pass.h>
 #include <mewo/detail/types.h>
 
 #include <stdint.h>
@@ -69,6 +70,21 @@ mewo_result_t mewo_session_render(
   mewo_session_t* session,
   mewo_surface_t* surface,
   uint64_t current_time
+);
+
+/**
+ * For each pass that has updated since the previous render, the revision count is incremented.
+ * Use this to check if the status of any pass in the session has changed.
+ *
+ * @param session Pointer to the session.
+ * @return The current revision count of the session. Updated between renders.
+ */
+uint64_t mewo_session_get_revision(mewo_session_t* session);
+
+mewo_result_t mewo_session_get_pass_status(
+  mewo_session_t* session,
+  mewo_pass_id_t pass_id,
+  mewo_pass_status_t* out
 );
 
 #ifdef __cplusplus

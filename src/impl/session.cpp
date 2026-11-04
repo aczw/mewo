@@ -132,7 +132,17 @@ Session::Session(
       common_unifs_bgl_(std::move(common_unifs_bgl)),
       common_unifs_bg_(std::move(common_unifs_bg)),
       states_(std::move(states)),
-      targets_(std::move(targets)) {}
+      targets_(std::move(targets)),
+      state_status_revision_(0) {}
+
+PassState* Session::get_state(Pass::Id pass_id) {
+  if (auto state_it = std::ranges::find(states_, pass_id, &PassState::pass_id);
+      state_it != states_.end()) {
+    return state_it.base();
+  }
+
+  return nullptr;
+}
 
 void Session::render(impl::Surface* surface, uint64_t current_time) {
   const gpu::Queue& queue = runtime_.queue();
@@ -164,8 +174,10 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
     queue.get(), common_unifs_buf_.get(), 0, common.bytes().data(), common.bytes().size()
   );
 
-  for (PassState& state : states_)
-    state.poll_compile_request(runtime_);
+  for (PassState& state : states_) {
+    if (state.poll_compile_request(runtime_))
+      state_status_revision_ += 1;
+  }
 
   WGPUCommandEncoderDescriptor cmd_encoder_desc = WGPU_COMMAND_ENCODER_DESCRIPTOR_INIT;
   cmd_encoder_desc.label = gpu::to_string_view("session-cmd-encoder");
@@ -178,20 +190,18 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
 
   for (size_t idx = 0; idx < passes.size(); ++idx) {
     const Pass& pass = passes[idx];
+    PassState* state = get_state(pass.id());
+    assert(state);
 
-    auto state_it = std::ranges::find(states_, pass.id(), &PassState::pass_id);
-    assert(state_it != states_.end());
-    PassState& state = *state_it;
-
-    if (state.is_stale(pass))
-      state.request_render_pipeline_build(runtime_, pass);
+    if (state->is_stale(pass))
+      state->request_render_pipeline_build(runtime_, pass);
 
     WGPURenderPassColorAttachment pass_color_attachment = WGPU_RENDER_PASS_COLOR_ATTACHMENT_INIT;
     pass_color_attachment.view = targets_.target_view(idx).get();
     pass_color_attachment.loadOp = WGPULoadOp_Clear;
     pass_color_attachment.storeOp = WGPUStoreOp_Store;
     WGPURenderPassDescriptor pass_desc = WGPU_RENDER_PASS_DESCRIPTOR_INIT;
-    pass_desc.label = gpu::to_string_view(state.pass_label());
+    pass_desc.label = gpu::to_string_view(state->pass_label());
     pass_desc.colorAttachmentCount = 1;
     pass_desc.colorAttachments = &pass_color_attachment;
 
@@ -200,7 +210,7 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
     );
 
     // Pipeline may not be ready yet because it's compiling asynchronously
-    if (const auto& render_pipeline = state.render_pipeline(); render_pipeline) {
+    if (const auto& render_pipeline = state->render_pipeline(); render_pipeline) {
       wgpuRenderPassEncoderSetPipeline(pass_encoder.get(), render_pipeline.get());
       wgpuRenderPassEncoderSetBindGroup(pass_encoder.get(), 0, common_unifs_bg_.get(), 0, nullptr);
       wgpuRenderPassEncoderSetBindGroup(
