@@ -28,9 +28,54 @@ std::unique_ptr<Project> Project::create() {
   return project;
 }
 
-void Project::add_pass(std::string name, std::string source) {
+Pass::Id Project::add_pass(std::string name, std::string source) {
   assert(next_pass_id_ != std::numeric_limits<Pass::Id>::max() && "pass IDs exhausted");
-  passes_.emplace_back(next_pass_id_++, std::move(name), std::move(source));
+
+  Pass::Id next_pass_id = next_pass_id_++;
+  passes_.emplace_back(next_pass_id, std::move(name), std::move(source));
+  structure_revision_ += 1;
+
+  return next_pass_id;
+}
+
+Project::RemovePassResult Project::remove_pass(Pass::Id pass_id) {
+  auto pass_it = std::ranges::find(passes_, pass_id, &Pass::id);
+
+  if (pass_it == passes_.end())
+    return RemovePassResult::kNotFound;
+
+  if (passes_.size() == 1)
+    return RemovePassResult::kFailedBecauseLast;
+
+  passes_.erase(pass_it);
+  structure_revision_ += 1;
+
+  return RemovePassResult::kSuccess;
+}
+
+bool Project::move_pass(Pass::Id pass_id, uint32_t new_index) {
+  if (new_index >= passes_.size())
+    return false;
+
+  auto current_it = std::ranges::find(passes_, pass_id, &Pass::id);
+
+  if (current_it == passes_.end())
+    return false;
+
+  auto new_it = passes_.begin() + new_index;
+
+  if (new_it == current_it)
+    return true;
+
+  if (new_it < current_it) {
+    std::rotate(new_it, current_it, current_it + 1);
+  } else {
+    std::rotate(current_it, current_it + 1, new_it + 1);
+  }
+
+  structure_revision_ += 1;
+
+  return true;
 }
 
 bool Project::set_pass_source(Pass::Id pass_id, std::string new_source) {

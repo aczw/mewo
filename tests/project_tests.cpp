@@ -6,8 +6,27 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
+
+namespace {
+
+using mewo::Pass;
+using mewo::impl::Project;
+
+constexpr const char* kSource = "fn main(frag_coord: vec2f) -> vec4f { return vec4f(1.0); }";
+
+/** The project's pass IDs in list (execution) order. */
+std::vector<Pass::Id> pass_ids(const Project& project) {
+  std::vector<Pass::Id> ids;
+  for (const Pass& pass : project.passes())
+    ids.push_back(pass.id());
+  return ids;
+}
+
+}  // namespace
 
 TEST_CASE("project can be created and destroyed", "[project]") {
   mewo_project_t* project = nullptr;
@@ -184,4 +203,170 @@ TEST_CASE("mewo_project_set_common_source converts the C string", "[project][com
   }
 
   mewo_project_destroy(project);
+}
+
+TEST_CASE("add_pass appends a pass and returns its new ID", "[project][structure]") {
+  std::unique_ptr<Project> project = Project::create();
+  const Pass::Id first = project->passes().front().id();
+  const auto revision = project->structure_revision();
+
+  const Pass::Id a = project->add_pass("A", kSource);
+  const Pass::Id b = project->add_pass("B", kSource);
+
+  CHECK(a != Pass::Id{0});
+  CHECK(a != first);
+  CHECK(b > a);
+  CHECK(pass_ids(*project) == std::vector<Pass::Id>{first, a, b});
+  CHECK(project->passes().back().name() == "B");
+  CHECK(project->passes().back().source() == kSource);
+  CHECK(project->structure_revision() == revision + 2);
+}
+
+TEST_CASE("remove_pass removes one pass and keeps the rest in order", "[project][structure]") {
+  std::unique_ptr<Project> project = Project::create();
+  const Pass::Id first = project->passes().front().id();
+  const Pass::Id a = project->add_pass("A", kSource);
+  const Pass::Id b = project->add_pass("B", kSource);
+  const auto revision = project->structure_revision();
+
+  SECTION("removing a middle pass") {
+    CHECK(project->remove_pass(a) == Project::RemovePassResult::kSuccess);
+
+    CHECK(pass_ids(*project) == std::vector<Pass::Id>{first, b});
+    CHECK(project->structure_revision() == revision + 1);
+  }
+
+  SECTION("removing the first pass") {
+    CHECK(project->remove_pass(first) == Project::RemovePassResult::kSuccess);
+
+    CHECK(pass_ids(*project) == std::vector<Pass::Id>{a, b});
+  }
+
+  SECTION("an unknown ID fails and changes nothing") {
+    CHECK(project->remove_pass(Pass::Id{0}) == Project::RemovePassResult::kNotFound);
+    CHECK(project->remove_pass(Pass::Id{9999}) == Project::RemovePassResult::kNotFound);
+
+    CHECK(pass_ids(*project) == std::vector<Pass::Id>{first, a, b});
+    CHECK(project->structure_revision() == revision);
+  }
+
+  SECTION("removing the same pass twice fails the second time") {
+    REQUIRE(project->remove_pass(a) == Project::RemovePassResult::kSuccess);
+
+    CHECK(project->remove_pass(a) == Project::RemovePassResult::kNotFound);
+    CHECK(project->structure_revision() == revision + 1);
+  }
+
+  SECTION("IDs are never reused after a removal") {
+    REQUIRE(project->remove_pass(b) == Project::RemovePassResult::kSuccess);
+
+    const Pass::Id c = project->add_pass("C", kSource);
+    CHECK(c != b);
+    CHECK(c > b);
+  }
+}
+
+TEST_CASE("remove_pass refuses to remove the last pass", "[project][structure]") {
+  std::unique_ptr<Project> project = Project::create();
+  REQUIRE(project->passes().size() == 1);
+  const Pass::Id only = project->passes().front().id();
+  const auto revision = project->structure_revision();
+
+  CHECK(project->remove_pass(only) == Project::RemovePassResult::kFailedBecauseLast);
+
+  CHECK(pass_ids(*project) == std::vector<Pass::Id>{only});
+  CHECK(project->structure_revision() == revision);
+
+  SECTION("an unknown ID is still reported as not found") {
+    CHECK(project->remove_pass(Pass::Id{9999}) == Project::RemovePassResult::kNotFound);
+  }
+
+  SECTION("after removing down to one pass, that one can't be removed") {
+    const Pass::Id a = project->add_pass("A", kSource);
+    REQUIRE(project->remove_pass(only) == Project::RemovePassResult::kSuccess);
+
+    CHECK(project->remove_pass(a) == Project::RemovePassResult::kFailedBecauseLast);
+    CHECK(pass_ids(*project) == std::vector<Pass::Id>{a});
+  }
+}
+
+TEST_CASE("move_pass puts a pass at its new index", "[project][structure]") {
+  // Five passes: p[0] .. p[4], in that order.
+  std::unique_ptr<Project> project = Project::create();
+  std::vector<Pass::Id> p = {project->passes().front().id()};
+  for (int i = 1; i < 5; ++i)
+    p.push_back(project->add_pass("Pass", kSource));
+  REQUIRE(pass_ids(*project) == p);
+
+  const auto revision = project->structure_revision();
+
+  SECTION("moving right") {
+    REQUIRE(project->move_pass(p[1], 3));
+
+    CHECK(pass_ids(*project) == std::vector<Pass::Id>{p[0], p[2], p[3], p[1], p[4]});
+    CHECK(project->structure_revision() == revision + 1);
+  }
+
+  SECTION("moving left") {
+    REQUIRE(project->move_pass(p[3], 1));
+
+    CHECK(pass_ids(*project) == std::vector<Pass::Id>{p[0], p[3], p[1], p[2], p[4]});
+    CHECK(project->structure_revision() == revision + 1);
+  }
+
+  SECTION("moving the last pass to the front") {
+    REQUIRE(project->move_pass(p[4], 0));
+
+    CHECK(pass_ids(*project) == std::vector<Pass::Id>{p[4], p[0], p[1], p[2], p[3]});
+  }
+
+  SECTION("moving the first pass to the back") {
+    REQUIRE(project->move_pass(p[0], 4));
+
+    CHECK(pass_ids(*project) == std::vector<Pass::Id>{p[1], p[2], p[3], p[4], p[0]});
+  }
+
+  SECTION("moving to its current index succeeds without changing anything") {
+    CHECK(project->move_pass(p[2], 2));
+
+    CHECK(pass_ids(*project) == p);
+    CHECK(project->structure_revision() == revision);
+  }
+
+  SECTION("an index past the end fails and changes nothing") {
+    CHECK_FALSE(project->move_pass(p[0], 5));
+    CHECK_FALSE(project->move_pass(p[0], UINT32_MAX));
+
+    CHECK(pass_ids(*project) == p);
+    CHECK(project->structure_revision() == revision);
+  }
+
+  SECTION("an unknown ID fails and changes nothing") {
+    CHECK_FALSE(project->move_pass(Pass::Id{0}, 0));
+    CHECK_FALSE(project->move_pass(Pass::Id{9999}, 0));
+
+    CHECK(pass_ids(*project) == p);
+    CHECK(project->structure_revision() == revision);
+  }
+
+  SECTION("moved passes keep their source and revision") {
+    const std::string source = project->passes()[1].source();
+    const auto pass_revision = project->passes()[1].revision();
+
+    REQUIRE(project->move_pass(p[1], 4));
+
+    CHECK(project->passes()[4].id() == p[1]);
+    CHECK(project->passes()[4].source() == source);
+    CHECK(project->passes()[4].revision() == pass_revision);
+  }
+}
+
+TEST_CASE("editing sources doesn't change the structure revision", "[project][structure]") {
+  std::unique_ptr<Project> project = Project::create();
+  const auto revision = project->structure_revision();
+
+  REQUIRE(project->set_pass_source(project->passes().front().id(), kSource));
+  project->set_common_source("fn helper() {}");
+
+  CHECK(project->structure_revision() == revision);
 }
