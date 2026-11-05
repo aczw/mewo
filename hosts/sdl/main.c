@@ -34,7 +34,7 @@ typedef struct {
   watched_file_t pass_1;
   mewo_pass_id_t pass_1_id;
   watched_file_t common;
-  uint64_t last_status_revision;
+  uint64_t last_pass_status_revision;
 } state_t;
 
 static bool fill_surface_desc(state_t* state, mewo_surface_descriptor_t* desc) {
@@ -204,7 +204,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
         if (mewo_session_create(state->runtime, &session_desc, &state->session) < 0)
           return SDL_APP_FAILURE;
 
-        state->last_status_revision = 0;
+        state->last_pass_status_revision = 0;
 
         SDL_Log("[info] created new session");
 
@@ -264,9 +264,9 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
   if (!state->session)
     return SDL_APP_CONTINUE;
 
-  uint64_t status_revision = mewo_session_get_status_revision(state->session);
+  uint64_t pass_status_revision = mewo_session_get_pass_status_revision(state->session);
 
-  if (status_revision != state->last_status_revision) {
+  if (pass_status_revision != state->last_pass_status_revision) {
     uint32_t pass_count = mewo_project_get_pass_count(state->project);
 
     for (uint32_t pass_idx = 0; pass_idx < pass_count; ++pass_idx) {
@@ -313,7 +313,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
       }
     }
 
-    state->last_status_revision = status_revision;
+    state->last_pass_status_revision = pass_status_revision;
   }
 
   if (mewo_session_render(state->session, state->surface, SDL_GetTicksNS()) < 0)

@@ -83,9 +83,9 @@ mewo_result_t mewo_session_render(
   return MEWO_SUCCESS;
 }
 
-uint64_t mewo_session_get_status_revision(mewo_session_t* session) {
+uint64_t mewo_session_get_pass_status_revision(mewo_session_t* session) {
   assert(session);
-  return session->impl->status_revision();
+  return session->impl->pass_status_revision();
 }
 
 mewo_result_t mewo_session_get_pass_compile_status(

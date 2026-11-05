@@ -27,7 +27,7 @@ class PassState {
 
   PassState(
     const gpu::Device& device,
-    const gpu::BindGroupLayout& common_unifs_bgl,
+    const gpu::BindGroupLayout& unifs_bgl,
     const gpu::BindGroupLayout& prev_bgl,
     const Pass& pass
   );

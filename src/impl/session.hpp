@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/common.hpp"
 #include "core/gpu/types.hpp"
 #include "core/pinned.hpp"
 #include "impl/common/dimensions.hpp"
@@ -29,7 +30,7 @@ class Session : private Pinned {
 
   void set_render_size(Dimensions render_size);
 
-  uint64_t status_revision() const { return status_revision_; }
+  Revision pass_status_revision() const { return pass_status_revision_; }
 
   PassState* get_state(Pass::Id pass_id);
 
@@ -40,9 +41,9 @@ class Session : private Pinned {
     impl::Runtime& runtime,
     impl::Project& project,
     Dimensions render_size,
-    gpu::Buf&& common_unifs_buf,
-    gpu::BindGroupLayout&& common_unifs_bgl,
-    gpu::BindGroup&& common_unifs_bg,
+    gpu::Buf&& unifs_buf,
+    gpu::BindGroupLayout&& unifs_bgl,
+    gpu::BindGroup&& unifs_bg,
     std::vector<PassState>&& states,
     PassTargets&& targets
   );
@@ -55,14 +56,20 @@ class Session : private Pinned {
   uint64_t elapsed_;
   uint32_t frame_number_;
 
-  gpu::Buf common_unifs_buf_;
-  gpu::BindGroupLayout common_unifs_bgl_;
-  gpu::BindGroup common_unifs_bg_;
+  gpu::Buf unifs_buf_;
+  gpu::BindGroupLayout unifs_bgl_;
+  gpu::BindGroup unifs_bg_;
 
   std::vector<PassState> states_;
   PassTargets targets_;
   SurfaceBlit blit_;
-  uint64_t status_revision_;
+
+  /**
+   * Updates whenever the status of a pass changed (compile started/finished, pass added/removed).
+   */
+  Revision pass_status_revision_;
+  /** Checked against the `Project` structure revision to see if we need to reconcile. */
+  Revision pass_structure_revision_;
 };
 
 }  // namespace mewo::impl

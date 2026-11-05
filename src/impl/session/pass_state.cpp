@@ -23,14 +23,14 @@ namespace mewo::impl {
 
 PassState::PassState(
   const gpu::Device& device,
-  const gpu::BindGroupLayout& common_unifs_bgl,
+  const gpu::BindGroupLayout& unifs_bgl,
   const gpu::BindGroupLayout& prev_bgl,
   const Pass& pass
 )
     : pass_id_(pass.id()),
       pass_label_(std::format("render-pass (ID {})", pass.id())),
       compile_status_(Pending{}) {
-  std::array<WGPUBindGroupLayout, 2> bgl_entries = {common_unifs_bgl.get(), prev_bgl.get()};
+  std::array<WGPUBindGroupLayout, 2> bgl_entries = {unifs_bgl.get(), prev_bgl.get()};
 
   WGPUPipelineLayoutDescriptor pipeline_layout_desc = WGPU_PIPELINE_LAYOUT_DESCRIPTOR_INIT;
   std::string pipeline_layout_label = std::format("pass-pipeline-layout (ID {})", pass.id());

@@ -40,61 +40,54 @@ std::optional<std::unique_ptr<Session>> Session::create(
   if (!device)
     return std::nullopt;
 
-  WGPUBufferDescriptor common_unifs_buf_desc = WGPU_BUFFER_DESCRIPTOR_INIT;
-  common_unifs_buf_desc.label = gpu::to_string_view("common-unifs-buf");
-  common_unifs_buf_desc.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_Uniform;
-  common_unifs_buf_desc.size = kUniformsLayout.size;
+  WGPUBufferDescriptor unifs_buf_desc = WGPU_BUFFER_DESCRIPTOR_INIT;
+  unifs_buf_desc.label = gpu::to_string_view("unifs-buf");
+  unifs_buf_desc.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_Uniform;
+  unifs_buf_desc.size = kUniformsLayout.size;
 
-  gpu::Buf common_unifs_buf(wgpuDeviceCreateBuffer(device.get(), &common_unifs_buf_desc));
+  gpu::Buf unifs_buf(wgpuDeviceCreateBuffer(device.get(), &unifs_buf_desc));
 
-  WGPUBindGroupLayoutEntry common_unifs_bgl_entry = WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT;
-  common_unifs_bgl_entry.binding = 0;
-  common_unifs_bgl_entry.visibility = WGPUShaderStage_Fragment;
-  common_unifs_bgl_entry.buffer.type = WGPUBufferBindingType_Uniform;
-  common_unifs_bgl_entry.buffer.minBindingSize = kUniformsLayout.size;
+  WGPUBindGroupLayoutEntry unifs_bgl_entry = WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT;
+  unifs_bgl_entry.binding = 0;
+  unifs_bgl_entry.visibility = WGPUShaderStage_Fragment;
+  unifs_bgl_entry.buffer.type = WGPUBufferBindingType_Uniform;
+  unifs_bgl_entry.buffer.minBindingSize = kUniformsLayout.size;
 
-  WGPUBindGroupLayoutDescriptor common_unifs_bgl_desc = WGPU_BIND_GROUP_LAYOUT_DESCRIPTOR_INIT;
-  common_unifs_bgl_desc.label = gpu::to_string_view("common-unifs-bgl");
-  common_unifs_bgl_desc.entryCount = 1;
-  common_unifs_bgl_desc.entries = &common_unifs_bgl_entry;
+  WGPUBindGroupLayoutDescriptor unifs_bgl_desc = WGPU_BIND_GROUP_LAYOUT_DESCRIPTOR_INIT;
+  unifs_bgl_desc.label = gpu::to_string_view("unifs-bgl");
+  unifs_bgl_desc.entryCount = 1;
+  unifs_bgl_desc.entries = &unifs_bgl_entry;
 
-  gpu::BindGroupLayout common_unifs_bgl(
-    wgpuDeviceCreateBindGroupLayout(device.get(), &common_unifs_bgl_desc)
-  );
+  gpu::BindGroupLayout unifs_bgl(wgpuDeviceCreateBindGroupLayout(device.get(), &unifs_bgl_desc));
 
-  WGPUBindGroupEntry common_unifs_bg_entry = WGPU_BIND_GROUP_ENTRY_INIT;
-  common_unifs_bg_entry.binding = 0;
-  common_unifs_bg_entry.buffer = common_unifs_buf.get();
-  common_unifs_bg_entry.size = kUniformsLayout.size;
+  WGPUBindGroupEntry unifs_bg_entry = WGPU_BIND_GROUP_ENTRY_INIT;
+  unifs_bg_entry.binding = 0;
+  unifs_bg_entry.buffer = unifs_buf.get();
+  unifs_bg_entry.size = kUniformsLayout.size;
 
-  WGPUBindGroupDescriptor common_unifs_bg_desc = WGPU_BIND_GROUP_DESCRIPTOR_INIT;
-  common_unifs_bg_desc.label = gpu::to_string_view("common-unifs-bg");
-  common_unifs_bg_desc.layout = common_unifs_bgl.get();
-  common_unifs_bg_desc.entryCount = 1;
-  common_unifs_bg_desc.entries = &common_unifs_bg_entry;
+  WGPUBindGroupDescriptor unifs_bg_desc = WGPU_BIND_GROUP_DESCRIPTOR_INIT;
+  unifs_bg_desc.label = gpu::to_string_view("unifs-bg");
+  unifs_bg_desc.layout = unifs_bgl.get();
+  unifs_bg_desc.entryCount = 1;
+  unifs_bg_desc.entries = &unifs_bg_entry;
 
-  gpu::BindGroup common_unifs_bg(wgpuDeviceCreateBindGroup(device.get(), &common_unifs_bg_desc));
+  gpu::BindGroup unifs_bg(wgpuDeviceCreateBindGroup(device.get(), &unifs_bg_desc));
 
   PassTargets targets(device, render_size);
 
   std::vector<PassState> states;
   states.reserve(project.passes().size());
-  for (const Pass& pass : project.passes()) {
-    PassState& inserted_state =
-      states.emplace_back(device, common_unifs_bgl, targets.bind_group_layout(), pass);
-    inserted_state.request_render_pipeline_build(
-      runtime, pass, project.common_source(), project.common_revision()
-    );
-  }
+  for (const Pass& pass : project.passes())
+    states.emplace_back(device, unifs_bgl, targets.bind_group_layout(), pass);
 
   // Constructor is private so can't use `std::make_unique`
   return std::unique_ptr<Session>(new Session(
     runtime,
     project,
     render_size,
-    std::move(common_unifs_buf),
-    std::move(common_unifs_bgl),
-    std::move(common_unifs_bg),
+    std::move(unifs_buf),
+    std::move(unifs_bgl),
+    std::move(unifs_bg),
     std::move(states),
     std::move(targets)
   ));
@@ -119,9 +112,9 @@ Session::Session(
   impl::Runtime& runtime,
   impl::Project& project,
   Dimensions render_size,
-  gpu::Buf&& common_unifs_buf,
-  gpu::BindGroupLayout&& common_unifs_bgl,
-  gpu::BindGroup&& common_unifs_bg,
+  gpu::Buf&& unifs_buf,
+  gpu::BindGroupLayout&& unifs_bgl,
+  gpu::BindGroup&& unifs_bg,
   std::vector<PassState>&& states,
   PassTargets&& targets
 )
@@ -130,12 +123,13 @@ Session::Session(
       render_size_(render_size),
       elapsed_(0),
       frame_number_(0),
-      common_unifs_buf_(std::move(common_unifs_buf)),
-      common_unifs_bgl_(std::move(common_unifs_bgl)),
-      common_unifs_bg_(std::move(common_unifs_bg)),
+      unifs_buf_(std::move(unifs_buf)),
+      unifs_bgl_(std::move(unifs_bgl)),
+      unifs_bg_(std::move(unifs_bg)),
       states_(std::move(states)),
       targets_(std::move(targets)),
-      status_revision_(0) {}
+      pass_status_revision_(0),
+      pass_structure_revision_(0) {}
 
 PassState* Session::get_state(Pass::Id pass_id) {
   if (
@@ -160,27 +154,60 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
   previous_time_ = current_time;
   elapsed_ += delta_time;
 
-  UniformData common;
-  common.set(
+  UniformData unifs;
+  unifs.set(
     UniformMember::kResolution,
     {static_cast<float>(render_size_.width), static_cast<float>(render_size_.height)}
   );
-  common.set(UniformMember::kTime, ns_to_s(elapsed_));
-  common.set(UniformMember::kDeltaTime, ns_to_s(delta_time));
-  common.set(UniformMember::kFrameNumber, frame_number_);
-  common.set(UniformMember::kFrameRate, [&delta_time]() -> uint32_t {
+  unifs.set(UniformMember::kTime, ns_to_s(elapsed_));
+  unifs.set(UniformMember::kDeltaTime, ns_to_s(delta_time));
+  unifs.set(UniformMember::kFrameNumber, frame_number_);
+  unifs.set(UniformMember::kFrameRate, [&delta_time]() -> uint32_t {
     if (delta_time == 0)
       return 0;
     return static_cast<uint32_t>(std::round(1.f / ns_to_s(delta_time)));
   }());
 
   wgpuQueueWriteBuffer(
-    queue.get(), common_unifs_buf_.get(), 0, common.bytes().data(), common.bytes().size()
+    queue.get(), unifs_buf_.get(), 0, unifs.bytes().data(), unifs.bytes().size()
   );
+
+  const std::vector<Pass>& passes = project_.passes();
+
+  if (
+    Revision structure_revision = project_.structure_revision();
+    pass_structure_revision_ != structure_revision
+  ) {
+    for (auto state_it = states_.begin(); state_it != states_.end();) {
+      bool still_exists = std::ranges::contains(passes, state_it->pass_id(), &Pass::id);
+
+      if (still_exists) {
+        state_it += 1;
+        continue;
+      }
+
+      state_it->discard_compile_request(runtime_);
+      state_it = states_.erase(state_it);
+      pass_status_revision_ += 1;
+    }
+
+    for (const Pass& pass : passes) {
+      bool does_not_exist = std::ranges::none_of(states_, [&pass](const PassState& state) {
+        return state.pass_id() == pass.id();
+      });
+
+      if (does_not_exist) {
+        states_.emplace_back(device, unifs_bgl_, targets_.bind_group_layout(), pass);
+        pass_status_revision_ += 1;
+      }
+    }
+
+    pass_structure_revision_ = structure_revision;
+  }
 
   for (PassState& state : states_) {
     if (state.poll_compile_request(runtime_))
-      status_revision_ += 1;
+      pass_status_revision_ += 1;
   }
 
   WGPUCommandEncoderDescriptor cmd_encoder_desc = WGPU_COMMAND_ENCODER_DESCRIPTOR_INIT;
@@ -189,8 +216,6 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
   gpu::CmdEncoder cmd_encoder(wgpuDeviceCreateCommandEncoder(device.get(), &cmd_encoder_desc));
 
   targets_.record_clear_pass(cmd_encoder);
-
-  const std::vector<Pass>& passes = project_.passes();
 
   for (size_t idx = 0; idx < passes.size(); ++idx) {
     const Pass& pass = passes[idx];
@@ -201,7 +226,7 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
       state->request_render_pipeline_build(
         runtime_, pass, project_.common_source(), common_revision
       );
-      status_revision_ += 1;
+      pass_status_revision_ += 1;
     }
 
     WGPURenderPassColorAttachment pass_color_attachment = WGPU_RENDER_PASS_COLOR_ATTACHMENT_INIT;
@@ -220,7 +245,7 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
     // Pipeline may not be ready yet because it's compiling asynchronously
     if (const auto& render_pipeline = state->render_pipeline(); render_pipeline) {
       wgpuRenderPassEncoderSetPipeline(pass_encoder.get(), render_pipeline.get());
-      wgpuRenderPassEncoderSetBindGroup(pass_encoder.get(), 0, common_unifs_bg_.get(), 0, nullptr);
+      wgpuRenderPassEncoderSetBindGroup(pass_encoder.get(), 0, unifs_bg_.get(), 0, nullptr);
       wgpuRenderPassEncoderSetBindGroup(
         pass_encoder.get(), 1, targets_.prev_bind_group(idx).get(), 0, nullptr
       );

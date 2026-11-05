@@ -82,7 +82,7 @@ mewo_result_t mewo_session_render(
  * @param session Pointer to the session.
  * @return The current revision count of the session.
  */
-uint64_t mewo_session_get_status_revision(mewo_session_t* session);
+uint64_t mewo_session_get_pass_status_revision(mewo_session_t* session);
 
 /**
  * Gets whether the pass's most recent compile is still pending, succeeded, or failed. For the
