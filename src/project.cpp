@@ -72,6 +72,58 @@ mewo_result_t mewo_project_set_common_source(mewo_project_t* project, mewo_strin
   return MEWO_SUCCESS;
 }
 
+mewo_result_t mewo_project_add_pass(
+  mewo_project_t* project,
+  mewo_string_view_t name,
+  mewo_string_view_t source,
+  mewo_pass_id_t* out
+) {
+  assert(project);
+  assert(out);
+  *out = MEWO_PASS_ID_NONE;
+
+  // Copies both strings and may grow the pass list
+  try {
+    auto name_opt = mewo::impl::to_string(name);
+    auto source_opt = mewo::impl::to_string(source);
+
+    if (!name_opt || !source_opt)
+      return MEWO_ERROR_INVALID_ARGUMENT;
+
+    *out = project->impl->add_pass(std::move(name_opt.value()), std::move(source_opt.value()));
+  } catch (...) {
+    return MEWO_ERROR_INTERNAL;
+  }
+
+  return MEWO_SUCCESS;
+}
+
+mewo_result_t mewo_project_remove_pass(mewo_project_t* project, mewo_pass_id_t pass_id) {
+  assert(project);
+
+  switch (project->impl->remove_pass(pass_id)) {
+    case mewo::impl::Project::RemovePassResult::kSuccess: return MEWO_SUCCESS;
+    case mewo::impl::Project::RemovePassResult::kNotFound: return MEWO_ERROR_INVALID_ARGUMENT;
+    case mewo::impl::Project::RemovePassResult::kFailedBecauseLast:
+      return MEWO_ERROR_INVALID_OPERATION;
+  }
+
+  std::unreachable();
+}
+
+mewo_result_t mewo_project_move_pass(
+  mewo_project_t* project,
+  mewo_pass_id_t pass_id,
+  uint32_t new_index
+) {
+  assert(project);
+
+  if (!project->impl->move_pass(pass_id, new_index))
+    return MEWO_ERROR_INVALID_ARGUMENT;
+
+  return MEWO_SUCCESS;
+}
+
 uint32_t mewo_project_get_pass_count(mewo_project_t* project) {
   assert(project);
 

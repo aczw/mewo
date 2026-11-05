@@ -70,6 +70,54 @@ mewo_result_t mewo_project_set_pass_source(
 mewo_result_t mewo_project_set_common_source(mewo_project_t* project, mewo_string_view_t source);
 
 /**
+ * Appends a new pass to the end of the pass list.
+ *
+ * Pass IDs are never reused within a project, even after a pass is removed.
+ *
+ * Sessions pick up structural changes (adding, removing, and moving passes) on their next
+ * call to `mewo_session_render()`. Until then, they keep reporting status for the old pass list.
+ *
+ * @param project Pointer to the project.
+ * @param name Display name of the pass.
+ * @param source WGSL source of the pass.
+ * @param out Out parameter where the new pass ID will be stored. Set to `MEWO_PASS_ID_NONE`
+ * on failure.
+ * @return `MEWO_ERROR_INVALID_ARGUMENT` if a string view is invalid, and `MEWO_SUCCESS` otherwise.
+ */
+mewo_result_t mewo_project_add_pass(
+  mewo_project_t* project,
+  mewo_string_view_t name,
+  mewo_string_view_t source,
+  mewo_pass_id_t* out
+);
+
+/**
+ * Removes a pass from the pass list. The remaining passes keep their order.
+ *
+ * @param project Pointer to the project.
+ * @param pass_id The ID of the pass to remove.
+ * @return `MEWO_ERROR_INVALID_ARGUMENT` if the pass ID is unknown, `MEWO_ERROR_INVALID_OPERATION`
+ * if it's the project's last pass, and `MEWO_SUCCESS` otherwise.
+ */
+mewo_result_t mewo_project_remove_pass(mewo_project_t* project, mewo_pass_id_t pass_id);
+
+/**
+ * Moves a pass to a new position in the pass list. The other passes keep their relative order.
+ * Moving a pass to its current index succeeds and changes nothing.
+ *
+ * @param project Pointer to the project.
+ * @param pass_id The ID of the pass to move.
+ * @param new_index The pass' index after the move. Must be less than the pass count.
+ * @return `MEWO_ERROR_INVALID_ARGUMENT` if the pass ID is unknown or `new_index` is out of range,
+ * and `MEWO_SUCCESS` otherwise.
+ */
+mewo_result_t mewo_project_move_pass(
+  mewo_project_t* project,
+  mewo_pass_id_t pass_id,
+  uint32_t new_index
+);
+
+/**
  * @param project Pointer to the project.
  * @return The number of passes currently in this project. A project always has at least
  * 1 pass, so the result is always >= 1.

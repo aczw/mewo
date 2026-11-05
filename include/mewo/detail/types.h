@@ -28,6 +28,8 @@ typedef enum mewo_result {
   /** Something went wrong internally that is not the host's fault */
   MEWO_ERROR_INTERNAL = -2,
   MEWO_ERROR_INVALID_ARGUMENT = -3,
+  /** Arguments are valid, but the operation currently isn't allowed */
+  MEWO_ERROR_INVALID_OPERATION = -4,
   MEWO_RESULT_FORCE_INT = MEWO_ENUM_FORCE_INT,
 } mewo_result_t;
 
