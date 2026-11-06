@@ -1,5 +1,27 @@
 {
-  "clangd.arguments": [
-    "--compile-commands-dir=${command:cmake.buildDirectory}"
-  ]
+  "clangd.arguments": ["--compile-commands-dir=${command:cmake.buildDirectory}"],
+  "customLocalFormatters.formatters": [
+    {
+      "command": "bun --cwd hosts/web fmt --stdin-filepath \"${file}\"",
+      "languages": ["typescript", "javascript", "html", "css", "json", "jsonc"]
+    }
+  ],
+  "[typescript]": {
+    "editor.defaultFormatter": "jkillian.custom-local-formatters"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "jkillian.custom-local-formatters"
+  },
+  "[html]": {
+    "editor.defaultFormatter": "jkillian.custom-local-formatters"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "jkillian.custom-local-formatters"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "jkillian.custom-local-formatters"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "jkillian.custom-local-formatters"
+  }
 }

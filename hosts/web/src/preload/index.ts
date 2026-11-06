@@ -1,4 +1,5 @@
 import { contextBridge } from "electron";
+
 import type { Versions } from "../shared/versions";
 
 const versions: Versions = {

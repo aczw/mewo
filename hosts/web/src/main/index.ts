@@ -1,6 +1,7 @@
-import { app, BrowserWindow } from "electron";
-import path from "node:path";
 import fs from "node:fs";
+import path from "node:path";
+
+import { app, BrowserWindow } from "electron";
 
 const distDir = path.join(import.meta.dirname, "..", "..", "dist");
 
