@@ -3,8 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
-    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'"
+    />
 
     <link rel="stylesheet" href="./styles/main.css" />
 
@@ -18,7 +20,7 @@
       </div>
 
       <div class="right">
-        <div class="viewport">Viewport</div>
+        <div class="viewport"><canvas id="mewo"></canvas></div>
         <div class="pass-list">Passes</div>
       </div>
     </main>

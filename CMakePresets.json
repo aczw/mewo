@@ -41,7 +41,7 @@
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "MEWO_WEBGPU_IMPL": "emdawnwebgpu",
         "MEWO_BUILD_TESTS": "OFF",
-        "MEWO_BUILD_HOSTS": "OFF"
+        "MEWO_BUILD_HOSTS": "ON"
       }
     }
   ],
@@ -84,7 +84,7 @@
       "name": "release-wasm",
       "displayName": "Release (Emscripten/WASM)",
       "configurePreset": "release-wasm",
-      "targets": ["mewo"]
+      "targets": ["mewo_web"]
     }
   ],
   "testPresets": [

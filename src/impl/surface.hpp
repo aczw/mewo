@@ -33,7 +33,11 @@ class Surface : private Pinned {
   void resize(Dimensions new_dimensions);
   std::optional<gpu::TexView> acquire(const gpu::Adapter& adapter, const gpu::Device& device);
 
-  void present() { wgpuSurfacePresent(surface_.get()); }
+  void present() {
+#if !defined(MEWO_WEBGPU_EMDAWNWEBGPU)
+    wgpuSurfacePresent(surface_.get());
+#endif
+  }
 
   WGPUTextureFormat format() const { return config_.format; }
 
