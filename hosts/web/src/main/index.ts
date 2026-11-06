@@ -1,16 +1,32 @@
 import { app, BrowserWindow } from "electron";
 import path from "node:path";
+import fs from "node:fs";
+
+const distDir = path.join(import.meta.dirname, "..", "..", "dist");
+
+const reloadOnChange = (win: BrowserWindow) => {
+  fs.mkdirSync(distDir, { recursive: true });
+  let timer: NodeJS.Timeout | undefined;
+
+  const watcher = fs.watch(distDir, { recursive: true }, () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => win.webContents.reloadIgnoringCache(), 50);
+  });
+
+  win.on("closed", () => watcher.close());
+};
 
 const createWindow = () => {
   const win = new BrowserWindow({
     width: 1280,
     height: 720,
     webPreferences: {
-      preload: path.join(import.meta.dirname, "..", "..", "dist", "preload.cjs"),
+      preload: path.join(distDir, "preload.cjs"),
     },
   });
 
-  win.loadFile(path.join(import.meta.dirname, "..", "..", "dist", "index.html"));
+  win.loadFile(path.join(distDir, "index.html"));
+  if (!app.isPackaged) reloadOnChange(win);
 };
 
 app.whenReady().then(() => {
