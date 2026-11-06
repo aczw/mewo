@@ -1,0 +1,22 @@
+{
+  "name": "mewo",
+  "version": "1.0.0",
+  "private": true,
+  "author": {
+    "name": "Charles Wang",
+    "email": "hi@charleszw.com",
+    "url": "https://charleszw.com"
+  },
+  "type": "module",
+  "main": "src/main/index.ts",
+  "scripts": {
+    "build:preload": "bun build src/preload/index.ts --minify --outfile dist/preload.cjs --target node --format cjs --external electron",
+    "build:renderer": "bun build src/renderer/index.html --minify --outdir dist --sourcemap=linked",
+    "build": "rm -rf dist && bun run build:preload && bun run build:renderer",
+    "start": "bun run build && electron ."
+  },
+  "devDependencies": {
+    "electron": "^45.2.3",
+    "typescript": "^7.0.2"
+  }
+}
