@@ -81,6 +81,9 @@ std::optional<std::unique_ptr<Surface>> Surface::create(
 }
 
 void Surface::resize(Dimensions new_dimensions) {
+  if (dimensions_ == new_dimensions)
+    return;
+
   dimensions_ = new_dimensions;
   needs_configure_ = true;
 }

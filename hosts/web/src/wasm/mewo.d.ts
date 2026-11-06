@@ -1,11 +1,13 @@
-export interface MewoModule {
+type Argument = "string" | "number";
+
+export interface WasmModule {
   cwrap(
     name: string,
     returnType: "string" | "number" | "boolean" | null,
-    argTypes: string[],
+    argTypes: Argument[],
   ): (...args: any[]) => any;
 }
 
-declare function createMewo(): Promise<MewoModule>;
+declare function createWasmModule(): Promise<WasmModule>;
 
-export default createMewo;
+export default createWasmModule;
