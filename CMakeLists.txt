@@ -51,5 +51,5 @@ if(MEWO_BUILD_HOST_SDL)
 endif()
 
 if(MEWO_BUILD_HOST_WEB)
-  add_subdirectory(hosts/web/wasm)
+  add_subdirectory(hosts/web/bindings)
 endif()

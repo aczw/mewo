@@ -1,4 +1,4 @@
-#include "bindings.h"
+#include "wrappers.h"
 
 #include <mewo/mewo.h>
 

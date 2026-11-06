@@ -1,4 +1,4 @@
-import { Mewo, MewoEvent, MewoResult, NULL, type Ptr } from "../wasm/bindings";
+import { Mewo, MewoEvent, MewoResult, NULL, type Ptr } from "../wasm/api";
 
 type Dimensions = { width: number; height: number };
 

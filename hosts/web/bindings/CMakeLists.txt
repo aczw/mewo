@@ -1,4 +1,4 @@
-add_executable(mewo_web bindings.c)
+add_executable(mewo_web wrappers.c)
 mewo_set_target_defaults(mewo_web C)
 
 target_link_libraries(mewo_web PRIVATE mewo)
