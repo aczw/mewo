@@ -12,5 +12,5 @@ target_link_options(mewo_web PRIVATE
 )
 set_target_properties(mewo_web PROPERTIES
   OUTPUT_NAME mewo
-  RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/hosts/web/src/wasm"
+  RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/hosts/web/src/mewo/wasm"
 )

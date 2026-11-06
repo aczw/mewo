@@ -1,6 +1,6 @@
-import { Mewo, MewoEvent, MewoResult, NULL, type Ptr } from "../wasm/api";
-
-type Dimensions = { width: number; height: number };
+import { Mewo } from "../mewo/api";
+import { type Dimensions, kNull, MewoEvent, type Ptr } from "../mewo/types";
+import { resultToString } from "../mewo/util";
 
 const kCanvasId = "mewo" as const;
 
@@ -14,23 +14,6 @@ const Log = {
 
 const canvasElt = document.getElementById(kCanvasId) as HTMLCanvasElement;
 
-const resultToString = (result: MewoResult): string => {
-  switch (result) {
-    case MewoResult.Success:
-      return "success";
-    case MewoResult.NotReady:
-      return "not ready";
-    case MewoResult.Internal:
-      return "internal";
-    case MewoResult.InvalidArgument:
-      return "invalid argument";
-    case MewoResult.InvalidOperation:
-      return "invalid operation";
-    default:
-      return `unknown (${result})`;
-  }
-};
-
 const getCanvasDimensions = (): Dimensions => ({
   width: Math.round(canvasElt.clientWidth * window.devicePixelRatio),
   height: Math.round(canvasElt.clientHeight * window.devicePixelRatio),
@@ -39,7 +22,7 @@ const getCanvasDimensions = (): Dimensions => ({
 const main = () => {
   const runtime = Mewo.runtimeCreate();
 
-  if (runtime === NULL) {
+  if (runtime === kNull) {
     Log.err("runtime creation failed:", resultToString(Mewo.lastResult()));
     return;
   } else {
@@ -54,7 +37,7 @@ const main = () => {
     lastDims.height,
   );
 
-  if (surface === NULL) {
+  if (surface === kNull) {
     Log.err("surface init failed:", resultToString(Mewo.lastResult()));
     return;
   } else {
@@ -63,7 +46,7 @@ const main = () => {
 
   const project = Mewo.projectCreate();
 
-  if (project === NULL) {
+  if (project === kNull) {
     Log.err("project creation failed:", resultToString(Mewo.lastResult()));
     return;
   } else {
@@ -72,7 +55,7 @@ const main = () => {
 
   Mewo.runtimeRequestDevice(runtime, surface);
 
-  let session: Ptr = NULL;
+  let session: Ptr = kNull;
 
   const onFrame: FrameRequestCallback = (time) => {
     Mewo.runtimeTick(runtime);
@@ -83,14 +66,14 @@ const main = () => {
 
         session = Mewo.sessionCreate(runtime, project, lastDims.width, lastDims.height);
 
-        if (session === NULL)
+        if (session === kNull)
           Log.err("session creation failed:", resultToString(Mewo.lastResult()));
       } else {
         Log.err(Mewo.eventMessage());
       }
     }
 
-    if (session === NULL) {
+    if (session === kNull) {
       window.requestAnimationFrame(onFrame);
       return;
     }

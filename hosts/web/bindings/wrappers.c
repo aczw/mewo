@@ -2,6 +2,7 @@
 
 #include <mewo/mewo.h>
 
+#include <emscripten/em_macros.h>
 #include <emscripten/emscripten.h>
 
 #include <stdbool.h>
@@ -60,7 +61,11 @@ mewo_runtime_t* mewo_web_runtime_create(void) {
 }
 
 EMSCRIPTEN_KEEPALIVE
-void mewo_web_runtime_tick(mewo_runtime_t* runtime) { mewo_runtime_tick(runtime); }
+void mewo_web_runtime_destroy(mewo_runtime_t* runtime) { mewo_runtime_destroy(runtime); }
+
+EMSCRIPTEN_KEEPALIVE void mewo_web_runtime_tick(mewo_runtime_t* runtime) {
+  mewo_runtime_tick(runtime);
+}
 
 EMSCRIPTEN_KEEPALIVE
 void mewo_web_runtime_request_device(mewo_runtime_t* runtime, mewo_surface_t* surface) {
@@ -102,6 +107,8 @@ mewo_surface_t* mewo_web_surface_create_canvas(
   last_result = mewo_surface_create(runtime, &desc, &surface);
   return surface;
 }
+
+void mewo_web_surface_destroy(mewo_surface_t* surface) { mewo_surface_destroy(surface); }
 
 EMSCRIPTEN_KEEPALIVE
 void mewo_web_surface_resize(mewo_surface_t* surface, uint32_t width, uint32_t height) {

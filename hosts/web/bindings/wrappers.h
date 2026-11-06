@@ -23,6 +23,8 @@ const char* mewo_web_get_version(void);
 
 mewo_runtime_t* mewo_web_runtime_create(void);
 
+void mewo_web_runtime_destroy(mewo_runtime_t* runtime);
+
 void mewo_web_runtime_tick(mewo_runtime_t* runtime);
 
 void mewo_web_runtime_request_device(mewo_runtime_t* runtime, mewo_surface_t* surface);
@@ -45,6 +47,8 @@ mewo_surface_t* mewo_web_surface_create_canvas(
   uint32_t width,
   uint32_t height
 );
+
+void mewo_web_surface_destroy(mewo_surface_t* surface);
 
 /** Resizes the surface to the new size in device pixels. 0 is valid. */
 void mewo_web_surface_resize(mewo_surface_t* surface, uint32_t width, uint32_t height);
