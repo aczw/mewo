@@ -24,19 +24,50 @@ std::optional<std::unique_ptr<Surface>> Surface::create(
   gpu::Surface surface = std::visit(
     Match{
       [&desc, &instance](const MetalLayer& variant) {
+#if defined(MEWO_WEBGPU_EMDAWNWEBGPU)
+        (void)desc;
+        (void)instance;
+        (void)variant;
+        return gpu::Surface();
+#else
         WGPUSurfaceSourceMetalLayer ml = WGPU_SURFACE_SOURCE_METAL_LAYER_INIT;
         ml.layer = variant.layer;
 
         desc.nextInChain = &ml.chain;
         return gpu::Surface(wgpuInstanceCreateSurface(instance.get(), &desc));
+#endif
       },
+
       [&desc, &instance](const Win32& variant) {
+#if defined(MEWO_WEBGPU_EMDAWNWEBGPU)
+        (void)desc;
+        (void)instance;
+        (void)variant;
+        return gpu::Surface();
+#else
         WGPUSurfaceSourceWindowsHWND win = WGPU_SURFACE_SOURCE_WINDOWS_HWND_INIT;
         win.hinstance = variant.hinstance;
         win.hwnd = variant.hwnd;
 
         desc.nextInChain = &win.chain;
         return gpu::Surface(wgpuInstanceCreateSurface(instance.get(), &desc));
+#endif
+      },
+
+      [&desc, &instance](const HtmlCanvas& variant) {
+#if defined(MEWO_WEBGPU_EMDAWNWEBGPU)
+        WGPUEmscriptenSurfaceSourceCanvasHTMLSelector canvas =
+          WGPU_EMSCRIPTEN_SURFACE_SOURCE_CANVAS_HTML_SELECTOR_INIT;
+        canvas.selector = gpu::to_string_view(variant.selector);
+
+        desc.nextInChain = &canvas.chain;
+        return gpu::Surface(wgpuInstanceCreateSurface(instance.get(), &desc));
+#else
+        (void)desc;
+        (void)instance;
+        (void)variant;
+        return gpu::Surface();
+#endif
       }
     },
     source

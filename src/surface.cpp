@@ -1,6 +1,8 @@
 #include "impl/surface.hpp"
 
+#include "impl/common/string.hpp"
 #include "impl/runtime.hpp"
+#include "impl/surface/source.hpp"
 
 #include <mewo/mewo.h>
 
@@ -19,35 +21,45 @@ mewo_result_t mewo_surface_create(
   assert(out);
   *out = nullptr;
 
-  auto source_opt = [&desc]() -> std::optional<mewo::impl::SurfaceSource> {
-    switch (desc->type) {
-      case MEWO_SURFACE_SOURCE_METAL_LAYER: {
-        if (!desc->variant.metal_layer.layer) {
-          return std::nullopt;
-        } else {
-          return mewo::impl::MetalLayer{.layer = desc->variant.metal_layer.layer};
-        }
-      }
-
-      case MEWO_SURFACE_SOURCE_WIN32: {
-        if (!desc->variant.win32.hinstance || !desc->variant.win32.hwnd) {
-          return std::nullopt;
-        } else {
-          return mewo::impl::Win32{
-            .hinstance = desc->variant.win32.hinstance,
-            .hwnd = desc->variant.win32.hwnd,
-          };
-        }
-      }
-
-      default: return std::nullopt;
-    }
-  }();
-
-  if (!source_opt)
-    return MEWO_ERROR_INVALID_ARGUMENT;
-
+  // Allocating a `std::string` can throw here
   try {
+    auto source_opt = [&desc]() -> std::optional<mewo::impl::SurfaceSource> {
+      switch (desc->type) {
+        case MEWO_SURFACE_SOURCE_METAL_LAYER: {
+          if (!desc->variant.metal_layer.layer) {
+            return std::nullopt;
+          } else {
+            return mewo::impl::MetalLayer{.layer = desc->variant.metal_layer.layer};
+          }
+        }
+
+        case MEWO_SURFACE_SOURCE_WIN32: {
+          if (!desc->variant.win32.hinstance || !desc->variant.win32.hwnd) {
+            return std::nullopt;
+          } else {
+            return mewo::impl::Win32{
+              .hinstance = desc->variant.win32.hinstance,
+              .hwnd = desc->variant.win32.hwnd,
+            };
+          }
+        }
+
+        case MEWO_SURFACE_SOURCE_HTML_CANVAS: {
+          auto selector_opt = mewo::impl::to_string(desc->variant.html_canvas.selector);
+
+          if (!selector_opt)
+            return std::nullopt;
+
+          return mewo::impl::HtmlCanvas{.selector = std::move(selector_opt.value())};
+        }
+
+        default: return std::nullopt;
+      }
+    }();
+
+    if (!source_opt)
+      return MEWO_ERROR_INVALID_ARGUMENT;
+
     auto surface_opt = mewo::impl::Surface::create(
       runtime->impl->instance(),
       {.width = desc->initial_width, .height = desc->initial_height},

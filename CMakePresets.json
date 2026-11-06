@@ -29,6 +29,20 @@
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++"
       }
+    },
+    {
+      "name": "release-wasm",
+      "displayName": "Release (Emscripten/WASM)",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "generator": "Ninja",
+      "toolchainFile": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "MEWO_WEBGPU_IMPL": "emdawnwebgpu",
+        "MEWO_BUILD_TESTS": "OFF",
+        "MEWO_BUILD_HOSTS": "OFF"
+      }
     }
   ],
   "buildPresets": [
@@ -41,18 +55,13 @@
       "name": "debug-clang-tests",
       "displayName": "Debug (Clang): tests only",
       "configurePreset": "debug-clang",
-      "targets": [
-        "mewo_tests",
-        "mewo_c_check"
-      ]
+      "targets": ["mewo_tests", "mewo_c_check"]
     },
     {
       "name": "debug-clang-host-sdl",
       "displayName": "Debug (Clang): SDL host",
       "configurePreset": "debug-clang",
-      "targets": [
-        "mewo_sdl"
-      ]
+      "targets": ["mewo_sdl"]
     },
     {
       "name": "release-clang",
@@ -63,18 +72,19 @@
       "name": "release-clang-tests",
       "displayName": "Release (Clang): tests only",
       "configurePreset": "release-clang",
-      "targets": [
-        "mewo_tests",
-        "mewo_c_check"
-      ]
+      "targets": ["mewo_tests", "mewo_c_check"]
     },
     {
       "name": "release-clang-host-sdl",
       "displayName": "Release (Clang): SDL host",
       "configurePreset": "release-clang",
-      "targets": [
-        "mewo_sdl"
-      ]
+      "targets": ["mewo_sdl"]
+    },
+    {
+      "name": "release-wasm",
+      "displayName": "Release (Emscripten/WASM)",
+      "configurePreset": "release-wasm",
+      "targets": ["mewo"]
     }
   ],
   "testPresets": [

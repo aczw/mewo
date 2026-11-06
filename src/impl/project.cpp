@@ -62,7 +62,7 @@ bool Project::move_pass(Pass::Id pass_id, uint32_t new_index) {
   if (current_it == passes_.end())
     return false;
 
-  auto new_it = passes_.begin() + new_index;
+  auto new_it = passes_.begin() + static_cast<std::ptrdiff_t>(new_index);
 
   if (new_it == current_it)
     return true;

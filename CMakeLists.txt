@@ -15,9 +15,11 @@ if(NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL
 endif()
 
 set(MEWO_WEBGPU_IMPL "dawn" CACHE STRING "Choose WebGPU implementation")
-set_property(CACHE MEWO_WEBGPU_IMPL PROPERTY STRINGS "dawn")
+set_property(CACHE MEWO_WEBGPU_IMPL PROPERTY STRINGS "dawn" "emdawnwebgpu")
 option(MEWO_BUILD_TESTS "Build tests" ON)
 option(MEWO_BUILD_HOSTS "Build hosts (apps)" ON)
+
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 if(MEWO_BUILD_TESTS)
   enable_testing()

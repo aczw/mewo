@@ -15,6 +15,7 @@ typedef enum mewo_surface_source_type {
   MEWO_SURFACE_SOURCE_NONE = 0,
   MEWO_SURFACE_SOURCE_METAL_LAYER,
   MEWO_SURFACE_SOURCE_WIN32,
+  MEWO_SURFACE_SOURCE_HTML_CANVAS,
   MEWO_SURFACE_SOURCE_FORCE_INT = MEWO_ENUM_FORCE_INT,
 } mewo_surface_source_type_t;
 
@@ -32,6 +33,11 @@ typedef struct mewo_surface_descriptor {
       void* hinstance;
       void* hwnd;
     } win32;
+
+    struct {
+      /** A `<canvas>` element found with `document.querySelector()`. */
+      mewo_string_view_t selector;
+    } html_canvas;
   } variant;
 } mewo_surface_descriptor_t;
 

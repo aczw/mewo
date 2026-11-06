@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <variant>
 
 namespace mewo::impl {
@@ -13,6 +14,10 @@ struct Win32 {
   void* hwnd;
 };
 
-using SurfaceSource = std::variant<MetalLayer, Win32>;
+struct HtmlCanvas {
+  std::string selector;
+};
+
+using SurfaceSource = std::variant<MetalLayer, Win32, HtmlCanvas>;
 
 }  // namespace mewo::impl
