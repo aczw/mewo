@@ -19,7 +19,7 @@ endif()
 #
 # Set up and add SDL
 #
-if(MEWO_BUILD_HOSTS AND NOT EMSCRIPTEN)
+if(MEWO_BUILD_HOST_SDL)
   # Build as a static library
   set(SDL_SHARED OFF CACHE BOOL "")
   set(SDL_STATIC ON CACHE BOOL "")

@@ -39,9 +39,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "MEWO_WEBGPU_IMPL": "emdawnwebgpu",
-        "MEWO_BUILD_TESTS": "OFF",
-        "MEWO_BUILD_HOSTS": "ON"
+        "MEWO_BUILD_TESTS": "OFF"
       }
     }
   ],

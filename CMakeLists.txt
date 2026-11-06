@@ -14,10 +14,19 @@ if(NOT (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL
   message(FATAL_ERROR "Unsupported compiler used: ${CMAKE_CXX_COMPILER_ID}")
 endif()
 
-set(MEWO_WEBGPU_IMPL "dawn" CACHE STRING "Choose WebGPU implementation")
+include(CMakeDependentOption)
+
+if(EMSCRIPTEN)
+  set(MEWO_DEFAULT_WEBGPU_IMPL "emdawnwebgpu")
+else()
+  set(MEWO_DEFAULT_WEBGPU_IMPL "dawn")
+endif()
+
+set(MEWO_WEBGPU_IMPL "${MEWO_DEFAULT_WEBGPU_IMPL}" CACHE STRING "WebGPU implementation")
 set_property(CACHE MEWO_WEBGPU_IMPL PROPERTY STRINGS "dawn" "emdawnwebgpu")
 option(MEWO_BUILD_TESTS "Build tests" ON)
-option(MEWO_BUILD_HOSTS "Build hosts (apps)" ON)
+cmake_dependent_option(MEWO_BUILD_HOST_SDL "Build SDL reference" ON "NOT EMSCRIPTEN" OFF)
+cmake_dependent_option(MEWO_BUILD_HOST_WEB "Build WASM frontend" ON "EMSCRIPTEN" OFF)
 
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
@@ -37,10 +46,10 @@ if(MEWO_BUILD_TESTS)
   add_subdirectory(tests)
 endif()
 
-if(MEWO_BUILD_HOSTS)
-  if(NOT EMSCRIPTEN)
-    add_subdirectory(hosts/sdl)
-  else()
-    add_subdirectory(hosts/web/wasm)
-  endif()
+if(MEWO_BUILD_HOST_SDL)
+  add_subdirectory(hosts/sdl)
+endif()
+
+if(MEWO_BUILD_HOST_WEB)
+  add_subdirectory(hosts/web/wasm)
 endif()
