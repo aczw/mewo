@@ -1,5 +1,8 @@
 {
-  "clangd.arguments": ["--compile-commands-dir=${command:cmake.buildDirectory}"],
+  "clangd.arguments": [
+    "--compile-commands-dir=${command:cmake.buildDirectory}",
+    "--query-driver=**/emscripten/em*"
+  ],
   "customLocalFormatters.formatters": [
     {
       "command": "bun --cwd hosts/web fmt --stdin-filepath \"${file}\"",
