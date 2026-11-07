@@ -22,5 +22,8 @@
   "devDependencies": {
     "electron": "^45.2.3",
     "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "codemirror": "^6.0.2"
   }
 }

@@ -5,7 +5,7 @@
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'"
+      content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'"
     />
 
     <link rel="stylesheet" href="./styles/main.css" />
@@ -15,9 +15,7 @@
 
   <body>
     <main>
-      <div class="left">
-        <p id="info"></p>
-      </div>
+      <div id="editor" class="left"></div>
 
       <div class="right">
         <div class="viewport"><canvas id="mewo"></canvas></div>
