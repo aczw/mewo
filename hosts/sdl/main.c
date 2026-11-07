@@ -19,6 +19,12 @@
 #define COMMON_FILE_NAME "common.wgsl"
 #define FOLDER_SCAN_INTERVAL_MS 250
 
+static const char kDefaultPassSource[] =
+  "fn main(frag_coord: vec2f) -> vec4f {\n"
+  "  let uv = frag_coord / mw.resolution;\n"
+  "  return vec4f(0.5 + 0.5 * cos(mw.time + uv.xyx + vec3f(0.0, 2.0, 4.0)), 1.0);\n"
+  "}\n";
+
 typedef struct {
   char* path;
   SDL_Time mod_time;
@@ -355,7 +361,11 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
   if (mewo_surface_create(state->runtime, &surface_desc, &state->surface) < 0)
     return SDL_APP_FAILURE;
 
-  if (mewo_project_create(&state->project) < 0)
+  mewo_project_descriptor_t project_desc = {0};
+  project_desc.first_pass_name = (mewo_string_view_t){.data = "Pass 1", .length = 6};
+  project_desc.first_pass_source =
+    (mewo_string_view_t){.data = kDefaultPassSource, sizeof(kDefaultPassSource) - 1};
+  if (mewo_project_create(&project_desc, &state->project) < 0)
     return SDL_APP_FAILURE;
 
   SDL_Log("[info] created new project");

@@ -20,7 +20,10 @@ class Project : private Pinned {
     kFailedBecauseLast,
   };
 
-  static std::unique_ptr<Project> create();
+  static std::unique_ptr<Project> create(
+    std::string&& first_pass_name,
+    std::string&& first_pass_source
+  );
 
   const std::vector<Pass>& passes() const { return passes_; }
 

@@ -117,9 +117,16 @@ void mewo_web_surface_resize(mewo_surface_t* surface, uint32_t width, uint32_t h
 }
 
 EMSCRIPTEN_KEEPALIVE
-mewo_project_t* mewo_web_project_create(void) {
+mewo_project_t* mewo_web_project_create(
+  const char* first_pass_name,
+  const char* first_pass_source
+) {
+  mewo_project_descriptor_t desc = {0};
+  desc.first_pass_name = to_string_view(first_pass_name);
+  desc.first_pass_source = to_string_view(first_pass_source);
+
   mewo_project_t* project = NULL;
-  last_result = mewo_project_create(&project);
+  last_result = mewo_project_create(&desc, &project);
   return project;
 }
 

@@ -53,7 +53,7 @@ void mewo_web_surface_destroy(mewo_surface_t* surface);
 /** Resizes the surface to the new size in device pixels. 0 is valid. */
 void mewo_web_surface_resize(mewo_surface_t* surface, uint32_t width, uint32_t height);
 
-mewo_project_t* mewo_web_project_create(void);
+mewo_project_t* mewo_web_project_create(const char* first_pass_name, const char* first_pass_source);
 
 void mewo_web_project_destroy(mewo_project_t* project);
 

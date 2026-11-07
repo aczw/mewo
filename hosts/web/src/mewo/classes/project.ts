@@ -5,8 +5,8 @@ import { kNull, type Ptr } from "../types";
 class Project implements Disposable {
   #handle: Ptr;
 
-  constructor() {
-    this.#handle = Mewo.projectCreate();
+  constructor(firstPassName: string, firstPassSource: string) {
+    this.#handle = Mewo.projectCreate(firstPassName, firstPassSource);
     if (this.#handle === kNull) throw new MewoError("project creation failed");
   }
 

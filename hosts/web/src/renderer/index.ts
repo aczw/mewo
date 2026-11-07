@@ -5,6 +5,10 @@ import { Surface } from "../mewo/classes/surface";
 import { MewoEvent } from "../mewo/types";
 
 const kCanvasId = "mewo";
+const kDefaultPassSource = `fn main(frag_coord: vec2f) -> vec4f {
+  let uv = frag_coord / mw.resolution;
+  return vec4f(0.5 + 0.5 * cos(mw.time + uv.xyx + vec3f(0.0, 2.0, 4.0)), 1.0);
+}`;
 
 const information = document.getElementById("info")!;
 information.innerText = `Chrome (v${versions.chrome()}) / Node.js (v${versions.node()}) / Electron (v${versions.electron()})`;
@@ -16,7 +20,7 @@ const main = () => {
   const surface = new Surface(runtime, document.getElementById(kCanvasId) as HTMLCanvasElement);
   console.info("[libmewo] created surface");
 
-  const project = new Project();
+  const project = new Project("Pass 1", kDefaultPassSource);
   console.info("[libmewo] initialized new project");
 
   runtime.requestDevice(surface);

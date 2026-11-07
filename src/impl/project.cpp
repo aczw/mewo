@@ -7,24 +7,18 @@
 #include <limits>
 #include <memory>
 #include <string>
-#include <string_view>
 #include <utility>
 #include <vector>
 
 namespace mewo::impl {
-namespace {
 
-constexpr std::string_view kDefaultPassSource = R"wgsl(fn main(frag_coord: vec2f) -> vec4f {
-  let uv = frag_coord / mw.resolution;
-  return vec4f(0.5 + 0.5 * cos(mw.time + uv.xyx + vec3f(0.0, 2.0, 4.0)), 1.0);
-})wgsl";
-
-}  // namespace
-
-std::unique_ptr<Project> Project::create() {
+std::unique_ptr<Project> Project::create(
+  std::string&& first_pass_name,
+  std::string&& first_pass_source
+) {
   // Constructor is private so can't use `std::make_unique`
   std::unique_ptr<Project> project(new Project());
-  project->add_pass("Pass 1", std::string(kDefaultPassSource));
+  project->add_pass(std::move(first_pass_name), std::move(first_pass_source));
   return project;
 }
 
@@ -39,6 +33,8 @@ Pass::Id Project::add_pass(std::string name, std::string source) {
 }
 
 Project::RemovePassResult Project::remove_pass(Pass::Id pass_id) {
+  assert(passes_.size() >= 1 && "project does not have at least 1 pass");
+
   auto pass_it = std::ranges::find(passes_, pass_id, &Pass::id);
 
   if (pass_it == passes_.end())
@@ -54,6 +50,8 @@ Project::RemovePassResult Project::remove_pass(Pass::Id pass_id) {
 }
 
 bool Project::move_pass(Pass::Id pass_id, uint32_t new_index) {
+  assert(passes_.size() >= 1 && "project does not have at least 1 pass");
+
   if (new_index >= passes_.size())
     return false;
 
@@ -79,6 +77,8 @@ bool Project::move_pass(Pass::Id pass_id, uint32_t new_index) {
 }
 
 bool Project::set_pass_source(Pass::Id pass_id, std::string new_source) {
+  assert(passes_.size() >= 1 && "project does not have at least 1 pass");
+
   if (auto pass_it = std::ranges::find(passes_, pass_id, &Pass::id); pass_it != passes_.end()) {
     pass_it->set_source(std::move(new_source));
     return true;
@@ -88,6 +88,8 @@ bool Project::set_pass_source(Pass::Id pass_id, std::string new_source) {
 }
 
 void Project::set_common_source(std::string new_source) {
+  assert(passes_.size() >= 1 && "project does not have at least 1 pass");
+
   common_source_ = std::move(new_source);
   common_revision_ += 1;
 }

@@ -37,7 +37,10 @@ const Mewo = {
     height: number,
   ) => void,
 
-  projectCreate: Module.cwrap("mewo_web_project_create", "number", []) as () => Ptr,
+  projectCreate: Module.cwrap("mewo_web_project_create", "number", ["string", "string"]) as (
+    firstPassName: string,
+    firstPassSource: string,
+  ) => Ptr,
   projectDestroy: Module.cwrap("mewo_web_project_destroy", null, ["number"]) as (
     project: Ptr,
   ) => void,

@@ -16,12 +16,19 @@
 static_assert(std::is_same_v<mewo_pass_id_t, mewo::Pass::Id>);
 
 extern "C" {
-mewo_result_t mewo_project_create(mewo_project_t** out) {
+mewo_result_t mewo_project_create(const mewo_project_descriptor_t* desc, mewo_project_t** out) {
+  assert(desc);
   assert(out);
   *out = nullptr;
 
   try {
-    *out = new mewo_project_t(mewo::impl::Project::create());
+    std::string first_pass_name =
+      mewo::impl::to_string(desc->first_pass_name).value_or("<invalid pass name>");
+    std::string first_pass_source = mewo::impl::to_string(desc->first_pass_source).value_or("");
+
+    *out = new mewo_project_t(
+      mewo::impl::Project::create(std::move(first_pass_name), std::move(first_pass_source))
+    );
   } catch (...) {
     return MEWO_ERROR_INTERNAL;
   }

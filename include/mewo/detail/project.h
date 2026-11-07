@@ -41,10 +41,20 @@ typedef struct mewo_diagnostic {
 } mewo_diagnostic_t;
 
 /**
+ * A project always has at least 1 pass. Therefore, the descriptor for the project asks you
+ * to provide the first pass name and source.
+ */
+typedef struct mewo_project_descriptor {
+  mewo_string_view_t first_pass_name;
+  mewo_string_view_t first_pass_source;
+} mewo_project_descriptor_t;
+
+/**
+ * @param desc Pointer to the project descriptor.
  * @param out Out parameter where a pointer to the project will be stored.
  * @return Returns whether the operation was successful.
  */
-mewo_result_t mewo_project_create(mewo_project_t** out);
+mewo_result_t mewo_project_create(const mewo_project_descriptor_t* desc, mewo_project_t** out);
 
 /**
  * Destroys the project. All sessions launched from this project must be destroyed first.
