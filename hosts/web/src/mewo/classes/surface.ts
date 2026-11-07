@@ -1,19 +1,20 @@
 import { Mewo } from "../api";
 import { MewoError } from "../error";
 import { type Dimensions, kNull, type Ptr } from "../types";
+import type { Runtime } from "./runtime";
 
 class Surface implements Disposable {
   #handle: Ptr;
   #canvas: HTMLCanvasElement;
   #dimensions: Dimensions;
 
-  constructor(runtime: Ptr, canvas: HTMLCanvasElement) {
+  constructor(runtime: Runtime, canvas: HTMLCanvasElement) {
     if (canvas.id === "") throw new Error("canvas has no id");
 
     this.#canvas = canvas;
     this.#dimensions = Surface.#measure(canvas);
     this.#handle = Mewo.surfaceCreateCanvas(
-      runtime,
+      runtime.handle,
       `#${canvas.id}`,
       this.#dimensions.width,
       this.#dimensions.height,

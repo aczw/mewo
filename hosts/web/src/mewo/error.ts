@@ -5,7 +5,7 @@ class MewoError extends Error {
   readonly result: MewoResult;
 
   constructor(result: MewoResult) {
-    super(`libmewo call failed: ${resultToString(result)}`);
+    super(`[libmewo] call failed: ${resultToString(result)}`);
     this.name = "MewoError";
     this.result = result;
   }

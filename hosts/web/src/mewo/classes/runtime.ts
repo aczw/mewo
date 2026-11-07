@@ -1,7 +1,7 @@
 import { Mewo } from "../api";
 import { MewoError } from "../error";
 import { kNull, MewoEvent, type Ptr } from "../types";
-import { Surface } from "./surface";
+import type { Surface } from "./surface";
 
 class Runtime implements Disposable {
   #handle: Ptr;

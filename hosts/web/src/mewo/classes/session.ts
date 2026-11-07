@@ -10,15 +10,21 @@ class Session implements Disposable {
 
   constructor(runtime: Runtime, project: Project, width: number, height: number) {
     this.#handle = Mewo.sessionCreate(runtime.handle, project.handle, width, height);
+    if (this.#handle === kNull) throw new MewoError(Mewo.lastResult());
   }
 
-  setRenderSize(newWidth: number, newHeight: number) {
-    if (!Mewo.sessionSetRenderSize(this.#handle, newWidth, newHeight))
+  get handle(): Ptr {
+    if (this.#handle === kNull) throw new Error("session used after dispose");
+    return this.#handle;
+  }
+
+  setRenderSize(newWidth: number, newHeight: number): void {
+    if (!Mewo.sessionSetRenderSize(this.handle, newWidth, newHeight))
       throw new MewoError(Mewo.lastResult());
   }
 
-  render(surface: Surface, timeMs: number) {
-    if (!Mewo.sessionRender(this.#handle, surface.handle, timeMs))
+  render(surface: Surface, timeMs: number): void {
+    if (!Mewo.sessionRender(this.handle, surface.handle, timeMs))
       throw new MewoError(Mewo.lastResult());
   }
 

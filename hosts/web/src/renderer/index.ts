@@ -1,11 +1,10 @@
-import { Mewo } from "../mewo/api";
 import { Project } from "../mewo/classes/project";
 import { Runtime } from "../mewo/classes/runtime";
+import { Session } from "../mewo/classes/session";
 import { Surface } from "../mewo/classes/surface";
-import { kNull, MewoEvent, type Ptr } from "../mewo/types";
-import { resultToString } from "../mewo/util";
+import { MewoEvent } from "../mewo/types";
 
-const kCanvasId = "mewo" as const;
+const kCanvasId = "mewo";
 
 const information = document.getElementById("info")!;
 information.innerText = `Chrome (v${versions.chrome()}) / Node.js (v${versions.node()}) / Electron (v${versions.electron()})`;
@@ -14,10 +13,7 @@ const main = () => {
   const runtime = new Runtime();
   console.info("[libmewo] created runtime");
 
-  const surface = new Surface(
-    runtime.handle,
-    document.getElementById(kCanvasId) as HTMLCanvasElement,
-  );
+  const surface = new Surface(runtime, document.getElementById(kCanvasId) as HTMLCanvasElement);
   console.info("[libmewo] created surface");
 
   const project = new Project();
@@ -25,7 +21,7 @@ const main = () => {
 
   runtime.requestDevice(surface);
 
-  let session: Ptr = kNull;
+  let session: Session | null = null;
 
   const onFrame: FrameRequestCallback = (time) => {
     runtime.tick();
@@ -35,37 +31,28 @@ const main = () => {
 
       if (event.type === MewoEvent.DeviceReady) {
         console.info("[libmewo] device is ready");
-        session = Mewo.sessionCreate(
-          runtime.handle,
-          project.handle,
+        session = new Session(
+          runtime,
+          project,
           surface.dimensions.width,
           surface.dimensions.height,
         );
-
-        if (session === kNull)
-          console.error("[libmewo] session creation failed:", resultToString(Mewo.lastResult()));
       } else {
         console.error("[libmewo]", event.message);
       }
     }
 
-    if (session === kNull) {
+    if (session === null) {
       window.requestAnimationFrame(onFrame);
       return;
     }
 
     if (surface.checkForResize()) {
       const dims = surface.dimensions;
-
-      if (dims.width !== 0 && dims.height !== 0) {
-        if (!Mewo.sessionSetRenderSize(session, dims.width, dims.height))
-          console.error("[libmewo] failed to set render size:", resultToString(Mewo.lastResult()));
-      }
+      if (dims.width !== 0 && dims.height !== 0) session.setRenderSize(dims.width, dims.height);
     }
 
-    if (!Mewo.sessionRender(session, surface.handle, time))
-      console.error("session failed to render:", resultToString(Mewo.lastResult()));
-
+    session.render(surface, time);
     window.requestAnimationFrame(onFrame);
   };
 
