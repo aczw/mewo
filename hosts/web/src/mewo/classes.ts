@@ -24,6 +24,12 @@ class Runtime implements Disposable {
     Mewo.runtimeRequestDevice(this.handle, surface.handle);
   }
 
+  createSurface(canvas: HTMLCanvasElement): Surface {
+    const surface = new Surface(this.handle, canvas, () => this.#children.delete(surface));
+    this.#children.add(surface);
+    return surface;
+  }
+
   *pollEvents(): Generator<{ type: MewoEvent; message: string }> {
     for (let event; (event = Mewo.runtimePollEvent(this.handle)) !== MewoEvent.None;) {
       yield { type: event, message: Mewo.eventMessage() };
@@ -71,14 +77,15 @@ class Surface implements Disposable {
     return this.#dimensions;
   }
 
-  checkForResize() {
+  checkForResize(): boolean {
     const current = Surface.#measure(this.#canvas);
 
     if (current.width === this.#dimensions.width && current.height === this.#dimensions.height)
-      return;
+      return false;
 
     Mewo.surfaceResize(this.handle, current.width, current.height);
     this.#dimensions = current;
+    return true;
   }
 
   static #measure(canvas: HTMLCanvasElement): Dimensions {
@@ -97,4 +104,4 @@ class Surface implements Disposable {
   }
 }
 
-export { Runtime };
+export { Runtime, type Surface };
