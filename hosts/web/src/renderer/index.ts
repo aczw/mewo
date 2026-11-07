@@ -1,5 +1,6 @@
 import { Mewo } from "../mewo/api";
-import { Runtime } from "../mewo/classes";
+import { Project } from "../mewo/classes/project";
+import { Runtime } from "../mewo/classes/runtime";
 import { kNull, MewoEvent, type Ptr } from "../mewo/types";
 import { resultToString } from "../mewo/util";
 
@@ -10,19 +11,11 @@ information.innerText = `Chrome (v${versions.chrome()}) / Node.js (v${versions.n
 
 const main = () => {
   const runtime = new Runtime();
-  console.log("[libmewo] created runtime");
-
+  console.info("[libmewo] created runtime");
   const surface = runtime.createSurface(document.getElementById(kCanvasId) as HTMLCanvasElement);
-  console.log("[libmewo] created surface");
-
-  const project = Mewo.projectCreate();
-
-  if (project === kNull) {
-    console.error("project creation failed:", resultToString(Mewo.lastResult()));
-    return;
-  } else {
-    console.log("created project");
-  }
+  console.info("[libmewo] created surface");
+  const project = new Project();
+  console.info("[libmewo] initialized new project");
 
   runtime.requestDevice(surface);
 
@@ -38,7 +31,7 @@ const main = () => {
         console.info("[libmewo] device is ready");
         session = Mewo.sessionCreate(
           runtime.handle,
-          project,
+          project.handle,
           surface.dimensions.width,
           surface.dimensions.height,
         );

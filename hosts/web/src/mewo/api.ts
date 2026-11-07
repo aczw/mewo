@@ -38,6 +38,9 @@ const Mewo = {
   ) => void,
 
   projectCreate: Module.cwrap("mewo_web_project_create", "number", []) as () => Ptr,
+  projectDestroy: Module.cwrap("mewo_web_project_destroy", null, ["number"]) as (
+    project: Ptr,
+  ) => void,
 
   sessionCreate: Module.cwrap("mewo_web_session_create", "number", [
     "number",

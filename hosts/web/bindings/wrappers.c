@@ -123,7 +123,9 @@ mewo_project_t* mewo_web_project_create(void) {
 }
 
 EMSCRIPTEN_KEEPALIVE
-mewo_session_t* mewo_web_session_create(
+void mewo_web_project_destroy(mewo_project_t* project) { mewo_project_destroy(project); }
+
+EMSCRIPTEN_KEEPALIVE mewo_session_t* mewo_web_session_create(
   mewo_runtime_t* runtime,
   mewo_project_t* project,
   uint32_t width,

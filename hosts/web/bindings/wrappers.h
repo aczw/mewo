@@ -55,6 +55,8 @@ void mewo_web_surface_resize(mewo_surface_t* surface, uint32_t width, uint32_t h
 
 mewo_project_t* mewo_web_project_create(void);
 
+void mewo_web_project_destroy(mewo_project_t* project);
+
 /** Passing 0 for the width and height is invalid. */
 mewo_session_t* mewo_web_session_create(
   mewo_runtime_t* runtime,
