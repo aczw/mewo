@@ -7,7 +7,7 @@ class Project implements Disposable {
 
   constructor() {
     this.#handle = Mewo.projectCreate();
-    if (this.#handle === kNull) throw new MewoError(Mewo.lastResult());
+    if (this.#handle === kNull) throw new MewoError("project creation failed");
   }
 
   get handle(): Ptr {

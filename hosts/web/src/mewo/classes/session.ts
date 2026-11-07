@@ -10,7 +10,7 @@ class Session implements Disposable {
 
   constructor(runtime: Runtime, project: Project, width: number, height: number) {
     this.#handle = Mewo.sessionCreate(runtime.handle, project.handle, width, height);
-    if (this.#handle === kNull) throw new MewoError(Mewo.lastResult());
+    if (this.#handle === kNull) throw new MewoError("session creation failed");
   }
 
   get handle(): Ptr {
@@ -20,12 +20,12 @@ class Session implements Disposable {
 
   setRenderSize(newWidth: number, newHeight: number): void {
     if (!Mewo.sessionSetRenderSize(this.handle, newWidth, newHeight))
-      throw new MewoError(Mewo.lastResult());
+      throw new MewoError("failed to set session render size");
   }
 
   render(surface: Surface, timeMs: number): void {
     if (!Mewo.sessionRender(this.handle, surface.handle, timeMs))
-      throw new MewoError(Mewo.lastResult());
+      throw new MewoError("session render failed");
   }
 
   [Symbol.dispose](): void {

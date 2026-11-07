@@ -8,7 +8,7 @@ class Runtime implements Disposable {
 
   constructor() {
     this.#handle = Mewo.runtimeCreate();
-    if (this.#handle === kNull) throw new MewoError(Mewo.lastResult());
+    if (this.#handle === kNull) throw new MewoError("runtime creation failed");
   }
 
   get handle(): Ptr {

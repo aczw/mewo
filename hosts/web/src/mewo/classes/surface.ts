@@ -20,7 +20,7 @@ class Surface implements Disposable {
       this.#dimensions.height,
     );
 
-    if (this.#handle === kNull) throw new MewoError(Mewo.lastResult());
+    if (this.#handle === kNull) throw new MewoError("surface creation failed");
   }
 
   get handle(): Ptr {
