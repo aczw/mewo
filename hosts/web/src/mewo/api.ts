@@ -48,6 +48,9 @@ const Mewo = {
     "number",
     "number",
   ]) as (runtime: Ptr, project: Ptr, width: number, height: number) => Ptr,
+  sessionDestroy: Module.cwrap("mewo_web_session_destroy", null, ["number"]) as (
+    session: Ptr,
+  ) => void,
   sessionSetRenderSize: Module.cwrap("mewo_web_session_set_render_size", "boolean", [
     "number",
     "number",

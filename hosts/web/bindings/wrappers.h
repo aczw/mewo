@@ -65,6 +65,8 @@ mewo_session_t* mewo_web_session_create(
   uint32_t height
 );
 
+void mewo_web_session_destroy(mewo_session_t* session);
+
 /** Passing 0 for the width and height is invalid. */
 bool mewo_web_session_set_render_size(mewo_session_t* session, uint32_t width, uint32_t height);
 

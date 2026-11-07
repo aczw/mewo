@@ -5,7 +5,6 @@ import { Surface } from "./surface";
 
 class Runtime implements Disposable {
   #handle: Ptr;
-  #children = new Set<Disposable>();
 
   constructor() {
     this.#handle = Mewo.runtimeCreate();
@@ -25,12 +24,6 @@ class Runtime implements Disposable {
     Mewo.runtimeRequestDevice(this.handle, surface.handle);
   }
 
-  createSurface(canvas: HTMLCanvasElement): Surface {
-    const surface = new Surface(this.handle, canvas, () => this.#children.delete(surface));
-    this.#children.add(surface);
-    return surface;
-  }
-
   *pollEvents(): Generator<{ type: MewoEvent; message: string }> {
     for (let event; (event = Mewo.runtimePollEvent(this.handle)) !== MewoEvent.None;) {
       yield { type: event, message: Mewo.eventMessage() };
@@ -39,7 +32,6 @@ class Runtime implements Disposable {
 
   [Symbol.dispose](): void {
     if (this.#handle === kNull) return;
-    if (this.#children.size > 0) throw new Error("dispose sessions and surfaces first");
 
     Mewo.runtimeDestroy(this.#handle);
     this.#handle = kNull;

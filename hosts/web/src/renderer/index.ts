@@ -1,6 +1,7 @@
 import { Mewo } from "../mewo/api";
 import { Project } from "../mewo/classes/project";
 import { Runtime } from "../mewo/classes/runtime";
+import { Surface } from "../mewo/classes/surface";
 import { kNull, MewoEvent, type Ptr } from "../mewo/types";
 import { resultToString } from "../mewo/util";
 
@@ -12,8 +13,13 @@ information.innerText = `Chrome (v${versions.chrome()}) / Node.js (v${versions.n
 const main = () => {
   const runtime = new Runtime();
   console.info("[libmewo] created runtime");
-  const surface = runtime.createSurface(document.getElementById(kCanvasId) as HTMLCanvasElement);
+
+  const surface = new Surface(
+    runtime.handle,
+    document.getElementById(kCanvasId) as HTMLCanvasElement,
+  );
   console.info("[libmewo] created surface");
+
   const project = new Project();
   console.info("[libmewo] initialized new project");
 

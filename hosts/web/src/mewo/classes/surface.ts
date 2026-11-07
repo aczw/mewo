@@ -6,9 +6,8 @@ class Surface implements Disposable {
   #handle: Ptr;
   #canvas: HTMLCanvasElement;
   #dimensions: Dimensions;
-  #onDispose: () => void;
 
-  constructor(runtime: Ptr, canvas: HTMLCanvasElement, onDispose: () => void) {
+  constructor(runtime: Ptr, canvas: HTMLCanvasElement) {
     if (canvas.id === "") throw new Error("canvas has no id");
 
     this.#canvas = canvas;
@@ -21,8 +20,6 @@ class Surface implements Disposable {
     );
 
     if (this.#handle === kNull) throw new MewoError(Mewo.lastResult());
-
-    this.#onDispose = onDispose;
   }
 
   get handle(): Ptr {
@@ -57,7 +54,6 @@ class Surface implements Disposable {
 
     Mewo.surfaceDestroy(this.#handle);
     this.#handle = kNull;
-    this.#onDispose();
   }
 }
 

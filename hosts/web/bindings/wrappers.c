@@ -108,6 +108,7 @@ mewo_surface_t* mewo_web_surface_create_canvas(
   return surface;
 }
 
+EMSCRIPTEN_KEEPALIVE
 void mewo_web_surface_destroy(mewo_surface_t* surface) { mewo_surface_destroy(surface); }
 
 EMSCRIPTEN_KEEPALIVE
@@ -125,7 +126,8 @@ mewo_project_t* mewo_web_project_create(void) {
 EMSCRIPTEN_KEEPALIVE
 void mewo_web_project_destroy(mewo_project_t* project) { mewo_project_destroy(project); }
 
-EMSCRIPTEN_KEEPALIVE mewo_session_t* mewo_web_session_create(
+EMSCRIPTEN_KEEPALIVE
+mewo_session_t* mewo_web_session_create(
   mewo_runtime_t* runtime,
   mewo_project_t* project,
   uint32_t width,
@@ -140,6 +142,9 @@ EMSCRIPTEN_KEEPALIVE mewo_session_t* mewo_web_session_create(
   last_result = mewo_session_create(runtime, &desc, &session);
   return session;
 }
+
+EMSCRIPTEN_KEEPALIVE
+void mewo_web_session_destroy(mewo_session_t* session) { mewo_session_destroy(session); }
 
 EMSCRIPTEN_KEEPALIVE
 bool mewo_web_session_set_render_size(mewo_session_t* session, uint32_t width, uint32_t height) {
