@@ -30,7 +30,7 @@ import {
 } from "@codemirror/view";
 
 const initialize = () => {
-  new EditorView({
+  return new EditorView({
     doc: "Start document",
     parent: document.getElementById("editor") as HTMLDivElement,
     extensions: [

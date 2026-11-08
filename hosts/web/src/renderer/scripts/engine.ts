@@ -1,8 +1,6 @@
 import { Project } from "../../mewo/classes/project";
 import { Runtime } from "../../mewo/classes/runtime";
-import { Session } from "../../mewo/classes/session";
 import { Surface } from "../../mewo/classes/surface";
-import { MewoEvent } from "../../mewo/types";
 
 const kCanvasId = "mewo";
 const kDefaultPassSource = `fn main(frag_coord: vec2f) -> vec4f {
@@ -22,42 +20,7 @@ const initialize = () => {
 
   runtime.requestDevice(surface);
 
-  let session: Session | null = null;
-
-  const onFrame: FrameRequestCallback = (time) => {
-    runtime.tick();
-
-    for (const event of runtime.pollEvents()) {
-      if (event.type === MewoEvent.None) break;
-
-      if (event.type === MewoEvent.DeviceReady) {
-        console.info("[libmewo] device is ready");
-        session = new Session(
-          runtime,
-          project,
-          surface.dimensions.width,
-          surface.dimensions.height,
-        );
-      } else {
-        console.error("[libmewo]", event.message);
-      }
-    }
-
-    if (session === null) {
-      window.requestAnimationFrame(onFrame);
-      return;
-    }
-
-    if (surface.checkForResize()) {
-      const dims = surface.dimensions;
-      if (dims.width !== 0 && dims.height !== 0) session.setRenderSize(dims.width, dims.height);
-    }
-
-    session.render(surface, time);
-    window.requestAnimationFrame(onFrame);
-  };
-
-  window.requestAnimationFrame(onFrame);
+  return { runtime, surface, project, session: null };
 };
 
 export { initialize as initializeEngine };
