@@ -33,7 +33,7 @@ class App extends Component {
     this.#sessionHolder = this.use(new Mutable<Session>());
 
     const editorElt = el("div", { class: "left" });
-    const rightElt = el("div", { class: "right" }, []);
+    const rightElt = el("div", { class: "right" });
     const main = el("main", {}, [editorElt, rightElt]);
     parent.append(main);
     this.defer(() => main.remove());
@@ -52,7 +52,7 @@ class App extends Component {
     this.#editor = this.use(
       new Editor(
         editorElt,
-        { firstPassSource: this.#project.getPassSource(this.#activePassId) },
+        { project: this.#project, activePassId: this.#activePassId },
         {
           onSourceChanged: (newSource) => {
             this.#project.setPassSource(this.#activePassId, newSource);
