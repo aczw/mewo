@@ -1,6 +1,6 @@
-import { Project } from "../../mewo/classes/project";
-import { Runtime } from "../../mewo/classes/runtime";
-import { Surface } from "../../mewo/classes/surface";
+import { Project } from "../mewo/classes/project";
+import { Runtime } from "../mewo/classes/runtime";
+import { Surface } from "../mewo/classes/surface";
 
 const kCanvasId = "mewo";
 const kDefaultPassSource = `fn main(frag_coord: vec2f) -> vec4f {

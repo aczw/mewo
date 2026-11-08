@@ -1,12 +1,10 @@
-import type { EditorView } from "codemirror";
-
 import type { Project } from "../mewo/classes/project";
 import type { Runtime } from "../mewo/classes/runtime";
 import { Session } from "../mewo/classes/session";
 import type { Surface } from "../mewo/classes/surface";
 import { MewoEvent } from "../mewo/types";
-import { initializeEditor } from "./scripts/editor";
-import { initializeEngine } from "./scripts/engine";
+import { Editor } from "./components/editor";
+import { initializeEngine } from "./engine";
 
 type App = {
   runtime: Runtime;
@@ -14,12 +12,12 @@ type App = {
   project: Project;
   session: Session | null;
 
-  editor: EditorView;
+  editor: Editor;
 };
 
 const app: App = {
   ...initializeEngine(),
-  editor: initializeEditor(),
+  editor: new Editor(document.getElementById("editor") as HTMLDivElement),
 };
 
 const onFrame: FrameRequestCallback = (time) => {
