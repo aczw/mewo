@@ -28,4 +28,8 @@
       }
     }
   }
+
+  > .pass-row-delete[disabled] {
+    opacity: 0.5;
+  }
 }

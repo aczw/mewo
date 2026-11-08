@@ -62,6 +62,7 @@ class PassList extends Component {
       const state: PassRowInit = {
         name: project.getPassName(passId),
         isActive: passId === activePassId,
+        canDelete: passIds.length > 1,
       };
 
       let passRow = this.#rows.get(passId);
