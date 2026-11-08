@@ -31,14 +31,18 @@ import {
 
 import { Component } from "../system/component";
 
+type EditorCallbacks = {
+  onSourceChanged: (newSource: string) => void;
+};
+
 class Editor extends Component {
   readonly view: EditorView;
 
-  constructor(parent: HTMLElement) {
+  constructor(parent: HTMLElement, firstPassSource: string, callbacks: EditorCallbacks) {
     super();
 
     this.view = new EditorView({
-      doc: "Start document",
+      doc: firstPassSource,
       parent,
       extensions: [
         // A line number gutter
@@ -91,6 +95,10 @@ class Editor extends Component {
           // Keys related to the linter system
           ...lintKeymap,
         ]),
+
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) callbacks.onSourceChanged(update.state.doc.toString());
+        }),
       ],
     });
 

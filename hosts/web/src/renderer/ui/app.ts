@@ -19,9 +19,9 @@ class App extends Component {
   readonly project: Project;
   readonly sessionHolder: Mutable<Session>;
 
-  readonly editor: Editor;
   readonly viewport: Viewport;
   readonly passList: PassList;
+  readonly editor: Editor;
 
   constructor(parent: HTMLElement) {
     super();
@@ -37,9 +37,15 @@ class App extends Component {
     parent.append(main);
     this.defer(() => main.remove());
 
-    this.editor = this.use(new Editor(editorElt));
     this.viewport = this.use(new Viewport(rightElt, this.runtime));
     this.passList = this.use(new PassList(rightElt, this.project));
+    this.editor = this.use(
+      new Editor(editorElt, kDefaultPassSource, {
+        onSourceChanged: (newSource) => {
+          this.project.setPassSource(this.passList.activePassId, newSource);
+        },
+      }),
+    );
 
     this.runtime.requestDevice(this.viewport.surface);
     this.#run();

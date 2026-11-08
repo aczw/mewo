@@ -199,6 +199,17 @@ const char* mewo_web_project_get_pass_name(mewo_project_t* project, mewo_pass_id
 }
 
 EMSCRIPTEN_KEEPALIVE
+const char* mewo_web_project_get_pass_source(mewo_project_t* project, mewo_pass_id_t pass_id) {
+  mewo_string_view_t source = {0};
+  last_result = mewo_project_get_pass_source(project, pass_id, &source);
+
+  if (last_result != MEWO_SUCCESS)
+    return NULL;
+
+  return to_c_string(source);
+}
+
+EMSCRIPTEN_KEEPALIVE
 mewo_session_t* mewo_web_session_create(
   mewo_runtime_t* runtime,
   mewo_project_t* project,

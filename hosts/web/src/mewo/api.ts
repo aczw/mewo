@@ -78,6 +78,10 @@ const Mewo = {
     "number",
     "number",
   ]) as (project: Ptr, passId: PassId) => string,
+  projectGetPassSource: Module.cwrap("mewo_web_project_get_pass_source", "string", [
+    "number",
+    "number",
+  ]) as (project: Ptr, passId: PassId) => string,
 
   sessionCreate: Module.cwrap("mewo_web_session_create", "number", [
     "number",

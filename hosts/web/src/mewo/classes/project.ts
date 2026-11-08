@@ -58,6 +58,15 @@ class Project implements Disposable {
     return name;
   }
 
+  getPassSource(passId: PassId): string {
+    const source = Mewo.projectGetPassSource(this.handle, passId);
+
+    // An empty string is a valid source, so we have to check the result explicitly
+    if (Mewo.lastResult() !== MewoResult.Success) throw new MewoError("failed to get pass source");
+
+    return source;
+  }
+
   [Symbol.dispose](): void {
     if (this.#handle === kNull) return;
 

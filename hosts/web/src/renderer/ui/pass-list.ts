@@ -8,6 +8,8 @@ class PassList extends Component {
   readonly #listElt: HTMLUListElement;
   readonly #rows = new Map<PassId, PassRow>();
 
+  readonly activePassId: PassId;
+
   constructor(parent: HTMLElement, project: Project) {
     super();
 
@@ -20,6 +22,9 @@ class PassList extends Component {
 
       this.#rows.set(passId, new PassRow(this.#listElt, project.getPassName(passId)));
     }
+
+    // First pass has to exist
+    this.activePassId = project.getPassId(0)!;
 
     parent.append(this.#listElt);
     this.defer(() => this.#listElt.remove());

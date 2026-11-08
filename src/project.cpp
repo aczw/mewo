@@ -173,4 +173,25 @@ mewo_result_t mewo_project_get_pass_name(
 
   return MEWO_SUCCESS;
 }
+
+mewo_result_t mewo_project_get_pass_source(
+  mewo_project_t* project,
+  mewo_pass_id_t pass_id,
+  mewo_string_view_t* out
+) {
+  assert(project);
+  assert(out);
+  *out = mewo_string_view_t{.data = nullptr, .length = 0};
+
+  const std::vector<mewo::Pass>& passes = project->impl->passes();
+  auto pass_it = std::ranges::find(passes, pass_id, &mewo::Pass::id);
+
+  if (pass_it == passes.end())
+    return MEWO_ERROR_INVALID_ARGUMENT;
+
+  const std::string& source = pass_it->source();
+  *out = mewo_string_view_t{.data = source.data(), .length = source.size()};
+
+  return MEWO_SUCCESS;
+}
 }

@@ -431,3 +431,41 @@ TEST_CASE("mewo_project_get_pass_name returns the pass' name", "[project][c_api]
 
   mewo_project_destroy(project);
 }
+
+TEST_CASE("mewo_project_get_pass_source returns the pass' source", "[project][c_api]") {
+  mewo_project_t* project = nullptr;
+  REQUIRE(mewo_project_create(&kDescriptor, &project) == MEWO_SUCCESS);
+
+  const mewo_pass_id_t first = mewo_project_get_pass_id(project, 0);
+  mewo_string_view_t source = {};
+
+  SECTION("known ID gives the source with an explicit length") {
+    REQUIRE(mewo_project_get_pass_source(project, first, &source) == MEWO_SUCCESS);
+
+    CHECK(source.length != MEWO_STRING_VIEW_SENTINEL);
+    CHECK(std::string_view(source.data, source.length) == kSource);
+  }
+
+  SECTION("edited source is reflected") {
+    constexpr const char* kEdited = "fn main(fragCoord: vec2f) -> vec4f { return vec4f(1.0); }";
+    REQUIRE(
+      mewo_project_set_pass_source(project, first, {kEdited, MEWO_STRING_VIEW_SENTINEL}) ==
+      MEWO_SUCCESS
+    );
+
+    REQUIRE(mewo_project_get_pass_source(project, first, &source) == MEWO_SUCCESS);
+    CHECK(std::string_view(source.data, source.length) == kEdited);
+  }
+
+  SECTION("unknown ID is rejected and clears the out-param") {
+    source = {kSource, 4};
+
+    CHECK(
+      mewo_project_get_pass_source(project, first + 100, &source) == MEWO_ERROR_INVALID_ARGUMENT
+    );
+    CHECK(source.data == nullptr);
+    CHECK(source.length == 0);
+  }
+
+  mewo_project_destroy(project);
+}
