@@ -1,14 +1,14 @@
 @import "./pass-list.css";
 
 .project-controller {
-  padding: 0.5rem;
+  padding: 0.25rem;
   height: 50%;
 
   > .add-pass {
     width: 100%;
     border: 1px dashed lightgray;
+    border-radius: 9999px;
     padding: 0.25rem;
-    text-align: left;
 
     &:hover {
       background-color: lightgray;

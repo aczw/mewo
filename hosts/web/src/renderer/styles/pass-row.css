@@ -1,21 +1,32 @@
 .pass-row {
-  border: 1px solid lightgray;
+  display: flex;
 
   > button {
     text-align: left;
-    width: 100%;
     padding: 0.25rem;
   }
 
+  > .pass-row-name {
+    flex-grow: 1;
+  }
+
+  > .pass-row-rename {
+    flex-shrink: 1;
+  }
+
   &:hover {
-    background-color: lightgray;
+    > .pass-row-name {
+      background-color: lightgray;
+    }
   }
 
   &.is-active {
-    background-color: lightcyan;
+    > .pass-row-name {
+      background-color: lightcyan;
 
-    &:hover {
-      background-color: cyan;
+      &:hover {
+        background-color: cyan;
+      }
     }
   }
 }

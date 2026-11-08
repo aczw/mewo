@@ -1,9 +1,11 @@
 @import "./pass-row.css";
 
 .passes-heading {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.1rem;
 }
 
 .pass-list {
+  border: 1px solid lightgray;
+  padding: 0.25rem;
   margin-bottom: 0.25rem;
 }
