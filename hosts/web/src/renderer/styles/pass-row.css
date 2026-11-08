@@ -1,5 +1,8 @@
 .pass-row {
-  list-style-type: none;
   border: 1px solid lightgray;
   padding: 0.25rem;
+
+  &.is-active {
+    background-color: lightcyan;
+  }
 }

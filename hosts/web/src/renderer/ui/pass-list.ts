@@ -8,24 +8,21 @@ class PassList extends Component {
   readonly #listElt: HTMLUListElement;
   readonly #rows = new Map<PassId, PassRow>();
 
-  readonly activePassId: PassId;
-
-  constructor(parent: HTMLElement, project: Project) {
+  constructor(parent: HTMLElement, project: Project, activePassId: PassId) {
     super();
 
     this.#listElt = el("ul", { class: "pass-list" });
 
     for (let idx = 0; idx < project.getPassCount(); ++idx) {
       const passId = project.getPassId(idx);
+      const isActive = activePassId === passId;
 
       if (!passId) continue;
 
-      this.#rows.set(passId, new PassRow(this.#listElt, project.getPassName(passId)));
+      this.#rows.set(passId, new PassRow(this.#listElt, project.getPassName(passId), isActive));
     }
 
-    // First pass has to exist
-    this.activePassId = project.getPassId(0)!;
-
+    parent.append(el("h2", { class: "passes-heading", text: "Passes" }));
     parent.append(this.#listElt);
     this.defer(() => this.#listElt.remove());
   }

@@ -6,7 +6,7 @@ import { Component } from "../system/component";
 import { el } from "../system/dom";
 import { Mutable } from "../system/mutable";
 import { Editor } from "./editor";
-import { PassList } from "./pass-list";
+import { ProjectController } from "./project-controller";
 import { Viewport } from "./viewport";
 
 const kDefaultPassSource = `fn main(frag_coord: vec2f) -> vec4f {
@@ -20,7 +20,7 @@ class App extends Component {
   readonly sessionHolder: Mutable<Session>;
 
   readonly viewport: Viewport;
-  readonly passList: PassList;
+  readonly projectController: ProjectController;
   readonly editor: Editor;
 
   constructor(parent: HTMLElement) {
@@ -38,11 +38,11 @@ class App extends Component {
     this.defer(() => main.remove());
 
     this.viewport = this.use(new Viewport(rightElt, this.runtime));
-    this.passList = this.use(new PassList(rightElt, this.project));
+    this.projectController = this.use(new ProjectController(rightElt, this.project));
     this.editor = this.use(
       new Editor(editorElt, kDefaultPassSource, {
         onSourceChanged: (newSource) => {
-          this.project.setPassSource(this.passList.activePassId, newSource);
+          this.project.setPassSource(this.projectController.activePassId, newSource);
         },
       }),
     );
