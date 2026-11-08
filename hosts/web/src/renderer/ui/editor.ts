@@ -39,7 +39,7 @@ type Init = {
 };
 
 type Callbacks = {
-  onSourceChanged: (newSource: string) => void;
+  onSourceChanged: (shownPassId: PassId, newSource: string) => void;
 };
 
 class Editor extends Component {
@@ -47,8 +47,12 @@ class Editor extends Component {
   readonly #states = new Map<PassId, EditorState>();
   readonly #view: EditorView;
 
+  #shownPassId: PassId;
+
   constructor(parent: HTMLElement, init: Init, cb: Callbacks) {
     super();
+
+    this.#shownPassId = init.activePassId;
 
     this.#extensions = [
       // A line number gutter
@@ -103,7 +107,7 @@ class Editor extends Component {
       ]),
 
       EditorView.updateListener.of((update) => {
-        if (update.docChanged) cb.onSourceChanged(update.state.doc.toString());
+        if (update.docChanged) cb.onSourceChanged(this.#shownPassId, update.state.doc.toString());
       }),
     ];
 
@@ -122,6 +126,8 @@ class Editor extends Component {
   }
 
   showState(passId: PassId): void {
+    this.#states.set(this.#shownPassId, this.#view.state);
+    this.#shownPassId = passId;
     // The current `EditorState`s are always kept in sync with the project, so this must exist
     this.#view.setState(this.#states.get(passId)!);
   }

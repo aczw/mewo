@@ -10,7 +10,8 @@ type Init = {
 };
 
 type Callbacks = {
-  onPassAdded: () => void;
+  onAddPass: () => void;
+  onSetActivePass: (newActivePassId: PassId) => void;
 };
 
 class ProjectController extends Component {
@@ -24,11 +25,17 @@ class ProjectController extends Component {
     this.defer(() => divElt.remove());
 
     this.#passList = this.use(
-      new PassList(divElt, { project: init.project, activePassId: init.activePassId }),
+      new PassList(
+        divElt,
+        { project: init.project, activePassId: init.activePassId },
+        {
+          onSetActivePass: cb.onSetActivePass,
+        },
+      ),
     );
 
     const addPassBtnElt = el("button", { class: "add-pass", text: "Add pass" });
-    addPassBtnElt.addEventListener("click", cb.onPassAdded);
+    addPassBtnElt.addEventListener("click", cb.onAddPass);
     divElt.append(addPassBtnElt);
   }
 

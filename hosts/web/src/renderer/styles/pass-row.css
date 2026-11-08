@@ -1,8 +1,21 @@
 .pass-row {
   border: 1px solid lightgray;
-  padding: 0.25rem;
+
+  > button {
+    text-align: left;
+    width: 100%;
+    padding: 0.25rem;
+  }
+
+  &:hover {
+    background-color: lightgray;
+  }
 
   &.is-active {
     background-color: lightcyan;
+
+    &:hover {
+      background-color: cyan;
+    }
   }
 }

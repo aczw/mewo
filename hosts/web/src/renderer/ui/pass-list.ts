@@ -9,16 +9,22 @@ type Init = {
   activePassId: PassId;
 };
 
+type Callbacks = {
+  onSetActivePass: (newActivePassId: PassId) => void;
+};
+
 class PassList extends Component {
   readonly #listElt: HTMLUListElement;
   readonly #rows = new Map<PassId, PassRow>();
+  readonly #onSetActivePass: (newActivePassId: PassId) => void;
 
   #currActivePass: PassId = kPassIdNone;
 
-  constructor(parent: HTMLElement, init: Init) {
+  constructor(parent: HTMLElement, init: Init, cb: Callbacks) {
     super();
 
     this.#listElt = el("ul", { class: "pass-list" });
+    this.#onSetActivePass = cb.onSetActivePass;
 
     for (let idx = 0; idx < init.project.getPassCount(); ++idx) {
       const passId = init.project.getPassId(idx);
@@ -37,21 +43,30 @@ class PassList extends Component {
 
     parent.append(this.#listElt);
     this.defer(() => this.#listElt.remove());
+
+    this.defer(() => {
+      for (const row of this.#rows.values()) row[Symbol.dispose]();
+    });
   }
 
   add(project: Project, passId: PassId, isActive: boolean) {
-    this.#rows.set(
-      passId,
-      new PassRow(this.#listElt, {
+    const passRow = new PassRow(
+      {
         name: project.getPassName(passId),
         isActive,
-      }),
+      },
+      {
+        onSetActive: () => this.#onSetActivePass(passId),
+      },
     );
+
+    this.#listElt.append(passRow.elt);
+    this.#rows.set(passId, passRow);
   }
 
   setActivePass(passId: PassId) {
-    this.#rows.get(this.#currActivePass)!.toggleActive();
-    this.#rows.get(passId)!.toggleActive();
+    this.#rows.get(this.#currActivePass)!.setActive(false);
+    this.#rows.get(passId)!.setActive(true);
     this.#currActivePass = passId;
   }
 }

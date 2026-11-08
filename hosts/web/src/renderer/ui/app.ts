@@ -25,10 +25,10 @@ class App extends Component {
   readonly #sessionHolder: Mutable<Session>;
 
   readonly #viewport: Viewport;
-  // @ts-ignore
   readonly #projectController: ProjectController;
   readonly #editor: Editor;
 
+  #rafId = 0;
   #activePassId: PassId;
 
   constructor(parent: HTMLElement) {
@@ -56,16 +56,19 @@ class App extends Component {
           activePassId: this.#activePassId,
         },
         {
-          onPassAdded: () => {
+          onAddPass: () => {
             const passCount = this.#project.getPassCount();
             const newPassId = this.#project.addPass(`Pass ${passCount + 1}`, kNewPassSource);
 
             this.#editor.addState(this.#project, newPassId);
             this.#projectController.addPass(this.#project, newPassId);
 
-            this.#activePassId = newPassId;
-            this.#editor.showState(this.#activePassId);
-            this.#projectController.setActivePass(this.#activePassId);
+            this.#setActivePassId(newPassId);
+          },
+
+          onSetActivePass: (newActivePassId) => {
+            if (this.#activePassId === newActivePassId) return;
+            this.#setActivePassId(newActivePassId);
           },
         },
       ),
@@ -76,8 +79,8 @@ class App extends Component {
         editorElt,
         { project: this.#project, activePassId: this.#activePassId },
         {
-          onSourceChanged: (newSource) => {
-            this.#project.setPassSource(this.#activePassId, newSource);
+          onSourceChanged: (shownPassId, newSource) => {
+            this.#project.setPassSource(shownPassId, newSource);
           },
         },
       ),
@@ -89,6 +92,7 @@ class App extends Component {
 
   #run(): void {
     const onFrame: FrameRequestCallback = (time) => {
+      this.#rafId = window.requestAnimationFrame(onFrame);
       this.#runtime.tick();
 
       for (const event of this.#runtime.pollEvents()) {
@@ -109,26 +113,25 @@ class App extends Component {
         }
       }
 
-      if (this.#sessionHolder.value === null) {
-        window.requestAnimationFrame(onFrame);
-        return;
-      }
-
       const session = this.#sessionHolder.value;
+      if (session === null) return;
 
       if (this.#viewport.surface.checkForResize()) {
         const dims = this.#viewport.surface.dimensions;
-
         if (dims.width !== 0 && dims.height !== 0) session.setRenderSize(dims.width, dims.height);
       }
 
       session.render(this.#viewport.surface, time);
-      window.requestAnimationFrame(onFrame);
     };
 
-    const id = window.requestAnimationFrame(onFrame);
+    this.#rafId = window.requestAnimationFrame(onFrame);
+    this.defer(() => window.cancelAnimationFrame(this.#rafId));
+  }
 
-    this.defer(() => window.cancelAnimationFrame(id));
+  #setActivePassId(newActivePassId: PassId) {
+    this.#activePassId = newActivePassId;
+    this.#editor.showState(this.#activePassId);
+    this.#projectController.setActivePass(this.#activePassId);
   }
 }
 
