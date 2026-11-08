@@ -1,14 +1,3 @@
-@import "./reset.css";
-@import "./editor.css";
-
-html,
-body {
-  height: 100%;
-  overflow: hidden;
-  cursor: default;
-  user-select: none;
-}
-
 main {
   height: 100%;
   display: flex;

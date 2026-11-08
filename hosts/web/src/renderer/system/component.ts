@@ -1,12 +1,7 @@
 abstract class Component implements Disposable {
-  readonly elt: HTMLElement;
   #stack = new DisposableStack();
 
-  constructor(elt: HTMLElement) {
-    this.elt = elt;
-  }
-
-  protected add<T extends Component>(child: T): T {
+  protected use<T extends Disposable>(child: T): T {
     return this.#stack.use(child);
   }
 
@@ -16,7 +11,6 @@ abstract class Component implements Disposable {
 
   [Symbol.dispose](): void {
     this.#stack.dispose();
-    this.elt.remove();
   }
 }
 

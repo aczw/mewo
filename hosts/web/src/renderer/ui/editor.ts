@@ -29,15 +29,17 @@ import {
   rectangularSelection,
 } from "@codemirror/view";
 
-import { Component } from "../component";
+import { Component } from "../system/component";
 
 class Editor extends Component {
   readonly view: EditorView;
 
-  constructor(parentElt: HTMLElement) {
-    const view = new EditorView({
+  constructor(parent: HTMLElement) {
+    super();
+
+    this.view = new EditorView({
       doc: "Start document",
-      parent: parentElt,
+      parent,
       extensions: [
         // A line number gutter
         lineNumbers(),
@@ -91,9 +93,6 @@ class Editor extends Component {
         ]),
       ],
     });
-
-    super(view.dom);
-    this.view = view;
 
     this.defer(() => this.view.destroy());
   }

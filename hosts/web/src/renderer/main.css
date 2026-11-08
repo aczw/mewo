@@ -1,0 +1,12 @@
+@import "./styles/reset.css";
+
+@import "./styles/app.css";
+@import "./styles/editor.css";
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  cursor: default;
+  user-select: none;
+}
