@@ -36,12 +36,12 @@ type EditorCallbacks = {
 };
 
 class Editor extends Component {
-  readonly view: EditorView;
+  readonly #view: EditorView;
 
   constructor(parent: HTMLElement, firstPassSource: string, callbacks: EditorCallbacks) {
     super();
 
-    this.view = new EditorView({
+    this.#view = new EditorView({
       doc: firstPassSource,
       parent,
       extensions: [
@@ -102,7 +102,7 @@ class Editor extends Component {
       ],
     });
 
-    this.defer(() => this.view.destroy());
+    this.defer(() => this.#view.destroy());
   }
 }
 

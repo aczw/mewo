@@ -15,20 +15,20 @@ const kDefaultPassSource = `fn main(frag_coord: vec2f) -> vec4f {
 }`;
 
 class App extends Component {
-  readonly runtime: Runtime;
-  readonly project: Project;
-  readonly sessionHolder: Mutable<Session>;
+  readonly #runtime: Runtime;
+  readonly #project: Project;
+  readonly #sessionHolder: Mutable<Session>;
 
-  readonly viewport: Viewport;
-  readonly projectController: ProjectController;
-  readonly editor: Editor;
+  readonly #viewport: Viewport;
+  readonly #projectController: ProjectController;
+  readonly #editor: Editor;
 
   constructor(parent: HTMLElement) {
     super();
 
-    this.runtime = this.use(new Runtime());
-    this.project = this.use(new Project("Pass 1", kDefaultPassSource));
-    this.sessionHolder = this.use(new Mutable<Session>());
+    this.#runtime = this.use(new Runtime());
+    this.#project = this.use(new Project("Pass 1", kDefaultPassSource));
+    this.#sessionHolder = this.use(new Mutable<Session>());
 
     const editorElt = el("div", { class: "left" });
     const rightElt = el("div", { class: "right" }, []);
@@ -37,31 +37,31 @@ class App extends Component {
     parent.append(main);
     this.defer(() => main.remove());
 
-    this.viewport = this.use(new Viewport(rightElt, this.runtime));
-    this.projectController = this.use(new ProjectController(rightElt, this.project));
-    this.editor = this.use(
+    this.#viewport = this.use(new Viewport(rightElt, this.#runtime));
+    this.#projectController = this.use(new ProjectController(rightElt, this.#project));
+    this.#editor = this.use(
       new Editor(editorElt, kDefaultPassSource, {
         onSourceChanged: (newSource) => {
-          this.project.setPassSource(this.projectController.activePassId, newSource);
+          this.#project.setPassSource(this.#projectController.activePassId, newSource);
         },
       }),
     );
 
-    this.runtime.requestDevice(this.viewport.surface);
+    this.#runtime.requestDevice(this.#viewport.surface);
     this.#run();
   }
 
   #run(): void {
     const onFrame: FrameRequestCallback = (time) => {
-      this.runtime.tick();
+      this.#runtime.tick();
 
-      for (const event of this.runtime.pollEvents()) {
+      for (const event of this.#runtime.pollEvents()) {
         switch (event.type) {
           case MewoEvent.DeviceReady: {
             console.info("[libmewo] device is ready");
 
-            const { width, height } = this.viewport.surface.dimensions;
-            this.sessionHolder.value = new Session(this.runtime, this.project, width, height);
+            const { width, height } = this.#viewport.surface.dimensions;
+            this.#sessionHolder.value = new Session(this.#runtime, this.#project, width, height);
 
             break;
           }
@@ -73,20 +73,20 @@ class App extends Component {
         }
       }
 
-      if (this.sessionHolder.value === null) {
+      if (this.#sessionHolder.value === null) {
         window.requestAnimationFrame(onFrame);
         return;
       }
 
-      const session = this.sessionHolder.value;
+      const session = this.#sessionHolder.value;
 
-      if (this.viewport.surface.checkForResize()) {
-        const dims = this.viewport.surface.dimensions;
+      if (this.#viewport.surface.checkForResize()) {
+        const dims = this.#viewport.surface.dimensions;
 
         if (dims.width !== 0 && dims.height !== 0) session.setRenderSize(dims.width, dims.height);
       }
 
-      session.render(this.viewport.surface, time);
+      session.render(this.#viewport.surface, time);
       window.requestAnimationFrame(onFrame);
     };
 

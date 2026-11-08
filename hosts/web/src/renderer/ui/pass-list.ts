@@ -22,7 +22,10 @@ class PassList extends Component {
       this.#rows.set(passId, new PassRow(this.#listElt, project.getPassName(passId), isActive));
     }
 
-    parent.append(el("h2", { class: "passes-heading", text: "Passes" }));
+    const passesHeadingElt = el("h2", { class: "passes-heading", text: "Passes" });
+    parent.append(passesHeadingElt);
+    this.defer(() => passesHeadingElt.remove());
+
     parent.append(this.#listElt);
     this.defer(() => this.#listElt.remove());
   }
