@@ -3,4 +3,11 @@
 .project-controller {
   padding: 0.5rem;
   height: 50%;
+
+  > .add-pass {
+    width: 100%;
+    border: 1px dashed lightgray;
+    padding: 0.25rem;
+    text-align: left;
+  }
 }

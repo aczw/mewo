@@ -109,14 +109,16 @@ class Editor extends Component {
 
     for (let idx = 0; idx < init.project.getPassCount(); ++idx) {
       const passId = init.project.getPassId(idx);
-
       if (!passId) continue;
-
-      this.#states.set(passId, this.#createState(init.project.getPassSource(passId)));
+      this.addState(init.project, passId);
     }
 
     this.#view = new EditorView({ parent, state: this.#states.get(init.activePassId) });
     this.defer(() => this.#view.destroy());
+  }
+
+  addState(project: Project, passId: PassId): void {
+    this.#states.set(passId, this.#createState(project.getPassSource(passId)));
   }
 
   showState(passId: PassId): void {

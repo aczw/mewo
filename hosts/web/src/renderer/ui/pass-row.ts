@@ -7,16 +7,22 @@ type Init = {
 };
 
 class PassRow extends Component {
+  readonly #listItemElt: HTMLLIElement;
+
   constructor(parent: HTMLElement, init: Init) {
     super();
 
-    const listItemElt = el("li", {
+    this.#listItemElt = el("li", {
       text: init.name,
       class: init.isActive ? "pass-row is-active" : "pass-row",
     });
 
-    parent.append(listItemElt);
-    this.defer(() => listItemElt.remove());
+    parent.append(this.#listItemElt);
+    this.defer(() => this.#listItemElt.remove());
+  }
+
+  toggleActive() {
+    this.#listItemElt.classList.toggle("is-active");
   }
 }
 

@@ -1,5 +1,5 @@
 import type { Project } from "../../mewo/classes/project";
-import type { PassId } from "../../mewo/types";
+import { kPassIdNone, type PassId } from "../../mewo/types";
 import { Component } from "../system/component";
 import { el } from "../system/dom";
 import { PassRow } from "./pass-row";
@@ -13,6 +13,8 @@ class PassList extends Component {
   readonly #listElt: HTMLUListElement;
   readonly #rows = new Map<PassId, PassRow>();
 
+  #currActivePass: PassId = kPassIdNone;
+
   constructor(parent: HTMLElement, init: Init) {
     super();
 
@@ -23,13 +25,10 @@ class PassList extends Component {
 
       if (!passId) continue;
 
-      this.#rows.set(
-        passId,
-        new PassRow(this.#listElt, {
-          name: init.project.getPassName(passId),
-          isActive: init.activePassId === passId,
-        }),
-      );
+      const isActive = init.activePassId === passId;
+      this.add(init.project, passId, isActive);
+
+      if (isActive) this.#currActivePass = passId;
     }
 
     const passesHeadingElt = el("h2", { class: "passes-heading", text: "Passes" });
@@ -38,6 +37,22 @@ class PassList extends Component {
 
     parent.append(this.#listElt);
     this.defer(() => this.#listElt.remove());
+  }
+
+  add(project: Project, passId: PassId, isActive: boolean) {
+    this.#rows.set(
+      passId,
+      new PassRow(this.#listElt, {
+        name: project.getPassName(passId),
+        isActive,
+      }),
+    );
+  }
+
+  setActivePass(passId: PassId) {
+    this.#rows.get(this.#currActivePass)!.toggleActive();
+    this.#rows.get(passId)!.toggleActive();
+    this.#currActivePass = passId;
   }
 }
 

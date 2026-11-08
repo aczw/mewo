@@ -14,12 +14,18 @@ const kDefaultPassSource = `fn main(frag_coord: vec2f) -> vec4f {
   return vec4f(0.5 + 0.5 * cos(mw.time + uv.xyx + vec3f(0.0, 2.0, 4.0)), 1.0);
 }`;
 
+const kNewPassSource = `fn main(frag_coord: vec2f) -> vec4f {
+  let uv = frag_coord / mw.resolution;
+  return textureSample(prev_tex, prev_smp, uv);
+}`;
+
 class App extends Component {
   readonly #runtime: Runtime;
   readonly #project: Project;
   readonly #sessionHolder: Mutable<Session>;
 
   readonly #viewport: Viewport;
+  // @ts-ignore
   readonly #projectController: ProjectController;
   readonly #editor: Editor;
 
@@ -43,10 +49,26 @@ class App extends Component {
 
     this.#viewport = this.use(new Viewport(rightElt, { runtime: this.#runtime }));
     this.#projectController = this.use(
-      new ProjectController(rightElt, {
-        project: this.#project,
-        activePassId: this.#activePassId,
-      }),
+      new ProjectController(
+        rightElt,
+        {
+          project: this.#project,
+          activePassId: this.#activePassId,
+        },
+        {
+          onPassAdded: () => {
+            const passCount = this.#project.getPassCount();
+            const newPassId = this.#project.addPass(`Pass ${passCount + 1}`, kNewPassSource);
+
+            this.#editor.addState(this.#project, newPassId);
+            this.#projectController.addPass(this.#project, newPassId);
+
+            this.#activePassId = newPassId;
+            this.#editor.showState(this.#activePassId);
+            this.#projectController.setActivePass(this.#activePassId);
+          },
+        },
+      ),
     );
 
     this.#editor = this.use(
