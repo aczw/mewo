@@ -1,0 +1,9 @@
+.viewport {
+  background-color: lightgray;
+  height: 50%;
+
+  > #mewo {
+    width: 100%;
+    height: 100%;
+  }
+}

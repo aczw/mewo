@@ -6,6 +6,7 @@ import { Component } from "../system/component";
 import { el } from "../system/dom";
 import { Mutable } from "../system/mutable";
 import { Editor } from "./editor";
+import { PassList } from "./pass-list";
 import { Viewport } from "./viewport";
 
 const kDefaultPassSource = `fn main(frag_coord: vec2f) -> vec4f {
@@ -20,6 +21,7 @@ class App extends Component {
 
   readonly editor: Editor;
   readonly viewport: Viewport;
+  readonly passList: PassList;
 
   constructor(parent: HTMLElement) {
     super();
@@ -29,19 +31,15 @@ class App extends Component {
     this.sessionHolder = this.use(new Mutable<Session>());
 
     const editorElt = el("div", { class: "left" });
-    const viewportElt = el("div", { class: "viewport" });
-    const passListElt = el("ul", { class: "pass-list", text: "Passes" });
-
-    const main = el("main", {}, [
-      editorElt,
-      el("div", { class: "right" }, [viewportElt, passListElt]),
-    ]);
+    const rightElt = el("div", { class: "right" }, []);
+    const main = el("main", {}, [editorElt, rightElt]);
 
     parent.append(main);
     this.defer(() => main.remove());
 
     this.editor = this.use(new Editor(editorElt));
-    this.viewport = this.use(new Viewport(viewportElt, this.runtime));
+    this.viewport = this.use(new Viewport(rightElt, this.runtime));
+    this.passList = this.use(new PassList(rightElt, this.project));
 
     this.runtime.requestDevice(this.viewport.surface);
     this.#run();

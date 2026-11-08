@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace {
@@ -380,4 +381,53 @@ TEST_CASE("editing sources doesn't change the structure revision", "[project][st
   project->set_common_source("fn helper() {}");
 
   CHECK(project->structure_revision() == revision);
+}
+
+TEST_CASE("mewo_project_get_pass_name returns the pass' name", "[project][c_api]") {
+  mewo_project_t* project = nullptr;
+  REQUIRE(mewo_project_create(&kDescriptor, &project) == MEWO_SUCCESS);
+
+  const mewo_pass_id_t first = mewo_project_get_pass_id(project, 0);
+  mewo_string_view_t name = {};
+
+  SECTION("known ID gives the name with an explicit length") {
+    REQUIRE(mewo_project_get_pass_name(project, first, &name) == MEWO_SUCCESS);
+
+    CHECK(name.length != MEWO_STRING_VIEW_SENTINEL);
+    CHECK(std::string_view(name.data, name.length) == kName);
+  }
+
+  SECTION("added passes report their own names") {
+    mewo_pass_id_t added = MEWO_PASS_ID_NONE;
+    REQUIRE(
+      mewo_project_add_pass(
+        project, {"Blur", MEWO_STRING_VIEW_SENTINEL}, {kSource, MEWO_STRING_VIEW_SENTINEL}, &added
+      ) == MEWO_SUCCESS
+    );
+
+    REQUIRE(mewo_project_get_pass_name(project, added, &name) == MEWO_SUCCESS);
+    CHECK(std::string_view(name.data, name.length) == "Blur");
+  }
+
+  SECTION("unknown ID is rejected and clears the out-param") {
+    name = {kName, 4};
+
+    CHECK(mewo_project_get_pass_name(project, first + 100, &name) == MEWO_ERROR_INVALID_ARGUMENT);
+    CHECK(name.data == nullptr);
+    CHECK(name.length == 0);
+  }
+
+  SECTION("removed pass ID is rejected") {
+    mewo_pass_id_t added = MEWO_PASS_ID_NONE;
+    REQUIRE(
+      mewo_project_add_pass(
+        project, {"Blur", MEWO_STRING_VIEW_SENTINEL}, {kSource, MEWO_STRING_VIEW_SENTINEL}, &added
+      ) == MEWO_SUCCESS
+    );
+    REQUIRE(mewo_project_remove_pass(project, first) == MEWO_SUCCESS);
+
+    CHECK(mewo_project_get_pass_name(project, first, &name) == MEWO_ERROR_INVALID_ARGUMENT);
+  }
+
+  mewo_project_destroy(project);
 }

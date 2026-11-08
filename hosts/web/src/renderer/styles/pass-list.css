@@ -1,0 +1,6 @@
+@import "./pass-row.css";
+
+.pass-list {
+  padding: 0.5rem;
+  height: 50%;
+}

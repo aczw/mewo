@@ -10,9 +10,10 @@ class Viewport extends Component {
     super();
 
     const canvasElt = el("canvas", { id: "mewo" });
+    const divElt = el("div", { class: "viewport" }, [canvasElt]);
 
-    parent.append(canvasElt);
-    this.defer(() => canvasElt.remove());
+    parent.append(divElt);
+    this.defer(() => divElt.remove());
 
     this.surface = this.use(new Surface(runtime, canvasElt));
   }

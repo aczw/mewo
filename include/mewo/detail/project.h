@@ -144,6 +144,23 @@ uint32_t mewo_project_get_pass_count(mewo_project_t* project);
  */
 mewo_pass_id_t mewo_project_get_pass_id(mewo_project_t* project, uint32_t index);
 
+/**
+ * Gets the display name of a pass.
+ *
+ * The returned view points into the project. It is valid until the next call that modifies the
+ * project or until it is destroyed.
+ *
+ * @param project Pointer to the project.
+ * @param pass_id The ID of the pass.
+ * @param out Out parameter where the name will be stored. Set to `{NULL, 0}` on failure.
+ * @return `MEWO_ERROR_INVALID_ARGUMENT` if the pass ID is unknown, and `MEWO_SUCCESS` otherwise.
+ */
+mewo_result_t mewo_project_get_pass_name(
+  mewo_project_t* project,
+  mewo_pass_id_t pass_id,
+  mewo_string_view_t* out
+);
+
 #ifdef __cplusplus
 }
 #endif

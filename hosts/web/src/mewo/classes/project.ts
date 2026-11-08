@@ -1,6 +1,6 @@
 import { Mewo } from "../api";
 import { MewoError } from "../error";
-import { kNull, kPassIdNone, type PassId, type Ptr } from "../types";
+import { kNull, kPassIdNone, MewoResult, type PassId, type Ptr } from "../types";
 
 class Project implements Disposable {
   #handle: Ptr;
@@ -25,34 +25,37 @@ class Project implements Disposable {
       throw new MewoError("failed to set common source");
   }
 
-  /** Appends a pass to the end of the list and returns its ID. */
   addPass(name: string, source: string): PassId {
-    // `>>> 0`: wasm returns a `uint32_t` as a signed i32, so reinterpret it as unsigned.
-    const passId = Mewo.projectAddPass(this.handle, name, source) >>> 0;
+    const passId = Mewo.projectAddPass(this.handle, name, source);
     if (passId === kPassIdNone) throw new MewoError("failed to add pass");
     return passId;
   }
 
-  /** Throws a `MewoError` with `MewoResult.InvalidOperation` when removing the last pass. */
   removePass(passId: PassId): void {
     if (!Mewo.projectRemovePass(this.handle, passId)) throw new MewoError("failed to remove pass");
   }
 
-  /** `newIndex` is the pass' index after the move. */
   movePass(passId: PassId, newIndex: number): void {
     if (!Mewo.projectMovePass(this.handle, passId, newIndex))
       throw new MewoError("failed to move pass");
   }
 
-  /** Always >= 1. */
   getPassCount(): number {
-    return Mewo.projectGetPassCount(this.handle) >>> 0;
+    return Mewo.projectGetPassCount(this.handle);
   }
 
-  /** Returns `null` if `index` is out of range. */
   getPassId(index: number): PassId | null {
-    const passId = Mewo.projectGetPassId(this.handle, index) >>> 0;
+    const passId = Mewo.projectGetPassId(this.handle, index);
     return passId === kPassIdNone ? null : passId;
+  }
+
+  getPassName(passId: PassId): string {
+    const name = Mewo.projectGetPassName(this.handle, passId);
+
+    // An empty string is a valid name, so we have to check the result explicitly
+    if (Mewo.lastResult() !== MewoResult.Success) throw new MewoError("failed to get pass name");
+
+    return name;
   }
 
   [Symbol.dispose](): void {
