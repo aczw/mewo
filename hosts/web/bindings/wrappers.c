@@ -144,6 +144,16 @@ bool mewo_web_project_set_pass_source(
 }
 
 EMSCRIPTEN_KEEPALIVE
+bool mewo_web_project_set_pass_name(
+  mewo_project_t* project,
+  mewo_pass_id_t pass_id,
+  const char* name
+) {
+  last_result = mewo_project_set_pass_name(project, pass_id, to_string_view(name));
+  return last_result == MEWO_SUCCESS;
+}
+
+EMSCRIPTEN_KEEPALIVE
 bool mewo_web_project_set_common_source(mewo_project_t* project, const char* source) {
   last_result = mewo_project_set_common_source(project, to_string_view(source));
   return last_result == MEWO_SUCCESS;

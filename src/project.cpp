@@ -62,6 +62,29 @@ mewo_result_t mewo_project_set_pass_source(
   return MEWO_SUCCESS;
 }
 
+mewo_result_t mewo_project_set_pass_name(
+  mewo_project_t* project,
+  mewo_pass_id_t pass_id,
+  mewo_string_view_t name
+) {
+  assert(project);
+
+  // We're attempting to allocate a new `std::string`
+  try {
+    auto name_opt = mewo::impl::to_string(name);
+
+    if (!name_opt)
+      return MEWO_ERROR_INVALID_ARGUMENT;
+
+    if (!project->impl->set_pass_name(pass_id, std::move(name_opt.value())))
+      return MEWO_ERROR_INVALID_ARGUMENT;
+  } catch (...) {
+    return MEWO_ERROR_INTERNAL;
+  }
+
+  return MEWO_SUCCESS;
+}
+
 mewo_result_t mewo_project_set_common_source(mewo_project_t* project, mewo_string_view_t source) {
   assert(project);
 

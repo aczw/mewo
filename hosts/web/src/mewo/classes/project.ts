@@ -20,6 +20,11 @@ class Project implements Disposable {
       throw new MewoError("failed to set pass source");
   }
 
+  setPassName(passId: PassId, name: string): void {
+    if (!Mewo.projectSetPassName(this.handle, passId, name))
+      throw new MewoError("failed to rename pass");
+  }
+
   setCommonSource(source: string): void {
     if (!Mewo.projectSetCommonSource(this.handle, source))
       throw new MewoError("failed to set common source");

@@ -30,6 +30,9 @@ class Pass {
 
   void set_source(std::string new_source);
 
+  /** Does not bump revision. */
+  void set_name(std::string new_name);
+
  private:
   Id id_;
   Revision revision_;

@@ -47,6 +47,13 @@ class Project : private Pinned {
    */
   bool set_pass_source(Pass::Id pass_id, std::string new_source);
 
+  /**
+   * Renames the pass. Bumps no revision, since sessions don't depend on pass names.
+   *
+   * @return True if the operation succeeded, false if the pass with the given ID was not found.
+   */
+  bool set_pass_name(Pass::Id pass_id, std::string new_name);
+
   void set_common_source(std::string new_source);
 
  private:

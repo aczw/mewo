@@ -10,4 +10,6 @@ void Pass::set_source(std::string new_source) {
   revision_ += 1;
 }
 
+void Pass::set_name(std::string new_name) { name_ = std::move(new_name); }
+
 }  // namespace mewo

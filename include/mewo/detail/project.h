@@ -70,6 +70,21 @@ mewo_result_t mewo_project_set_pass_source(
 );
 
 /**
+ * Renames a pass. Names don't have to be unique.
+ *
+ * @param project Pointer to the project.
+ * @param pass_id The ID of the pass.
+ * @param name New display name of the pass. Can be empty.
+ * @return `MEWO_ERROR_INVALID_ARGUMENT` if the pass ID is unknown or the string view is invalid,
+ * and `MEWO_SUCCESS` otherwise.
+ */
+mewo_result_t mewo_project_set_pass_name(
+  mewo_project_t* project,
+  mewo_pass_id_t pass_id,
+  mewo_string_view_t name
+);
+
+/**
  * Sets the common source code shared by all passes. Bumps the revision even if the text is
  * unchanged, and causes every pass to recompile on the next render.
  *

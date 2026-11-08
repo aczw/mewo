@@ -63,6 +63,12 @@ bool mewo_web_project_set_pass_source(
   const char* source
 );
 
+bool mewo_web_project_set_pass_name(
+  mewo_project_t* project,
+  mewo_pass_id_t pass_id,
+  const char* name
+);
+
 bool mewo_web_project_set_common_source(mewo_project_t* project, const char* source);
 
 mewo_pass_id_t mewo_web_project_add_pass(

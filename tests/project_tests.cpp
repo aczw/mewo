@@ -432,6 +432,43 @@ TEST_CASE("mewo_project_get_pass_name returns the pass' name", "[project][c_api]
   mewo_project_destroy(project);
 }
 
+TEST_CASE("mewo_project_set_pass_name renames one pass", "[project][c_api]") {
+  mewo_project_t* project = nullptr;
+  REQUIRE(mewo_project_create(&kDescriptor, &project) == MEWO_SUCCESS);
+
+  const mewo_pass_id_t first = mewo_project_get_pass_id(project, 0);
+  mewo_string_view_t name = {};
+
+  SECTION("the pass reports its new name and keeps its source revision") {
+    const auto revision = project->impl->passes().front().revision();
+
+    REQUIRE(
+      mewo_project_set_pass_name(project, first, {"Bloom", MEWO_STRING_VIEW_SENTINEL}) ==
+      MEWO_SUCCESS
+    );
+    REQUIRE(mewo_project_get_pass_name(project, first, &name) == MEWO_SUCCESS);
+
+    CHECK(std::string_view(name.data, name.length) == "Bloom");
+    CHECK(project->impl->passes().front().revision() == revision);
+  }
+
+  SECTION("an empty name is allowed") {
+    REQUIRE(mewo_project_set_pass_name(project, first, {"", 0}) == MEWO_SUCCESS);
+    REQUIRE(mewo_project_get_pass_name(project, first, &name) == MEWO_SUCCESS);
+
+    CHECK(name.length == 0);
+  }
+
+  SECTION("an unknown ID is rejected") {
+    CHECK(
+      mewo_project_set_pass_name(project, first + 100, {"Bloom", MEWO_STRING_VIEW_SENTINEL}) ==
+      MEWO_ERROR_INVALID_ARGUMENT
+    );
+  }
+
+  mewo_project_destroy(project);
+}
+
 TEST_CASE("mewo_project_get_pass_source returns the pass' source", "[project][c_api]") {
   mewo_project_t* project = nullptr;
   REQUIRE(mewo_project_create(&kDescriptor, &project) == MEWO_SUCCESS);

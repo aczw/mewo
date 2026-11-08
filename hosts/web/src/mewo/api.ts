@@ -49,6 +49,11 @@ const Mewo = {
     "number",
     "string",
   ]) as (project: Ptr, passId: PassId, source: string) => boolean,
+  projectSetPassName: Module.cwrap("mewo_web_project_set_pass_name", "boolean", [
+    "number",
+    "number",
+    "string",
+  ]) as (project: Ptr, passId: PassId, name: string) => boolean,
   projectSetCommonSource: Module.cwrap("mewo_web_project_set_common_source", "boolean", [
     "number",
     "string",

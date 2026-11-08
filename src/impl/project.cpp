@@ -87,6 +87,15 @@ bool Project::set_pass_source(Pass::Id pass_id, std::string new_source) {
   return false;
 }
 
+bool Project::set_pass_name(Pass::Id pass_id, std::string new_name) {
+  if (auto pass_it = std::ranges::find(passes_, pass_id, &Pass::id); pass_it != passes_.end()) {
+    pass_it->set_name(std::move(new_name));
+    return true;
+  }
+
+  return false;
+}
+
 void Project::set_common_source(std::string new_source) {
   assert(passes_.size() >= 1 && "project does not have at least 1 pass");
 
