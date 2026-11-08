@@ -194,4 +194,11 @@ mewo_result_t mewo_project_get_pass_source(
 
   return MEWO_SUCCESS;
 }
+
+mewo_string_view_t mewo_project_get_common_source(mewo_project_t* project) {
+  assert(project);
+
+  const std::string& source = project->impl->common_source();
+  return mewo_string_view_t{.data = source.data(), .length = source.size()};
+}
 }

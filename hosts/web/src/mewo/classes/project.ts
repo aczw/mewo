@@ -67,6 +67,10 @@ class Project implements Disposable {
     return source;
   }
 
+  getCommonSource(): string {
+    return Mewo.projectGetCommonSource(this.handle);
+  }
+
   [Symbol.dispose](): void {
     if (this.#handle === kNull) return;
 

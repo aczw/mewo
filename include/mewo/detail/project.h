@@ -178,6 +178,17 @@ mewo_result_t mewo_project_get_pass_source(
   mewo_string_view_t* out
 );
 
+/**
+ * Gets the common source shared by all passes. Empty if it was never set.
+ *
+ * The returned view points into the project. It is valid until the next call that modifies the
+ * project or until the project is destroyed.
+ *
+ * @param project Pointer to the project.
+ * @return A view of the common source.
+ */
+mewo_string_view_t mewo_project_get_common_source(mewo_project_t* project);
+
 #ifdef __cplusplus
 }
 #endif

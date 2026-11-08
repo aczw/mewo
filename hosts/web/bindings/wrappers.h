@@ -87,6 +87,8 @@ const char* mewo_web_project_get_pass_name(mewo_project_t* project, mewo_pass_id
 
 const char* mewo_web_project_get_pass_source(mewo_project_t* project, mewo_pass_id_t pass_id);
 
+const char* mewo_web_project_get_common_source(mewo_project_t* project);
+
 /** Passing 0 for the width and height is invalid. */
 mewo_session_t* mewo_web_session_create(
   mewo_runtime_t* runtime,

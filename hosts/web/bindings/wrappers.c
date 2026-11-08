@@ -210,6 +210,11 @@ const char* mewo_web_project_get_pass_source(mewo_project_t* project, mewo_pass_
 }
 
 EMSCRIPTEN_KEEPALIVE
+const char* mewo_web_project_get_common_source(mewo_project_t* project) {
+  return to_c_string(mewo_project_get_common_source(project));
+}
+
+EMSCRIPTEN_KEEPALIVE
 mewo_session_t* mewo_web_session_create(
   mewo_runtime_t* runtime,
   mewo_project_t* project,

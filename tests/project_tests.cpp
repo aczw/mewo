@@ -469,3 +469,27 @@ TEST_CASE("mewo_project_get_pass_source returns the pass' source", "[project][c_
 
   mewo_project_destroy(project);
 }
+
+TEST_CASE("mewo_project_get_common_source returns the common source", "[project][c_api]") {
+  mewo_project_t* project = nullptr;
+  REQUIRE(mewo_project_create(&kDescriptor, &project) == MEWO_SUCCESS);
+
+  SECTION("a new project has empty common source") {
+    const mewo_string_view_t source = mewo_project_get_common_source(project);
+
+    CHECK(source.length == 0);
+  }
+
+  SECTION("set common source is reflected") {
+    constexpr const char* kCommon = "fn helper() -> f32 { return 1.0; }";
+    REQUIRE(
+      mewo_project_set_common_source(project, {kCommon, MEWO_STRING_VIEW_SENTINEL}) == MEWO_SUCCESS
+    );
+
+    const mewo_string_view_t source = mewo_project_get_common_source(project);
+    CHECK(source.length != MEWO_STRING_VIEW_SENTINEL);
+    CHECK(std::string_view(source.data, source.length) == kCommon);
+  }
+
+  mewo_project_destroy(project);
+}
