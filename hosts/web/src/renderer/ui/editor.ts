@@ -30,7 +30,7 @@ import {
 } from "@codemirror/view";
 
 import type { Project } from "../../mewo/classes/project";
-import type { PassId } from "../../mewo/types";
+import { kPassIdNone, type PassId } from "../../mewo/types";
 import { Component } from "../system/component";
 
 type Init = {
@@ -47,12 +47,10 @@ class Editor extends Component {
   readonly #states = new Map<PassId, EditorState>();
   readonly #view: EditorView;
 
-  #shownPassId: PassId;
+  #shownPassId: PassId = kPassIdNone;
 
   constructor(parent: HTMLElement, init: Init, cb: Callbacks) {
     super();
-
-    this.#shownPassId = init.activePassId;
 
     this.#extensions = [
       // A line number gutter
@@ -111,25 +109,33 @@ class Editor extends Component {
       }),
     ];
 
-    for (let idx = 0; idx < init.project.getPassCount(); ++idx) {
-      const passId = init.project.getPassId(idx);
-      if (!passId) continue;
-      this.addState(init.project, passId);
+    this.#view = new EditorView({ parent });
+
+    this.defer(() => this.#view.destroy());
+    this.update(init.project, init.activePassId);
+  }
+
+  update(project: Project, activePassId: PassId): void {
+    // Save the currently shown pass' latest state before reconciling
+    if (this.#shownPassId !== kPassIdNone) this.#states.set(this.#shownPassId, this.#view.state);
+
+    const aliveIds = new Set<PassId>();
+    for (let idx = 0; idx < project.getPassCount(); ++idx) {
+      const passId = project.getPassId(idx)!;
+      aliveIds.add(passId);
+
+      if (!this.#states.has(passId))
+        this.#states.set(passId, this.#createState(project.getPassSource(passId)));
     }
 
-    this.#view = new EditorView({ parent, state: this.#states.get(init.activePassId) });
-    this.defer(() => this.#view.destroy());
-  }
+    for (const passId of this.#states.keys())
+      if (!aliveIds.has(passId)) this.#states.delete(passId);
 
-  addState(project: Project, passId: PassId): void {
-    this.#states.set(passId, this.#createState(project.getPassSource(passId)));
-  }
-
-  showState(passId: PassId): void {
-    this.#states.set(this.#shownPassId, this.#view.state);
-    this.#shownPassId = passId;
-    // The current `EditorState`s are always kept in sync with the project, so this must exist
-    this.#view.setState(this.#states.get(passId)!);
+    // Switch the view only if the active pass has changed
+    if (activePassId !== this.#shownPassId) {
+      this.#view.setState(this.#states.get(activePassId)!);
+      this.#shownPassId = activePassId;
+    }
   }
 
   #createState(source: string): EditorState {
