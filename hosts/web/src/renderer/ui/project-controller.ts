@@ -4,12 +4,15 @@ import { Component } from "../system/component";
 import { el } from "../system/dom";
 import { PassList } from "./pass-list";
 
+type Init = {
+  project: Project;
+  activePassId: PassId;
+};
+
 class ProjectController extends Component {
-  readonly activePassId: PassId;
-  // @ts-ignore
   readonly #passList: PassList;
 
-  constructor(parent: HTMLElement, project: Project) {
+  constructor(parent: HTMLElement, init: Init) {
     super();
 
     const divElt = el("div", { class: "project-controller" });
@@ -17,9 +20,9 @@ class ProjectController extends Component {
     parent.append(divElt);
     this.defer(() => divElt.remove());
 
-    // First pass has to exist
-    this.activePassId = project.getPassId(0)!;
-    this.#passList = this.use(new PassList(divElt, project, this.activePassId));
+    this.#passList = this.use(
+      new PassList(divElt, { project: init.project, activePassId: init.activePassId }),
+    );
   }
 }
 

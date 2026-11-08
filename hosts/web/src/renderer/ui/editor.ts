@@ -31,18 +31,22 @@ import {
 
 import { Component } from "../system/component";
 
-type EditorCallbacks = {
+type Init = {
+  firstPassSource: string;
+};
+
+type Callbacks = {
   onSourceChanged: (newSource: string) => void;
 };
 
 class Editor extends Component {
   readonly #view: EditorView;
 
-  constructor(parent: HTMLElement, firstPassSource: string, callbacks: EditorCallbacks) {
+  constructor(parent: HTMLElement, init: Init, callbacks: Callbacks) {
     super();
 
     this.#view = new EditorView({
-      doc: firstPassSource,
+      doc: init.firstPassSource,
       parent,
       extensions: [
         // A line number gutter

@@ -3,10 +3,14 @@ import { Surface } from "../../mewo/classes/surface";
 import { Component } from "../system/component";
 import { el } from "../system/dom";
 
+type Init = {
+  runtime: Runtime;
+};
+
 class Viewport extends Component {
   readonly surface: Surface;
 
-  constructor(parent: HTMLElement, runtime: Runtime) {
+  constructor(parent: HTMLElement, init: Init) {
     super();
 
     const canvasElt = el("canvas", { id: "mewo" });
@@ -15,7 +19,7 @@ class Viewport extends Component {
     parent.append(divElt);
     this.defer(() => divElt.remove());
 
-    this.surface = this.use(new Surface(runtime, canvasElt));
+    this.surface = this.use(new Surface(init.runtime, canvasElt));
   }
 }
 

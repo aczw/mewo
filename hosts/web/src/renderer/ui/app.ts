@@ -1,7 +1,7 @@
 import { Project } from "../../mewo/classes/project";
 import { Runtime } from "../../mewo/classes/runtime";
 import { Session } from "../../mewo/classes/session";
-import { MewoEvent } from "../../mewo/types";
+import { MewoEvent, type PassId } from "../../mewo/types";
 import { Component } from "../system/component";
 import { el } from "../system/dom";
 import { Mutable } from "../system/mutable";
@@ -23,6 +23,8 @@ class App extends Component {
   readonly #projectController: ProjectController;
   readonly #editor: Editor;
 
+  #activePassId: PassId;
+
   constructor(parent: HTMLElement) {
     super();
 
@@ -33,18 +35,30 @@ class App extends Component {
     const editorElt = el("div", { class: "left" });
     const rightElt = el("div", { class: "right" }, []);
     const main = el("main", {}, [editorElt, rightElt]);
-
     parent.append(main);
     this.defer(() => main.remove());
 
-    this.#viewport = this.use(new Viewport(rightElt, this.#runtime));
-    this.#projectController = this.use(new ProjectController(rightElt, this.#project));
-    this.#editor = this.use(
-      new Editor(editorElt, kDefaultPassSource, {
-        onSourceChanged: (newSource) => {
-          this.#project.setPassSource(this.#projectController.activePassId, newSource);
-        },
+    // First pass has to exist
+    this.#activePassId = this.#project.getPassId(0)!;
+
+    this.#viewport = this.use(new Viewport(rightElt, { runtime: this.#runtime }));
+    this.#projectController = this.use(
+      new ProjectController(rightElt, {
+        project: this.#project,
+        activePassId: this.#activePassId,
       }),
+    );
+
+    this.#editor = this.use(
+      new Editor(
+        editorElt,
+        { firstPassSource: this.#project.getPassSource(this.#activePassId) },
+        {
+          onSourceChanged: (newSource) => {
+            this.#project.setPassSource(this.#activePassId, newSource);
+          },
+        },
+      ),
     );
 
     this.#runtime.requestDevice(this.#viewport.surface);
