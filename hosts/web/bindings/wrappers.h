@@ -57,6 +57,32 @@ mewo_project_t* mewo_web_project_create(const char* first_pass_name, const char*
 
 void mewo_web_project_destroy(mewo_project_t* project);
 
+bool mewo_web_project_set_pass_source(
+  mewo_project_t* project,
+  mewo_pass_id_t pass_id,
+  const char* source
+);
+
+bool mewo_web_project_set_common_source(mewo_project_t* project, const char* source);
+
+mewo_pass_id_t mewo_web_project_add_pass(
+  mewo_project_t* project,
+  const char* name,
+  const char* source
+);
+
+bool mewo_web_project_remove_pass(mewo_project_t* project, mewo_pass_id_t pass_id);
+
+bool mewo_web_project_move_pass(
+  mewo_project_t* project,
+  mewo_pass_id_t pass_id,
+  uint32_t new_index
+);
+
+uint32_t mewo_web_project_get_pass_count(mewo_project_t* project);
+
+mewo_pass_id_t mewo_web_project_get_pass_id(mewo_project_t* project, uint32_t index);
+
 /** Passing 0 for the width and height is invalid. */
 mewo_session_t* mewo_web_session_create(
   mewo_runtime_t* runtime,

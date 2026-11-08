@@ -30,13 +30,11 @@ class App extends Component {
 
     const editorElt = el("div", { class: "left" });
     const viewportElt = el("div", { class: "viewport" });
+    const passListElt = el("ul", { class: "pass-list", text: "Passes" });
 
     const main = el("main", {}, [
       editorElt,
-      el("div", { class: "right" }, [
-        viewportElt,
-        el("div", { class: "pass-list", text: "Passes" }),
-      ]),
+      el("div", { class: "right" }, [viewportElt, passListElt]),
     ]);
 
     parent.append(main);

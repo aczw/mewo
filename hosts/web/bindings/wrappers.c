@@ -134,6 +134,60 @@ EMSCRIPTEN_KEEPALIVE
 void mewo_web_project_destroy(mewo_project_t* project) { mewo_project_destroy(project); }
 
 EMSCRIPTEN_KEEPALIVE
+bool mewo_web_project_set_pass_source(
+  mewo_project_t* project,
+  mewo_pass_id_t pass_id,
+  const char* source
+) {
+  last_result = mewo_project_set_pass_source(project, pass_id, to_string_view(source));
+  return last_result == MEWO_SUCCESS;
+}
+
+EMSCRIPTEN_KEEPALIVE
+bool mewo_web_project_set_common_source(mewo_project_t* project, const char* source) {
+  last_result = mewo_project_set_common_source(project, to_string_view(source));
+  return last_result == MEWO_SUCCESS;
+}
+
+EMSCRIPTEN_KEEPALIVE
+mewo_pass_id_t mewo_web_project_add_pass(
+  mewo_project_t* project,
+  const char* name,
+  const char* source
+) {
+  mewo_pass_id_t pass_id = MEWO_PASS_ID_NONE;
+  last_result =
+    mewo_project_add_pass(project, to_string_view(name), to_string_view(source), &pass_id);
+  return pass_id;
+}
+
+EMSCRIPTEN_KEEPALIVE
+bool mewo_web_project_remove_pass(mewo_project_t* project, mewo_pass_id_t pass_id) {
+  last_result = mewo_project_remove_pass(project, pass_id);
+  return last_result == MEWO_SUCCESS;
+}
+
+EMSCRIPTEN_KEEPALIVE
+bool mewo_web_project_move_pass(
+  mewo_project_t* project,
+  mewo_pass_id_t pass_id,
+  uint32_t new_index
+) {
+  last_result = mewo_project_move_pass(project, pass_id, new_index);
+  return last_result == MEWO_SUCCESS;
+}
+
+EMSCRIPTEN_KEEPALIVE
+uint32_t mewo_web_project_get_pass_count(mewo_project_t* project) {
+  return mewo_project_get_pass_count(project);
+}
+
+EMSCRIPTEN_KEEPALIVE
+mewo_pass_id_t mewo_web_project_get_pass_id(mewo_project_t* project, uint32_t index) {
+  return mewo_project_get_pass_id(project, index);
+}
+
+EMSCRIPTEN_KEEPALIVE
 mewo_session_t* mewo_web_session_create(
   mewo_runtime_t* runtime,
   mewo_project_t* project,

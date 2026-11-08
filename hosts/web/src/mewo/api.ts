@@ -1,4 +1,4 @@
-import { MewoEvent, MewoResult, type Ptr } from "./types";
+import { MewoEvent, MewoResult, type PassId, type Ptr } from "./types";
 import createWasmModule from "./wasm/mewo";
 
 const Module = await createWasmModule();
@@ -44,6 +44,36 @@ const Mewo = {
   projectDestroy: Module.cwrap("mewo_web_project_destroy", null, ["number"]) as (
     project: Ptr,
   ) => void,
+  projectSetPassSource: Module.cwrap("mewo_web_project_set_pass_source", "boolean", [
+    "number",
+    "number",
+    "string",
+  ]) as (project: Ptr, passId: PassId, source: string) => boolean,
+  projectSetCommonSource: Module.cwrap("mewo_web_project_set_common_source", "boolean", [
+    "number",
+    "string",
+  ]) as (project: Ptr, source: string) => boolean,
+  projectAddPass: Module.cwrap("mewo_web_project_add_pass", "number", [
+    "number",
+    "string",
+    "string",
+  ]) as (project: Ptr, name: string, source: string) => PassId,
+  projectRemovePass: Module.cwrap("mewo_web_project_remove_pass", "boolean", [
+    "number",
+    "number",
+  ]) as (project: Ptr, passId: PassId) => boolean,
+  projectMovePass: Module.cwrap("mewo_web_project_move_pass", "boolean", [
+    "number",
+    "number",
+    "number",
+  ]) as (project: Ptr, passId: PassId, newIndex: number) => boolean,
+  projectGetPassCount: Module.cwrap("mewo_web_project_get_pass_count", "number", ["number"]) as (
+    project: Ptr,
+  ) => number,
+  projectGetPassId: Module.cwrap("mewo_web_project_get_pass_id", "number", [
+    "number",
+    "number",
+  ]) as (project: Ptr, index: number) => PassId,
 
   sessionCreate: Module.cwrap("mewo_web_session_create", "number", [
     "number",

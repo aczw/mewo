@@ -16,4 +16,9 @@ type MewoResult = (typeof MewoResult)[keyof typeof MewoResult];
 
 type Dimensions = { width: number; height: number };
 
-export { type Ptr, type Dimensions, MewoEvent, MewoResult, kNull };
+type PassId = number;
+
+/** Maps to `MEWO_PASS_ID_NONE`. */
+const kPassIdNone: PassId = 0 as const;
+
+export { type Ptr, type Dimensions, type PassId, MewoEvent, MewoResult, kNull, kPassIdNone };
