@@ -6,23 +6,25 @@ type Init = {
   isActive: boolean;
 };
 
-class PassRow extends Component {
-  readonly #listItemElt: HTMLLIElement;
+type Callbacks = {
+  onSetActive: () => void;
+};
 
-  constructor(parent: HTMLElement, init: Init) {
+class PassRow extends Component {
+  readonly elt: HTMLLIElement;
+
+  constructor(init: Init, cb: Callbacks) {
     super();
 
-    this.#listItemElt = el("li", {
-      text: init.name,
-      class: init.isActive ? "pass-row is-active" : "pass-row",
-    });
+    const buttonElt = el("button", { text: init.name });
+    buttonElt.addEventListener("click", cb.onSetActive);
+    this.elt = el("li", { class: init.isActive ? "pass-row is-active" : "pass-row" }, [buttonElt]);
 
-    parent.append(this.#listItemElt);
-    this.defer(() => this.#listItemElt.remove());
+    this.defer(() => this.elt.remove());
   }
 
-  toggleActive() {
-    this.#listItemElt.classList.toggle("is-active");
+  setActive(isActive: boolean) {
+    this.elt.classList.toggle("is-active", isActive);
   }
 }
 

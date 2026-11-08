@@ -9,5 +9,9 @@
     border: 1px dashed lightgray;
     padding: 0.25rem;
     text-align: left;
+
+    &:hover {
+      background-color: lightgray;
+    }
   }
 }
