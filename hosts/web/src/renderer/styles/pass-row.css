@@ -8,16 +8,15 @@
 
   > .pass-row-name {
     flex-grow: 1;
-  }
 
-  > .pass-row-rename {
-    flex-shrink: 1;
-  }
-
-  &:hover {
-    > .pass-row-name {
+    &:hover {
       background-color: lightgray;
     }
+  }
+
+  > .pass-row-rename,
+  > .pass-row-delete {
+    flex-shrink: 0;
   }
 
   &.is-active {

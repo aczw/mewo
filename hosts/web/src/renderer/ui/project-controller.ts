@@ -11,6 +11,7 @@ type Init = {
 
 type Callbacks = {
   onAddPass: () => void;
+  onRemovePass: (removedPassId: PassId) => void;
   onSetActivePass: (newActivePassId: PassId) => void;
   onPassRename: (passId: PassId, newPassName: string) => void;
 };
@@ -30,6 +31,7 @@ class ProjectController extends Component {
         divElt,
         { project: init.project, activePassId: init.activePassId },
         {
+          onRemovePass: cb.onRemovePass,
           onSetActivePass: cb.onSetActivePass,
           onPassRename: cb.onPassRename,
         },

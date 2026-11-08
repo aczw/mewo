@@ -10,6 +10,7 @@ type Init = {
 };
 
 type Callbacks = {
+  onRemovePass: (removedPassId: PassId) => void;
   onSetActivePass: (newActivePassId: PassId) => void;
   onPassRename: (passId: PassId, newPassName: string) => void;
 };
@@ -17,6 +18,8 @@ type Callbacks = {
 class PassList extends Component {
   readonly #listElt: HTMLUListElement;
   readonly #rows = new Map<PassId, PassRow>();
+
+  readonly #onRemovePass: (removedPassId: PassId) => void;
   readonly #onSetActivePass: (newActivePassId: PassId) => void;
   readonly #onPassRename: (passId: PassId, newPassName: string) => void;
 
@@ -24,6 +27,7 @@ class PassList extends Component {
     super();
 
     this.#listElt = el("ul", { class: "pass-list" });
+    this.#onRemovePass = cb.onRemovePass;
     this.#onSetActivePass = cb.onSetActivePass;
     this.#onPassRename = cb.onPassRename;
 
@@ -79,8 +83,9 @@ class PassList extends Component {
 
   #createRow(passId: PassId, init: PassRowInit): PassRow {
     return new PassRow(init, {
+      onRemove: () => this.#onRemovePass(passId),
       onSetActive: () => this.#onSetActivePass(passId),
-      onPassRename: (newPassName) => this.#onPassRename(passId, newPassName),
+      onRename: (newPassName) => this.#onPassRename(passId, newPassName),
     });
   }
 }

@@ -61,6 +61,11 @@ class App extends Component {
             this.#activePassId = this.#project.addPass(`Pass ${passCount + 1}`, kNewPassSource);
             this.#refresh();
           },
+          onRemovePass: (removedPassId) => {
+            this.#project.removePass(removedPassId);
+            this.#activePassId = this.#project.getPassId(0)!;
+            this.#refresh();
+          },
           onSetActivePass: (newActivePassId) => {
             this.#activePassId = newActivePassId;
             this.#refresh();

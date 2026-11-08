@@ -7,8 +7,9 @@ type Init = {
 };
 
 type Callbacks = {
+  onRemove: () => void;
   onSetActive: () => void;
-  onPassRename: (newPassName: string) => void;
+  onRename: (newPassName: string) => void;
 };
 
 class PassRow extends Component {
@@ -28,11 +29,15 @@ class PassRow extends Component {
     this.#nameElt.addEventListener("click", cb.onSetActive);
 
     const renameElt = el("button", { class: "pass-row-rename", text: "Rename" });
-    renameElt.addEventListener("click", () => cb.onPassRename("incredible new name"));
+    renameElt.addEventListener("click", () => cb.onRename("incredible new name"));
+
+    const deleteElt = el("button", { class: "pass-row-delete", text: "Delete" });
+    deleteElt.addEventListener("click", cb.onRemove);
 
     this.elt = el("li", { class: init.isActive ? "pass-row is-active" : "pass-row" }, [
       this.#nameElt,
       renameElt,
+      deleteElt,
     ]);
     this.defer(() => this.elt.remove());
   }
