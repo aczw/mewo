@@ -8,31 +8,46 @@ type Init = {
 
 type Callbacks = {
   onSetActive: () => void;
+  onPassRename: (newPassName: string) => void;
 };
 
 class PassRow extends Component {
   readonly elt: HTMLLIElement;
+  readonly #nameElt: HTMLButtonElement;
+
+  #name: string;
+  #isActive: boolean;
 
   constructor(init: Init, cb: Callbacks) {
     super();
 
-    const nameElt = el("button", { class: "pass-row-name", text: init.name });
-    nameElt.addEventListener("click", cb.onSetActive);
+    this.#name = init.name;
+    this.#isActive = init.isActive;
+
+    this.#nameElt = el("button", { class: "pass-row-name", text: init.name });
+    this.#nameElt.addEventListener("click", cb.onSetActive);
 
     const renameElt = el("button", { class: "pass-row-rename", text: "Rename" });
-    renameElt.addEventListener("click", () => prompt("New pass name"));
+    renameElt.addEventListener("click", () => cb.onPassRename("incredible new name"));
 
     this.elt = el("li", { class: init.isActive ? "pass-row is-active" : "pass-row" }, [
-      nameElt,
+      this.#nameElt,
       renameElt,
     ]);
-
     this.defer(() => this.elt.remove());
   }
 
-  setActive(isActive: boolean) {
-    this.elt.classList.toggle("is-active", isActive);
+  update(state: Init) {
+    if (this.#name !== state.name) {
+      this.#nameElt.textContent = state.name;
+      this.#name = state.name;
+    }
+
+    if (this.#isActive !== state.isActive) {
+      this.elt.classList.toggle("is-active", state.isActive);
+      this.#isActive = state.isActive;
+    }
   }
 }
 
-export { PassRow };
+export { PassRow, type Init as PassRowInit };

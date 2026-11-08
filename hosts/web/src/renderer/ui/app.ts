@@ -60,15 +60,23 @@ class App extends Component {
             const passCount = this.#project.getPassCount();
             const newPassId = this.#project.addPass(`Pass ${passCount + 1}`, kNewPassSource);
 
+            this.#activePassId = newPassId;
             this.#editor.addState(this.#project, newPassId);
-            this.#projectController.addPass(this.#project, newPassId);
-
-            this.#setActivePassId(newPassId);
+            this.#editor.showState(this.#activePassId);
+            this.#projectController.update(this.#project, this.#activePassId);
           },
 
           onSetActivePass: (newActivePassId) => {
             if (this.#activePassId === newActivePassId) return;
-            this.#setActivePassId(newActivePassId);
+
+            this.#activePassId = newActivePassId;
+            this.#editor.showState(this.#activePassId);
+            this.#projectController.update(this.#project, this.#activePassId);
+          },
+
+          onPassRename: (passId, newPassName) => {
+            this.#project.setPassName(passId, newPassName);
+            this.#projectController.update(this.#project, this.#activePassId);
           },
         },
       ),
@@ -126,12 +134,6 @@ class App extends Component {
 
     this.#rafId = window.requestAnimationFrame(onFrame);
     this.defer(() => window.cancelAnimationFrame(this.#rafId));
-  }
-
-  #setActivePassId(newActivePassId: PassId) {
-    this.#activePassId = newActivePassId;
-    this.#editor.showState(this.#activePassId);
-    this.#projectController.setActivePass(this.#activePassId);
   }
 }
 

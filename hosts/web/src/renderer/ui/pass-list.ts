@@ -1,8 +1,8 @@
 import type { Project } from "../../mewo/classes/project";
-import { kPassIdNone, type PassId } from "../../mewo/types";
+import type { PassId } from "../../mewo/types";
 import { Component } from "../system/component";
 import { el } from "../system/dom";
-import { PassRow } from "./pass-row";
+import { PassRow, type PassRowInit } from "./pass-row";
 
 type Init = {
   project: Project;
@@ -11,31 +11,23 @@ type Init = {
 
 type Callbacks = {
   onSetActivePass: (newActivePassId: PassId) => void;
+  onPassRename: (passId: PassId, newPassName: string) => void;
 };
 
 class PassList extends Component {
   readonly #listElt: HTMLUListElement;
   readonly #rows = new Map<PassId, PassRow>();
   readonly #onSetActivePass: (newActivePassId: PassId) => void;
-
-  #currActivePass: PassId = kPassIdNone;
+  readonly #onPassRename: (passId: PassId, newPassName: string) => void;
 
   constructor(parent: HTMLElement, init: Init, cb: Callbacks) {
     super();
 
     this.#listElt = el("ul", { class: "pass-list" });
     this.#onSetActivePass = cb.onSetActivePass;
+    this.#onPassRename = cb.onPassRename;
 
-    for (let idx = 0; idx < init.project.getPassCount(); ++idx) {
-      const passId = init.project.getPassId(idx);
-
-      if (!passId) continue;
-
-      const isActive = init.activePassId === passId;
-      this.add(init.project, passId, isActive);
-
-      if (isActive) this.#currActivePass = passId;
-    }
+    this.update(init.project, init.activePassId);
 
     const passesHeadingElt = el("h2", { class: "passes-heading", text: "Passes" });
     parent.append(passesHeadingElt);
@@ -49,25 +41,47 @@ class PassList extends Component {
     });
   }
 
-  add(project: Project, passId: PassId, isActive: boolean) {
-    const passRow = new PassRow(
-      {
-        name: project.getPassName(passId),
-        isActive,
-      },
-      {
-        onSetActive: () => this.#onSetActivePass(passId),
-      },
-    );
+  update(project: Project, activePassId: PassId) {
+    const passIds: PassId[] = [];
+    for (let idx = 0; idx < project.getPassCount(); ++idx) passIds.push(project.getPassId(idx)!);
 
-    this.#listElt.append(passRow.elt);
-    this.#rows.set(passId, passRow);
+    // Delete and dispose any `PassRow`s whose passes have been deleted
+    const aliveIds = new Set(passIds);
+    for (const [passId, row] of this.#rows) {
+      if (aliveIds.has(passId)) continue;
+      row[Symbol.dispose]();
+      this.#rows.delete(passId);
+    }
+
+    let domCursor = this.#listElt.firstElementChild;
+    for (const passId of passIds) {
+      const state: PassRowInit = {
+        name: project.getPassName(passId),
+        isActive: passId === activePassId,
+      };
+
+      let passRow = this.#rows.get(passId);
+      if (passRow) {
+        passRow.update(state);
+      } else {
+        // Create new `PassRow`s for newly added passes
+        passRow = this.#createRow(passId, state);
+        this.#rows.set(passId, passRow);
+      }
+
+      if (passRow.elt === domCursor) {
+        domCursor = domCursor.nextElementSibling;
+      } else {
+        this.#listElt.insertBefore(passRow.elt, domCursor);
+      }
+    }
   }
 
-  setActivePass(passId: PassId) {
-    this.#rows.get(this.#currActivePass)!.setActive(false);
-    this.#rows.get(passId)!.setActive(true);
-    this.#currActivePass = passId;
+  #createRow(passId: PassId, init: PassRowInit): PassRow {
+    return new PassRow(init, {
+      onSetActive: () => this.#onSetActivePass(passId),
+      onPassRename: (newPassName) => this.#onPassRename(passId, newPassName),
+    });
   }
 }
 

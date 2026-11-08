@@ -12,6 +12,7 @@ type Init = {
 type Callbacks = {
   onAddPass: () => void;
   onSetActivePass: (newActivePassId: PassId) => void;
+  onPassRename: (passId: PassId, newPassName: string) => void;
 };
 
 class ProjectController extends Component {
@@ -30,6 +31,7 @@ class ProjectController extends Component {
         { project: init.project, activePassId: init.activePassId },
         {
           onSetActivePass: cb.onSetActivePass,
+          onPassRename: cb.onPassRename,
         },
       ),
     );
@@ -39,12 +41,8 @@ class ProjectController extends Component {
     divElt.append(addPassBtnElt);
   }
 
-  addPass(project: Project, passId: PassId) {
-    this.#passList.add(project, passId, false);
-  }
-
-  setActivePass(passId: PassId) {
-    this.#passList.setActivePass(passId);
+  update(project: Project, activePassId: PassId) {
+    this.#passList.update(project, activePassId);
   }
 }
 
