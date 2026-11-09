@@ -123,6 +123,7 @@ Session::Session(
       render_size_(render_size),
       elapsed_(0),
       frame_number_(0),
+      is_paused_(false),
       unifs_buf_(std::move(unifs_buf)),
       unifs_bgl_(std::move(unifs_bgl)),
       unifs_bg_(std::move(unifs_bg)),
@@ -132,10 +133,8 @@ Session::Session(
       pass_structure_revision_(0) {}
 
 PassState* Session::get_state(Pass::Id pass_id) {
-  if (
-    auto state_it = std::ranges::find(states_, pass_id, &PassState::pass_id);
-    state_it != states_.end()
-  ) {
+  if (auto state_it = std::ranges::find(states_, pass_id, &PassState::pass_id);
+      state_it != states_.end()) {
     return std::to_address(state_it);
   }
 
@@ -146,12 +145,12 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
   const gpu::Queue& queue = runtime_.queue();
   const gpu::Device& device = runtime_.device();
 
-  uint64_t delta_time = 0;
-
+  uint64_t host_delta_time = 0;
   if (previous_time_ && current_time > *previous_time_)
     delta_time = current_time - *previous_time_;
-
   previous_time_ = current_time;
+
+  uint64_t delta_time = is_paused_ ? 0 : host_delta_time;
   elapsed_ += delta_time;
 
   UniformData unifs;
@@ -174,10 +173,8 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
 
   const std::vector<Pass>& passes = project_.passes();
 
-  if (
-    Revision structure_revision = project_.structure_revision();
-    pass_structure_revision_ != structure_revision
-  ) {
+  if (Revision structure_revision = project_.structure_revision();
+      pass_structure_revision_ != structure_revision) {
     for (auto state_it = states_.begin(); state_it != states_.end();) {
       bool still_exists = std::ranges::contains(passes, state_it->pass_id(), &Pass::id);
 
@@ -296,7 +293,8 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
   if (surface_view)
     surface->present();
 
-  frame_number_ += 1;
+  if (!is_paused_)
+    frame_number_ += 1;
 }
 
 }  // namespace mewo::impl

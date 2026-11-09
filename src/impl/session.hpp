@@ -32,6 +32,10 @@ class Session : private Pinned {
 
   uint64_t elapsed() const { return elapsed_; }
 
+  bool is_paused() const { return is_paused_; }
+
+  void set_is_paused(bool is_paused) { is_paused_ = is_paused; }
+
   Revision pass_status_revision() const { return pass_status_revision_; }
 
   PassState* get_state(Pass::Id pass_id);
@@ -57,6 +61,7 @@ class Session : private Pinned {
   std::optional<uint64_t> previous_time_;
   uint64_t elapsed_;
   uint32_t frame_number_;
+  bool is_paused_;
 
   gpu::Buf unifs_buf_;
   gpu::BindGroupLayout unifs_bgl_;
