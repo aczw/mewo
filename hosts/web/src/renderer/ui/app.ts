@@ -95,7 +95,15 @@ class App extends Component {
   }
 
   #run(): void {
+    let prevTime: number | null = null;
+
     const onFrame: FrameRequestCallback = (time) => {
+      if (prevTime === null) prevTime = time;
+
+      const deltaTime = time - prevTime;
+      this.#viewport.updateFpsInfo(deltaTime);
+      prevTime = time;
+
       this.#rafId = window.requestAnimationFrame(onFrame);
       this.#runtime.tick();
 
@@ -124,7 +132,7 @@ class App extends Component {
         const dims = this.#viewport.surface.dimensions;
         if (dims.width !== 0 && dims.height !== 0) {
           session.setRenderSize(dims.width, dims.height);
-          this.#viewport.updateInfo();
+          this.#viewport.updateDimensionsInfo();
         }
       }
 
