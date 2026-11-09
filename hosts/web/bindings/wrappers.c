@@ -255,3 +255,8 @@ bool mewo_web_session_render(mewo_session_t* session, mewo_surface_t* surface, d
   last_result = mewo_session_render(session, surface, (uint64_t)(time_ms * 1e6));
   return last_result == MEWO_SUCCESS;
 }
+
+EMSCRIPTEN_KEEPALIVE
+double mewo_web_session_get_time(mewo_session_t* session) {
+  return (double)mewo_session_get_time(session) / 1e6;
+}

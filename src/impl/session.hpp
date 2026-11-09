@@ -30,6 +30,8 @@ class Session : private Pinned {
 
   void set_render_size(Dimensions render_size);
 
+  uint64_t elapsed() const { return elapsed_; }
+
   Revision pass_status_revision() const { return pass_status_revision_; }
 
   PassState* get_state(Pass::Id pass_id);

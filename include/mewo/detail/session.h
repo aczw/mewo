@@ -76,6 +76,15 @@ mewo_result_t mewo_session_render(
 );
 
 /**
+ * Gets the session's playback time (what shaders see as `mw.time`) as of the last call to
+ * `mewo_session_render()`. It is 0 before the first render.
+ *
+ * @param session Pointer to the session.
+ * @return The playback time in nanoseconds.
+ */
+uint64_t mewo_session_get_time(mewo_session_t* session);
+
+/**
  * Each time the compile status or diagnostics of a pass change, the revision count is incremented.
  * Use this to check if the status of any pass in the session has changed.
  *

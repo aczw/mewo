@@ -9,6 +9,7 @@ type Init = {
 
 class Viewport extends Component {
   readonly surface: Surface;
+  readonly #timeElt: HTMLParagraphElement;
   readonly #dimsElt: HTMLParagraphElement;
   readonly #fpsElt: HTMLParagraphElement;
   readonly #runningFpsValues: number[] = [];
@@ -17,17 +18,22 @@ class Viewport extends Component {
     super();
 
     const canvasElt = el("canvas", { id: "mewo" });
-    const divElt = el("div", { class: "viewport" }, [canvasElt]);
-
-    parent.append(divElt);
-    this.defer(() => divElt.remove());
+    const viewportElt = el("div", { class: "viewport" }, [canvasElt]);
+    parent.append(viewportElt);
+    this.defer(() => viewportElt.remove());
 
     this.surface = this.use(new Surface(init.runtime, canvasElt));
 
+    this.#timeElt = el("p", { text: "0.00s" });
+
     this.#dimsElt = el("p");
     this.#fpsElt = el("p", { text: "0.0 FPS" });
-    const infoElt = el("div", { class: "viewport-info" }, [this.#dimsElt, this.#fpsElt]);
-    divElt.append(infoElt);
+    const infoRightElt = el("div", { class: "viewport-info-right" });
+    infoRightElt.append(this.#dimsElt);
+    infoRightElt.append(this.#fpsElt);
+
+    const infoElt = el("div", { class: "viewport-info" }, [this.#timeElt, infoRightElt]);
+    viewportElt.append(infoElt);
 
     this.updateDimensionsInfo();
   }
@@ -50,6 +56,10 @@ class Viewport extends Component {
     const averageFps = Math.round((sum / this.#runningFpsValues.length) * 10) * 0.1;
 
     this.#fpsElt.textContent = `${averageFps.toFixed(1)} FPS`;
+  }
+
+  updateTimeInfo(timeMs: number): void {
+    this.#timeElt.textContent = `${(timeMs * 0.001).toFixed(2)}s`;
   }
 }
 

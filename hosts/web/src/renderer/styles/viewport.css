@@ -12,5 +12,10 @@
   > .viewport-info {
     display: flex;
     justify-content: space-between;
+
+    > .viewport-info-right {
+      display: flex;
+      column-gap: 0.5rem;
+    }
   }
 }

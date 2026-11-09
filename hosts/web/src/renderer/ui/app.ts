@@ -137,6 +137,7 @@ class App extends Component {
       }
 
       session.render(this.#viewport.surface, time);
+      this.#viewport.updateTimeInfo(session.timeMs);
     };
 
     this.#rafId = window.requestAnimationFrame(onFrame);

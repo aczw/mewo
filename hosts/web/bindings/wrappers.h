@@ -110,4 +110,6 @@ bool mewo_web_session_set_render_size(mewo_session_t* session, uint32_t width, u
 
 bool mewo_web_session_render(mewo_session_t* session, mewo_surface_t* surface, double time_ms);
 
+double mewo_web_session_get_time(mewo_session_t* session);
+
 #endif

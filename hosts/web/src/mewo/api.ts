@@ -110,6 +110,9 @@ const Mewo = {
     "number",
     "number",
   ]) as (session: Ptr, surface: Ptr, timeMs: number) => boolean,
+  sessionGetTime: Module.cwrap("mewo_web_session_get_time", "number", ["number"]) as (
+    session: Ptr,
+  ) => number,
 };
 
 export { Mewo };

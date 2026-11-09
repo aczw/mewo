@@ -83,6 +83,11 @@ mewo_result_t mewo_session_render(
   return MEWO_SUCCESS;
 }
 
+uint64_t mewo_session_get_time(mewo_session_t* session) {
+  assert(session);
+  return session->impl->elapsed();
+}
+
 uint64_t mewo_session_get_pass_status_revision(mewo_session_t* session) {
   assert(session);
   return session->impl->pass_status_revision();
