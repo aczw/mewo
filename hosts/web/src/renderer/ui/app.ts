@@ -122,7 +122,10 @@ class App extends Component {
 
       if (this.#viewport.surface.checkForResize()) {
         const dims = this.#viewport.surface.dimensions;
-        if (dims.width !== 0 && dims.height !== 0) session.setRenderSize(dims.width, dims.height);
+        if (dims.width !== 0 && dims.height !== 0) {
+          session.setRenderSize(dims.width, dims.height);
+          this.#viewport.updateInfo();
+        }
       }
 
       session.render(this.#viewport.surface, time);

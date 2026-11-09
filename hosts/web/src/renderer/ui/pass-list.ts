@@ -26,19 +26,15 @@ class PassList extends Component {
   constructor(parent: HTMLElement, init: Init, cb: Callbacks) {
     super();
 
-    this.#listElt = el("ul", { class: "pass-list" });
     this.#onRemovePass = cb.onRemovePass;
     this.#onSetActivePass = cb.onSetActivePass;
     this.#onPassRename = cb.onPassRename;
 
-    this.update(init.project, init.activePassId);
-
-    const passesHeadingElt = el("h2", { class: "passes-heading", text: "Passes" });
-    parent.append(passesHeadingElt);
-    this.defer(() => passesHeadingElt.remove());
-
+    this.#listElt = el("ul", { class: "pass-list" });
     parent.append(this.#listElt);
     this.defer(() => this.#listElt.remove());
+
+    this.update(init.project, init.activePassId);
 
     this.defer(() => {
       for (const row of this.#rows.values()) row[Symbol.dispose]();

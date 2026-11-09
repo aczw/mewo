@@ -9,6 +9,7 @@ type Init = {
 
 class Viewport extends Component {
   readonly surface: Surface;
+  readonly #dimsElt: HTMLParagraphElement;
 
   constructor(parent: HTMLElement, init: Init) {
     super();
@@ -20,6 +21,17 @@ class Viewport extends Component {
     this.defer(() => divElt.remove());
 
     this.surface = this.use(new Surface(init.runtime, canvasElt));
+
+    this.#dimsElt = el("p");
+    const infoElt = el("div", { class: "viewport-info" }, [this.#dimsElt]);
+    divElt.append(infoElt);
+
+    this.updateInfo();
+  }
+
+  updateInfo(): void {
+    const dims = this.surface.dimensions;
+    this.#dimsElt.textContent = `${dims.width}×${dims.height}`;
   }
 }
 
