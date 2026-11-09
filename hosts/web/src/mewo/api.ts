@@ -113,6 +113,14 @@ const Mewo = {
   sessionGetTime: Module.cwrap("mewo_web_session_get_time", "number", ["number"]) as (
     session: Ptr,
   ) => number,
+  // `cwrap` has no "boolean" argument type, so we use a number instead
+  sessionSetPaused: Module.cwrap("mewo_web_session_set_paused", null, ["number", "number"]) as (
+    session: Ptr,
+    paused: boolean,
+  ) => void,
+  sessionIsPaused: Module.cwrap("mewo_web_session_is_paused", "boolean", ["number"]) as (
+    session: Ptr,
+  ) => boolean,
 };
 
 export { Mewo };

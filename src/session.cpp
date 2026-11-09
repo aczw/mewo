@@ -88,6 +88,16 @@ uint64_t mewo_session_get_time(mewo_session_t* session) {
   return session->impl->elapsed();
 }
 
+void mewo_session_set_paused(mewo_session_t* session, bool paused) {
+  assert(session);
+  session->impl->set_is_paused(paused);
+}
+
+bool mewo_session_is_paused(mewo_session_t* session) {
+  assert(session);
+  return session->impl->is_paused();
+}
+
 uint64_t mewo_session_get_pass_status_revision(mewo_session_t* session) {
   assert(session);
   return session->impl->pass_status_revision();

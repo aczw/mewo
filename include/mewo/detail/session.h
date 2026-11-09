@@ -7,6 +7,7 @@
 #include <mewo/detail/project.h>
 #include <mewo/detail/types.h>
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -83,6 +84,25 @@ mewo_result_t mewo_session_render(
  * @return The playback time in nanoseconds.
  */
 uint64_t mewo_session_get_time(mewo_session_t* session);
+
+/**
+ * Pauses or resumes the session's playback. While paused, the session still renders (so
+ * edits show up), but `mw.time` and `mw.frame_number` stay frozen and `mw.delta_time` is 0.
+ *
+ * Resuming continues from the paused time, without jumping forward.
+ *
+ * @param session Pointer to the session.
+ * @param paused Whether the session should be paused.
+ */
+void mewo_session_set_paused(mewo_session_t* session, bool paused);
+
+/**
+ * Gets whether the session's playback is paused.
+ *
+ * @param session Pointer to the session.
+ * @return `true` if the session is paused, `false` otherwise.
+ */
+bool mewo_session_is_paused(mewo_session_t* session);
 
 /**
  * Each time the compile status or diagnostics of a pass change, the revision count is incremented.

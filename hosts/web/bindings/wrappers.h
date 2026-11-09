@@ -112,4 +112,8 @@ bool mewo_web_session_render(mewo_session_t* session, mewo_surface_t* surface, d
 
 double mewo_web_session_get_time(mewo_session_t* session);
 
+void mewo_web_session_set_paused(mewo_session_t* session, bool paused);
+
+bool mewo_web_session_is_paused(mewo_session_t* session);
+
 #endif

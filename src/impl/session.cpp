@@ -147,7 +147,7 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
 
   uint64_t host_delta_time = 0;
   if (previous_time_ && current_time > *previous_time_)
-    delta_time = current_time - *previous_time_;
+    host_delta_time = current_time - *previous_time_;
   previous_time_ = current_time;
 
   uint64_t delta_time = is_paused_ ? 0 : host_delta_time;

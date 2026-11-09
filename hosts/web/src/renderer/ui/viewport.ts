@@ -7,14 +7,23 @@ type Init = {
   runtime: Runtime;
 };
 
+type Callbacks = {
+  onSetPaused: (isPaused: boolean) => void;
+};
+
 class Viewport extends Component {
   readonly surface: Surface;
+
+  readonly #playbackBtnElt: HTMLButtonElement;
+
   readonly #timeElt: HTMLParagraphElement;
   readonly #dimsElt: HTMLParagraphElement;
   readonly #fpsElt: HTMLParagraphElement;
   readonly #runningFpsValues: number[] = [];
 
-  constructor(parent: HTMLElement, init: Init) {
+  #isPaused = false;
+
+  constructor(parent: HTMLElement, init: Init, cb: Callbacks) {
     super();
 
     const canvasElt = el("canvas", { id: "mewo" });
@@ -24,16 +33,30 @@ class Viewport extends Component {
 
     this.surface = this.use(new Surface(init.runtime, canvasElt));
 
-    this.#timeElt = el("p", { text: "0.00s" });
+    {
+      this.#playbackBtnElt = el("button", { text: "Pause" });
+      this.#playbackBtnElt.addEventListener("click", () => {
+        cb.onSetPaused(!this.#isPaused);
+        this.#isPaused = !this.#isPaused;
+        this.#playbackBtnElt.textContent = this.#isPaused ? "Resume" : "Pause";
+      });
 
-    this.#dimsElt = el("p");
-    this.#fpsElt = el("p", { text: "0.0 FPS" });
-    const infoRightElt = el("div", { class: "viewport-info-right" });
-    infoRightElt.append(this.#dimsElt);
-    infoRightElt.append(this.#fpsElt);
+      const controlsElt = el("div", {}, [this.#playbackBtnElt]);
+      viewportElt.append(controlsElt);
+    }
 
-    const infoElt = el("div", { class: "viewport-info" }, [this.#timeElt, infoRightElt]);
-    viewportElt.append(infoElt);
+    {
+      this.#timeElt = el("p", { text: "0.00s" });
+
+      this.#dimsElt = el("p");
+      this.#fpsElt = el("p", { text: "0.0 FPS" });
+      const infoRightElt = el("div", { class: "viewport-info-right" });
+      infoRightElt.append(this.#dimsElt);
+      infoRightElt.append(this.#fpsElt);
+
+      const infoElt = el("div", { class: "viewport-info" }, [this.#timeElt, infoRightElt]);
+      viewportElt.append(infoElt);
+    }
 
     this.updateDimensionsInfo();
   }

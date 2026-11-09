@@ -22,6 +22,14 @@ class Session implements Disposable {
     return Mewo.sessionGetTime(this.handle);
   }
 
+  get paused(): boolean {
+    return Mewo.sessionIsPaused(this.handle);
+  }
+
+  set paused(paused: boolean) {
+    Mewo.sessionSetPaused(this.handle, paused);
+  }
+
   setRenderSize(newWidth: number, newHeight: number): void {
     if (!Mewo.sessionSetRenderSize(this.handle, newWidth, newHeight))
       throw new MewoError("failed to set session render size");

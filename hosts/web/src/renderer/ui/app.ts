@@ -47,7 +47,17 @@ class App extends Component {
     // First pass has to exist
     this.#activePassId = this.#project.getPassId(0)!;
 
-    this.#viewport = this.use(new Viewport(rightElt, { runtime: this.#runtime }));
+    this.#viewport = this.use(
+      new Viewport(
+        rightElt,
+        { runtime: this.#runtime },
+        {
+          onSetPaused: (isPaused) => {
+            if (this.#sessionHolder.value !== null) this.#sessionHolder.value.paused = isPaused;
+          },
+        },
+      ),
+    );
     this.#projectController = this.use(
       new ProjectController(
         rightElt,

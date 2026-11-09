@@ -260,3 +260,11 @@ EMSCRIPTEN_KEEPALIVE
 double mewo_web_session_get_time(mewo_session_t* session) {
   return (double)mewo_session_get_time(session) / 1e6;
 }
+
+EMSCRIPTEN_KEEPALIVE
+void mewo_web_session_set_paused(mewo_session_t* session, bool paused) {
+  mewo_session_set_paused(session, paused);
+}
+
+EMSCRIPTEN_KEEPALIVE
+bool mewo_web_session_is_paused(mewo_session_t* session) { return mewo_session_is_paused(session); }
