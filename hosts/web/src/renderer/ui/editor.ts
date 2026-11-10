@@ -29,16 +29,12 @@ import {
   rectangularSelection,
 } from "@codemirror/view";
 
-import type { Project } from "../../mewo/classes/project";
 import { kPassIdNone, type PassId } from "../../mewo/types";
 import { Component } from "../system/component";
-
-type Init = {
-  project: Project;
-  activePassId: PassId;
-};
+import type { EngineSnapshot } from "../system/engine";
 
 type Callbacks = {
+  getPassSource: (passId: PassId) => string;
   onSourceChanged: (shownPassId: PassId, newSource: string) => void;
 };
 
@@ -46,11 +42,14 @@ class Editor extends Component {
   readonly #extensions: Extension[];
   readonly #states = new Map<PassId, EditorState>();
   readonly #view: EditorView;
+  readonly #getPassSource: (passId: PassId) => string;
 
   #shownPassId: PassId = kPassIdNone;
 
-  constructor(parent: HTMLElement, init: Init, cb: Callbacks) {
+  constructor(parent: HTMLElement, init: EngineSnapshot, cb: Callbacks) {
     super();
+
+    this.#getPassSource = cb.getPassSource;
 
     this.#extensions = [
       // A line number gutter
@@ -110,31 +109,28 @@ class Editor extends Component {
     ];
 
     this.#view = new EditorView({ parent });
-
     this.defer(() => this.#view.destroy());
-    this.update(init.project, init.activePassId);
+
+    this.update(init);
   }
 
-  update(project: Project, activePassId: PassId): void {
+  update(snapshot: EngineSnapshot): void {
     // Save the currently shown pass' latest state before reconciling
     if (this.#shownPassId !== kPassIdNone) this.#states.set(this.#shownPassId, this.#view.state);
 
     const aliveIds = new Set<PassId>();
-    for (let idx = 0; idx < project.getPassCount(); ++idx) {
-      const passId = project.getPassId(idx)!;
-      aliveIds.add(passId);
-
-      if (!this.#states.has(passId))
-        this.#states.set(passId, this.#createState(project.getPassSource(passId)));
+    for (const { id } of snapshot.passes) {
+      aliveIds.add(id);
+      if (!this.#states.has(id)) this.#states.set(id, this.#createState(this.#getPassSource(id)));
     }
 
     for (const passId of this.#states.keys())
       if (!aliveIds.has(passId)) this.#states.delete(passId);
 
     // Switch the view only if the active pass has changed
-    if (activePassId !== this.#shownPassId) {
-      this.#view.setState(this.#states.get(activePassId)!);
-      this.#shownPassId = activePassId;
+    if (snapshot.activePass !== this.#shownPassId) {
+      this.#view.setState(this.#states.get(snapshot.activePass)!);
+      this.#shownPassId = snapshot.activePass;
     }
   }
 

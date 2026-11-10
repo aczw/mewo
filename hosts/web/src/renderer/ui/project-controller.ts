@@ -1,13 +1,8 @@
-import type { Project } from "../../mewo/classes/project";
 import type { PassId } from "../../mewo/types";
 import { Component } from "../system/component";
 import { el } from "../system/dom";
+import type { EngineSnapshot } from "../system/engine";
 import { PassList } from "./pass-list";
-
-type Init = {
-  project: Project;
-  activePassId: PassId;
-};
 
 type Callbacks = {
   onAddPass: () => void;
@@ -19,7 +14,7 @@ type Callbacks = {
 class ProjectController extends Component {
   readonly #passList: PassList;
 
-  constructor(parent: HTMLElement, init: Init, cb: Callbacks) {
+  constructor(parent: HTMLElement, init: EngineSnapshot, cb: Callbacks) {
     super();
 
     const divElt = el("div", { class: "project-controller" });
@@ -27,15 +22,11 @@ class ProjectController extends Component {
     this.defer(() => divElt.remove());
 
     this.#passList = this.use(
-      new PassList(
-        divElt,
-        { project: init.project, activePassId: init.activePassId },
-        {
-          onRemovePass: cb.onRemovePass,
-          onSetActivePass: cb.onSetActivePass,
-          onPassRename: cb.onPassRename,
-        },
-      ),
+      new PassList(divElt, init, {
+        onRemovePass: cb.onRemovePass,
+        onSetActivePass: cb.onSetActivePass,
+        onPassRename: cb.onPassRename,
+      }),
     );
 
     const addPassBtnElt = el("button", { class: "add-pass", text: "Add pass" });
@@ -43,8 +34,8 @@ class ProjectController extends Component {
     divElt.append(addPassBtnElt);
   }
 
-  update(project: Project, activePassId: PassId) {
-    this.#passList.update(project, activePassId);
+  update(snapshot: EngineSnapshot): void {
+    this.#passList.update(snapshot);
   }
 }
 

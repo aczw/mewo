@@ -18,7 +18,8 @@ class Session implements Disposable {
     return this.#handle;
   }
 
-  get timeMs(): number {
+  /** In milliseconds. */
+  get time(): number {
     return Mewo.sessionGetTime(this.handle);
   }
 
