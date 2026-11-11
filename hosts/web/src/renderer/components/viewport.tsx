@@ -75,7 +75,7 @@ const Viewport = () => {
 
         <div className={styles.controlsGroup}>
           <button className={styles.button}>
-            <FocusIcon size="var(--icon)" /> Reset
+            <FocusIcon size="var(--icon)" /> Screenshot
           </button>
           <button className={styles.button}>
             <ExpandIcon size="var(--icon)" /> Fullscreen

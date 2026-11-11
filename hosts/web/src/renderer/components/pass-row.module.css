@@ -1,35 +1,48 @@
 .passRow {
   display: flex;
-
-  > button {
-    text-align: left;
-    padding: 0.25rem;
-  }
-
-  &[data-active="true"] {
-    .name {
-      background-color: lightcyan;
-
-      &:hover {
-        background-color: cyan;
-      }
-    }
-  }
 }
 
-.name {
+.active {
+  display: flex;
+  column-gap: var(--pad);
+  margin-right: var(--pad);
   flex-grow: 1;
+  background-color: var(--fg-low);
+  padding: var(--pad);
+  border: var(--brd-w) solid var(--fg-low);
+  border-radius: var(--brd-rad);
+}
+
+.inactive {
+  display: flex;
+  column-gap: var(--pad);
+  margin-right: var(--pad);
+  flex-grow: 1;
+  padding: var(--pad);
+  border: var(--brd-w) solid var(--bg-secondary);
+  border-radius: var(--brd-rad);
 
   &:hover {
-    background-color: lightgray;
+    background-color: var(--bg-secondary);
   }
 }
 
-.rename,
-.delete {
-  flex-shrink: 0;
+.index {
+  display: flex;
+  justify-content: center;
+  width: var(--icon);
+  color: var(--fg-med);
 }
 
-.delete[disabled] {
-  opacity: 0.5;
+.buttonIcon {
+  padding: var(--pad);
+  border-radius: var(--brd-rad);
+
+  &[data-disabled="false"]:hover {
+    background-color: var(--bg-secondary);
+  }
+
+  &[data-disabled="true"] {
+    color: var(--fg-med);
+  }
 }

@@ -1,0 +1,41 @@
+.controller {
+  display: flex;
+  flex-direction: column;
+  padding: var(--pad);
+  flex-grow: 1;
+  border-top: var(--brd-w) solid var(--bg-secondary);
+}
+
+.heading {
+  margin-bottom: var(--pad);
+}
+
+.common {
+  padding: var(--pad);
+  border: var(--brd-w) solid var(--fg-low);
+  border-radius: var(--brd-rad) var(--brd-rad) 0 0;
+}
+
+.add {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  column-gap: var(--pad);
+  padding: var(--pad);
+  border: var(--brd-w) dashed var(--bg-secondary);
+  border-radius: var(--brd-rad);
+
+  &:hover {
+    background-color: var(--bg-secondary);
+  }
+}
+
+.passes {
+  border-width: 0 var(--brd-w) var(--brd-w) var(--brd-w);
+  border-style: solid;
+  border-color: var(--fg-low);
+  border-radius: 0 0 var(--brd-rad) var(--brd-rad);
+  padding: var(--pad);
+  height: 100%;
+  overflow-y: auto;
+}

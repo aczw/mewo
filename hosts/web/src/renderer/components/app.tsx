@@ -1,6 +1,6 @@
+import { Controller } from "./controller";
 import { Editor } from "./editor";
 import { EditorInfo } from "./editor-info";
-import { ProjectController } from "./project-controller";
 import { Viewport } from "./viewport";
 
 import styles from "./app.module.css";
@@ -14,7 +14,7 @@ const App = () => {
       </div>
       <div className={styles.right}>
         <Viewport />
-        <ProjectController />
+        <Controller />
       </div>
     </main>
   );
