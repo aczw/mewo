@@ -1,0 +1,14 @@
+:root {
+  --col-0: #f0f0f0;
+  --col-1: #e0e0e0;
+  --col-2: #c7c7c7;
+  --col-3: #9d9d9d;
+  --col-4: #4e4e4e;
+
+  --bg-primary: var(--col-0);
+  --bg-secondary: var(--col-1);
+
+  --fg-low: var(--col-2);
+  --fg-med: var(--col-3);
+  --fg-high: var(--col-4);
+}
