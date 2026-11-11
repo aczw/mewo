@@ -11,11 +11,47 @@
 }
 
 .info {
+  background-color: var(--bg-secondary);
+  padding: var(--pad);
   display: flex;
   justify-content: space-between;
 }
 
-.right {
+.infoRight {
   display: flex;
-  column-gap: 0.5rem;
+  column-gap: var(--pad-high);
+}
+
+.unit {
+  color: var(--fg-med);
+}
+
+.controls {
+  background-color: var(--fg-low);
+  padding: var(--pad);
+  border-radius: 0 0 var(--brd-rad) var(--brd-rad);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.controlsGroup {
+  display: flex;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  column-gap: var(--pad);
+  padding: var(--pad);
+  border-radius: var(--brd-rad);
+
+  &:hover {
+    background-color: var(--fg-med);
+  }
+}
+
+.playPause {
+  composes: button;
+  width: 5.25rem;
 }
