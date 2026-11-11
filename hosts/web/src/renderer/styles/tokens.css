@@ -19,4 +19,7 @@
   --pad-high: 0.8rem;
 
   --icon: 1rem;
+
+  --font-ui: "IBM Plex Sans", system-ui, sans-serif;
+  --font-code: "Geist Mono", ui-monospace, monospace;
 }

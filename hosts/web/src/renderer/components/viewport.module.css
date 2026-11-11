@@ -54,5 +54,5 @@
 
 .playPause {
   composes: button;
-  width: 5.25rem;
+  width: 5.75rem;
 }
