@@ -12,7 +12,7 @@
 }
 
 .info {
-  background-color: var(--bg-secondary);
+  background-color: var(--fg-low);
   padding: var(--pad);
   display: flex;
   justify-content: space-between;
@@ -28,7 +28,7 @@
 }
 
 .controls {
-  background-color: var(--fg-low);
+  background-color: var(--bg-secondary);
   padding: var(--pad);
   border-radius: 0 0 var(--brd-rad) var(--brd-rad);
   display: flex;
@@ -48,11 +48,11 @@
   border-radius: var(--brd-rad);
 
   &:hover {
-    background-color: var(--fg-med);
+    background-color: var(--fg-low);
   }
 }
 
 .playPause {
   composes: button;
-  width: 5.75rem;
+  width: 4.75rem;
 }

@@ -59,7 +59,7 @@ const Viewport = () => {
           <button onClick={() => engine.setPaused(!paused)} className={styles.playPause}>
             {paused ? (
               <>
-                <PlayIcon size="var(--icon)" /> Resume
+                <PlayIcon size="var(--icon)" /> Play
               </>
             ) : (
               <>
@@ -75,7 +75,7 @@ const Viewport = () => {
 
         <div className={styles.controlsGroup}>
           <button className={styles.button}>
-            <FocusIcon size="var(--icon)" /> Screenshot
+            <FocusIcon size="var(--icon)" /> Capture
           </button>
           <button className={styles.button}>
             <ExpandIcon size="var(--icon)" /> Fullscreen
