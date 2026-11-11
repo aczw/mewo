@@ -94,6 +94,12 @@ const createExtensions = (onDocChanged: (source: string) => void): Extension[] =
   EditorView.theme({
     "&": { height: "100%" },
     ".cm-scroller": { overflow: "auto" },
+    ".cm-gutters": {
+      backgroundColor: "var(--bg-secondary)",
+      color: "var(--fg-med)",
+      border: "none",
+    },
+    ".cm-content": { backgroundColor: "white" },
   }),
 ];
 

@@ -1,4 +1,5 @@
 import { Editor } from "./editor";
+import { EditorInfo } from "./editor-info";
 import { ProjectController } from "./project-controller";
 import { Viewport } from "./viewport";
 
@@ -9,6 +10,7 @@ const App = () => {
     <main className={styles.main}>
       <div className={styles.left}>
         <Editor />
+        <EditorInfo />
       </div>
       <div className={styles.right}>
         <Viewport />

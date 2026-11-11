@@ -11,4 +11,12 @@
   --fg-low: var(--col-2);
   --fg-med: var(--col-3);
   --fg-high: var(--col-4);
+
+  --brd-w: 2px;
+  --brd-rad: 3px;
+
+  --pad: 0.3rem;
+  --pad-high: 0.8rem;
+
+  --icon: 1rem;
 }
