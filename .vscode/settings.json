@@ -6,9 +6,12 @@
   "customLocalFormatters.formatters": [
     {
       "command": "bun --cwd hosts/web fmt --stdin-filepath \"${file}\"",
-      "languages": ["typescript", "javascript", "html", "css", "json", "jsonc"]
+      "languages": ["typescriptreact", "typescript", "javascript", "html", "css", "json", "jsonc"]
     }
   ],
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "jkillian.custom-local-formatters"
+  },
   "[typescript]": {
     "editor.defaultFormatter": "jkillian.custom-local-formatters"
   },

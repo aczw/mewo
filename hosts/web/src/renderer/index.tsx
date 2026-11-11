@@ -1,0 +1,16 @@
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+
+import { App } from "./app";
+import { EngineContext } from "./engine/context";
+import { Engine } from "./engine/engine";
+
+const engine = new Engine();
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <EngineContext value={engine}>
+      <App />
+    </EngineContext>
+  </StrictMode>,
+);
