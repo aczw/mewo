@@ -3,6 +3,7 @@
   flex-direction: column;
   padding: var(--pad);
   flex-grow: 1;
+  min-height: 0;
   border-top: var(--brd-w) solid var(--bg-secondary);
 }
 
@@ -36,6 +37,7 @@
   border-color: var(--fg-low);
   border-radius: 0 0 var(--brd-rad) var(--brd-rad);
   padding: var(--pad);
-  height: 100%;
+  flex-grow: 1;
+  min-height: 0;
   overflow-y: auto;
 }
