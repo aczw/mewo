@@ -1,6 +1,4 @@
-@import "./pass-row.css";
-
-.pass-list {
+.passList {
   border: 1px solid lightgray;
   padding: 0.25rem;
   margin-bottom: 0.25rem;

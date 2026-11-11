@@ -3,6 +3,8 @@ import { useEffect, useRef } from "react";
 import { useEngine, useEngineSnapshot } from "../engine/context";
 import { FpsCounter } from "../scripts/fps-counter";
 
+import styles from "./viewport.module.css";
+
 const Viewport = () => {
   const engine = useEngine();
   const { paused } = useEngineSnapshot();
@@ -25,14 +27,17 @@ const Viewport = () => {
   }, [engine]);
 
   return (
-    <div className="viewport">
+    <div className={styles.viewport}>
       <canvas id="mewo" ref={canvasRef}></canvas>
+
       <div>
         <button onClick={() => engine.setPaused(!paused)}>{paused ? "Resume" : "Pause"}</button>
       </div>
-      <div className="viewport-info">
+
+      <div className={styles.info}>
         <p ref={timeRef}></p>
-        <div className="viewport-info-right">
+
+        <div className={styles.right}>
           <p ref={dimsRef}></p>
           <p ref={fpsRef}></p>
         </div>

@@ -1,13 +1,16 @@
 import { useEngine } from "../engine/context";
 import { PassList } from "./pass-list";
 
+import styles from "./project-controller.module.css";
+
 const ProjectController = () => {
   const engine = useEngine();
 
   return (
-    <div className="project-controller">
+    <div className={styles.projectController}>
       <PassList />
-      <button className="add-pass" onClick={() => engine.addPass()}>
+
+      <button className={styles.addPass} onClick={() => engine.addPass()}>
         Add pass
       </button>
     </div>

@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-import { App } from "./app";
+import { App } from "./components/app";
 import { EngineContext } from "./engine/context";
 import { Engine } from "./engine/engine";
 

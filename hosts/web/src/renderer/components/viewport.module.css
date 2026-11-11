@@ -1,0 +1,21 @@
+.viewport {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+
+  > canvas {
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    height: auto;
+  }
+}
+
+.info {
+  display: flex;
+  justify-content: space-between;
+}
+
+.right {
+  display: flex;
+  column-gap: 0.5rem;
+}

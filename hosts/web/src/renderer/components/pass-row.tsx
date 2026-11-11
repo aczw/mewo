@@ -1,6 +1,8 @@
 import { useEngine } from "../engine/context";
 import type { Pass } from "../engine/engine";
 
+import styles from "./pass-row.module.css";
+
 type Props = {
   pass: Pass;
   active: boolean;
@@ -11,18 +13,18 @@ const PassRow = ({ pass, active, canDelete }: Props) => {
   const engine = useEngine();
 
   return (
-    <li className={active ? "pass-row is-active" : "pass-row"}>
-      <button className="pass-row-name" onClick={() => engine.setActivePass(pass.id)}>
+    <li className={styles.passRow} data-active={active ? "true" : "false"}>
+      <button className={styles.name} onClick={() => engine.setActivePass(pass.id)}>
         {pass.name}
       </button>
       <button
-        className="pass-row-rename"
+        className={styles.rename}
         onClick={() => engine.renamePass(pass.id, "incredible new name")}
       >
         Rename
       </button>
       <button
-        className="pass-row-delete"
+        className={styles.delete}
         disabled={!canDelete}
         onClick={() => engine.removePass(pass.id)}
       >

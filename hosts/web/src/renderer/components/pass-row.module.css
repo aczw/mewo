@@ -1,0 +1,35 @@
+.passRow {
+  display: flex;
+
+  > button {
+    text-align: left;
+    padding: 0.25rem;
+  }
+
+  &[data-active="true"] {
+    .name {
+      background-color: lightcyan;
+
+      &:hover {
+        background-color: cyan;
+      }
+    }
+  }
+}
+
+.name {
+  flex-grow: 1;
+
+  &:hover {
+    background-color: lightgray;
+  }
+}
+
+.rename,
+.delete {
+  flex-shrink: 0;
+}
+
+.delete[disabled] {
+  opacity: 0.5;
+}

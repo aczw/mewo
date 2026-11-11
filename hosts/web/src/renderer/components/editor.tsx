@@ -33,6 +33,8 @@ import { useEffect, useRef, useState } from "react";
 import { kPassIdNone, type PassId } from "../../mewo/types";
 import { useEngine, useEngineSnapshot } from "../engine/context";
 
+import styles from "./editor.module.css";
+
 const createExtensions = (onDocChanged: (source: string) => void): Extension[] => [
   // A line number gutter
   lineNumbers(),
@@ -88,6 +90,11 @@ const createExtensions = (onDocChanged: (source: string) => void): Extension[] =
   EditorView.updateListener.of((update) => {
     if (update.docChanged) onDocChanged(update.state.doc.toString());
   }),
+
+  EditorView.theme({
+    "&": { height: "100%" },
+    ".cm-scroller": { overflow: "auto" },
+  }),
 ];
 
 const Editor = () => {
@@ -142,7 +149,7 @@ const Editor = () => {
     }
   }, [engine, extensions, passes, activePass]);
 
-  return <div className="editor" ref={parentRef} />;
+  return <div className={styles.wrapper} ref={parentRef} />;
 };
 
 export { Editor };
