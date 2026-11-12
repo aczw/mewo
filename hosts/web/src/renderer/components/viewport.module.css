@@ -46,6 +46,7 @@
   column-gap: var(--pad);
   padding: var(--pad);
   border-radius: var(--brd-rad);
+  height: 1.5lh;
 
   &:hover {
     background-color: var(--fg-low);
@@ -55,4 +56,14 @@
 .playPause {
   composes: button;
   width: 4.75rem;
+}
+
+@container (width < 23rem) {
+  .hiddenWhenSmall {
+    display: none;
+  }
+
+  .playPause {
+    width: auto;
+  }
 }

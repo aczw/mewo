@@ -59,26 +59,31 @@ const Viewport = () => {
           <button onClick={() => engine.setPaused(!paused)} className={styles.playPause}>
             {paused ? (
               <>
-                <PlayIcon size="var(--icon)" /> Play
+                <PlayIcon size="var(--icon)" />
+                <span className={styles.hiddenWhenSmall}>Play</span>
               </>
             ) : (
               <>
-                <PauseIcon size="var(--icon)" /> Pause
+                <PauseIcon size="var(--icon)" />
+                <span className={styles.hiddenWhenSmall}>Pause</span>
               </>
             )}
           </button>
 
           <button className={styles.button}>
-            <RotateCcwIcon size="var(--icon)" /> Reset
+            <RotateCcwIcon size="var(--icon)" />
+            <span className={styles.hiddenWhenSmall}>Reset</span>
           </button>
         </div>
 
         <div className={styles.controlsGroup}>
           <button className={styles.button}>
-            <FocusIcon size="var(--icon)" /> Capture
+            <FocusIcon size="var(--icon)" />
+            <span className={styles.hiddenWhenSmall}>Capture</span>
           </button>
           <button className={styles.button}>
-            <ExpandIcon size="var(--icon)" /> Fullscreen
+            <ExpandIcon size="var(--icon)" />
+            <span className={styles.hiddenWhenSmall}>Fullscreen</span>
           </button>
         </div>
       </div>

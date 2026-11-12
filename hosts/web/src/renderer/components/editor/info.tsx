@@ -28,13 +28,14 @@ const Info = ({ info }: { info: DocInfo }) => {
         </ul>
 
         <p>
-          Compiled <span className={styles.time}>in 23ms</span>
+          <span className={styles.compiledText}>Compiled </span>
+          <span className={styles.time}>in 23ms</span>
         </p>
       </div>
 
       <div className={styles.right}>
         <p>{info.length} chars</p>
-        <p>
+        <p className={styles.lineColumn}>
           Ln {info.line}, Col {info.column}
         </p>
       </div>

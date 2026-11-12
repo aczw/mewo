@@ -5,6 +5,7 @@
 }
 
 .left {
+  container-type: inline-size;
   padding: var(--pad);
   width: 50%;
   border-right: var(--brd-w) solid var(--bg-secondary);
@@ -14,6 +15,7 @@
 }
 
 .right {
+  container-type: inline-size;
   width: 50%;
   display: flex;
   flex-direction: column;

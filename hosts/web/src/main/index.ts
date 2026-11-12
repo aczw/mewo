@@ -22,6 +22,8 @@ const createWindow = () => {
     show: false,
     width: 1280,
     height: 720,
+    minWidth: 550,
+    minHeight: 400,
     titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "hidden",
     titleBarOverlay:
       process.platform === "darwin"
