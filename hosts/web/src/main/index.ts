@@ -23,7 +23,12 @@ const createWindow = () => {
     width: 1280,
     height: 720,
     titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "hidden",
-    titleBarOverlay: true,
+    titleBarOverlay:
+      process.platform === "darwin"
+        ? true
+        : {
+            color: "#ffffff00",
+          },
     webPreferences: {
       preload: path.join(distDir, "preload.cjs"),
     },
