@@ -1,0 +1,39 @@
+.titleBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: var(--titlebar-h);
+  padding-left: var(--titlebar-x);
+  padding-right: calc(100% - var(--titlebar-x) - var(--titlebar-w));
+  background-color: var(--bg-secondary);
+  font-size: calc(var(--tb-px) * 12.5);
+  app-region: drag;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  column-gap: calc(var(--tb-px) * 5);
+  padding: 0 calc(var(--tb-px) * 10);
+  background-color: var(--bg-primary);
+  width: fit-content;
+  height: 100%;
+  border-radius: calc(var(--tb-px) * 5) calc(var(--tb-px) * 5) 0 0;
+}
+
+.project {
+  font-weight: 500;
+}
+
+.slash {
+  color: var(--fg-low);
+}
+
+.wordmark {
+  flex-shrink: 0;
+  width: auto;
+  height: 40%;
+  margin-inline: calc(var(--tb-px) * 10);
+}

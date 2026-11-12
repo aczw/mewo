@@ -19,12 +19,17 @@ const reloadOnChange = (win: BrowserWindow) => {
 
 const createWindow = () => {
   const win = new BrowserWindow({
+    show: false,
     width: 1280,
     height: 720,
+    titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "hidden",
+    titleBarOverlay: true,
     webPreferences: {
       preload: path.join(distDir, "preload.cjs"),
     },
   });
+
+  win.once("ready-to-show", () => win.show());
 
   win.loadFile(path.join(distDir, "index.html"));
   if (!app.isPackaged) reloadOnChange(win);
