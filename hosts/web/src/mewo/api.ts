@@ -121,6 +121,12 @@ const Mewo = {
   sessionIsPaused: Module.cwrap("mewo_web_session_is_paused", "boolean", ["number"]) as (
     session: Ptr,
   ) => boolean,
+  // Milliseconds, or -1 (pending or unknown pass ID, call `lastResult()` to find out)
+  sessionGetPassCompileDuration: Module.cwrap(
+    "mewo_web_session_get_pass_compile_duration",
+    "number",
+    ["number", "number"],
+  ) as (session: Ptr, passId: PassId) => number,
 };
 
 export { Mewo };

@@ -116,4 +116,6 @@ void mewo_web_session_set_paused(mewo_session_t* session, bool paused);
 
 bool mewo_web_session_is_paused(mewo_session_t* session);
 
+double mewo_web_session_get_pass_compile_duration(mewo_session_t* session, mewo_pass_id_t pass_id);
+
 #endif

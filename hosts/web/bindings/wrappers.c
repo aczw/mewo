@@ -268,3 +268,14 @@ void mewo_web_session_set_paused(mewo_session_t* session, bool paused) {
 
 EMSCRIPTEN_KEEPALIVE
 bool mewo_web_session_is_paused(mewo_session_t* session) { return mewo_session_is_paused(session); }
+
+EMSCRIPTEN_KEEPALIVE
+double mewo_web_session_get_pass_compile_duration(mewo_session_t* session, mewo_pass_id_t pass_id) {
+  uint64_t duration_ns = 0;
+  last_result = mewo_session_get_pass_compile_duration(session, pass_id, &duration_ns);
+
+  if (last_result != MEWO_SUCCESS)
+    return -1;
+
+  return (double)duration_ns / 1e6;
+}
