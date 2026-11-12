@@ -1,6 +1,6 @@
 import { Mewo } from "../api";
 import { MewoError } from "../error";
-import { kNull, type Ptr } from "../types";
+import { kNull, type PassCompilation, type PassId, type Ptr } from "../types";
 import type { Project } from "./project";
 import type { Runtime } from "./runtime";
 import type { Surface } from "./surface";
@@ -29,6 +29,18 @@ class Session implements Disposable {
 
   set paused(paused: boolean) {
     Mewo.sessionSetPaused(this.handle, paused);
+  }
+
+  getPassStatusRevision(): number {
+    return Mewo.sessionGetPassStatusRevision(this.handle);
+  }
+
+  readPassCompile(passId: PassId): PassCompilation | null {
+    const status = Mewo.sessionGetPassCompileStatus(this.handle, passId);
+    if (status === -1) return null;
+
+    const duration = Mewo.sessionGetPassCompileDuration(this.handle, passId);
+    return { status, duration: duration === -1 ? null : duration };
   }
 
   setRenderSize(newWidth: number, newHeight: number): void {

@@ -36,6 +36,7 @@ class Engine implements Disposable {
 
   #activePass: PassId;
   #paused = false;
+  #lastStatusRevision: number | null = null;
 
   #snapshot: EngineSnapshot;
   readonly #listeners = new Set<() => void>();
@@ -170,6 +171,12 @@ class Engine implements Disposable {
 
     session.render(surface, time);
 
+    const revision = session.getPassStatusRevision();
+    if (revision !== this.#lastStatusRevision) {
+      this.#lastStatusRevision = revision;
+      this.#emit();
+    }
+
     const stats: FrameStats = {
       deltaTime,
       sessionTime: session.time,
@@ -185,10 +192,16 @@ class Engine implements Disposable {
   }
 
   #readSnapshot(): EngineSnapshot {
+    const session = this.#sessionHolder.value;
+
     const passes: Pass[] = [];
     for (let idx = 0; idx < this.#project.getPassCount(); ++idx) {
       const passId = this.#project.getPassId(idx)!;
-      passes.push({ id: passId, name: this.#project.getPassName(passId) });
+      passes.push({
+        id: passId,
+        name: this.#project.getPassName(passId),
+        compilation: session?.readPassCompile(passId) ?? null,
+      });
     }
 
     return { passes, activePass: this.#activePass, paused: this.#paused };
