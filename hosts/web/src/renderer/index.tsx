@@ -6,6 +6,7 @@ import { EngineContext } from "./engine/context";
 import { Engine } from "./engine/engine";
 
 const engine = new Engine();
+document.documentElement.dataset.platform = window.platform;
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

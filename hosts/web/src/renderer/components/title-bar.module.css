@@ -7,8 +7,12 @@
   padding-left: var(--titlebar-x);
   padding-right: calc(100% - var(--titlebar-x) - var(--titlebar-w));
   background-color: var(--bg-secondary);
-  font-size: calc(var(--tb-px) * 12.5);
+  font-size: calc(var(--tb-px) * var(--tb-font-size));
   app-region: drag;
+
+  [data-platform="win32"] & {
+    justify-content: start;
+  }
 }
 
 .tab {
@@ -36,4 +40,30 @@
   width: auto;
   height: 40%;
   margin-inline: calc(var(--tb-px) * 10);
+
+  [data-platform="win32"] & {
+    height: 70%;
+    margin-inline: 0;
+  }
+}
+
+[data-platform="win32"] .menu {
+  app-region: no-drag;
+  flex-shrink: 0;
+  width: auto;
+  height: 100%;
+  padding: calc(var(--tb-px) * 4);
+}
+
+[data-platform="win32"] .menuButtonWrapper {
+  display: flex;
+  align-items: center;
+  column-gap: calc(var(--tb-px) * 5);
+  height: 100%;
+  padding: calc(var(--tb-px) * 4);
+  border-radius: calc(var(--tb-px) * 3);
+
+  .menu:hover & {
+    background-color: var(--fg-low);
+  }
 }
