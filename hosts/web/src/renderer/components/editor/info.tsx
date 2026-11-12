@@ -1,8 +1,17 @@
+import type { EditorState } from "@codemirror/state";
 import { InfoIcon, OctagonXIcon, TriangleAlertIcon } from "lucide-react";
 
-import styles from "./editor-info.module.css";
+import styles from "./info.module.css";
 
-const EditorInfo = () => {
+type DocInfo = { line: number; column: number; length: number };
+
+const calculateDocInfo = (state: EditorState): DocInfo => {
+  const head = state.selection.main.head;
+  const line = state.doc.lineAt(head);
+  return { line: line.number, column: head - line.from + 1, length: state.doc.length };
+};
+
+const Info = ({ info }: { info: DocInfo }) => {
   return (
     <div className={styles.editorInfo}>
       <div className={styles.left}>
@@ -24,11 +33,13 @@ const EditorInfo = () => {
       </div>
 
       <div className={styles.right}>
-        <p>5234 chars</p>
-        <p>Ln 2, Col 34</p>
+        <p>{info.length} chars</p>
+        <p>
+          Ln {info.line}, Col {info.column}
+        </p>
       </div>
     </div>
   );
 };
 
-export { EditorInfo };
+export { Info, calculateDocInfo, type DocInfo };

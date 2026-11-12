@@ -26,16 +26,21 @@ import {
   highlightSpecialChars,
   keymap,
   lineNumbers,
-  rectangularSelection,
 } from "@codemirror/view";
 import { useEffect, useRef, useState } from "react";
 
-import { kPassIdNone, type PassId } from "../../mewo/types";
-import { useEngine, useEngineSnapshot } from "../engine/context";
+import { kPassIdNone, type PassId } from "../../../mewo/types";
+import { useEngine, useEngineSnapshot } from "../../engine/context";
+import { calculateDocInfo, type DocInfo, Info } from "./info";
 
 import styles from "./editor.module.css";
 
-const createExtensions = (onDocChanged: (source: string) => void): Extension[] => [
+type Callbacks = {
+  onDocChanged: (source: string) => void;
+  onSelectionChanged: (state: EditorState) => void;
+};
+
+const createExtensions = (cb: Callbacks): Extension[] => [
   // A line number gutter
   lineNumbers(),
   // A gutter with code folding markers
@@ -60,8 +65,6 @@ const createExtensions = (onDocChanged: (source: string) => void): Extension[] =
   closeBrackets(),
   // Load the autocompletion system
   autocompletion(),
-  // Allow alt-drag to select rectangular regions
-  rectangularSelection(),
   // Change the cursor to a crosshair when hold
   crosshairCursor(),
   // Style the current line specially
@@ -88,7 +91,8 @@ const createExtensions = (onDocChanged: (source: string) => void): Extension[] =
   ]),
 
   EditorView.updateListener.of((update) => {
-    if (update.docChanged) onDocChanged(update.state.doc.toString());
+    if (update.docChanged) cb.onDocChanged(update.state.doc.toString());
+    if (update.docChanged || update.selectionSet) cb.onSelectionChanged(update.state);
   }),
 
   EditorView.theme({
@@ -113,8 +117,13 @@ const Editor = () => {
   const statesRef = useRef(new Map<PassId, EditorState>());
   const shownPassRef = useRef<PassId>(kPassIdNone);
 
+  const [docInfo, setDocInfo] = useState<DocInfo>({ line: 1, column: 1, length: 0 });
+
   const [extensions] = useState(() =>
-    createExtensions((source) => engine.setPassSource(shownPassRef.current, source)),
+    createExtensions({
+      onDocChanged: (source) => engine.setPassSource(shownPassRef.current, source),
+      onSelectionChanged: (state) => setDocInfo(calculateDocInfo(state)),
+    }),
   );
 
   useEffect(() => {
@@ -152,11 +161,17 @@ const Editor = () => {
     // Switch view only if active pass has changed
     if (activePass !== shownPassRef.current) {
       view.setState(states.get(activePass)!);
+      setDocInfo(calculateDocInfo(view.state));
       shownPassRef.current = activePass;
     }
   }, [engine, extensions, passes, activePass]);
 
-  return <div className={styles.wrapper} ref={parentRef} />;
+  return (
+    <>
+      <div className={styles.wrapper} ref={parentRef} />
+      <Info info={docInfo} />
+    </>
+  );
 };
 
 export { Editor };

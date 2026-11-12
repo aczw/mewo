@@ -1,6 +1,5 @@
 import { Controller } from "./controller";
-import { Editor } from "./editor";
-import { EditorInfo } from "./editor-info";
+import { Editor } from "./editor/editor";
 import { TitleBar } from "./title-bar";
 import { Viewport } from "./viewport";
 
@@ -13,7 +12,6 @@ const App = () => {
       <main className={styles.main}>
         <div className={styles.left}>
           <Editor />
-          <EditorInfo />
         </div>
         <div className={styles.right}>
           <Viewport />
