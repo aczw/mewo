@@ -27,6 +27,7 @@ body {
   overflow: hidden;
   cursor: default;
   user-select: none;
+  scrollbar-width: thin;
 
   #root {
     height: 100%;
