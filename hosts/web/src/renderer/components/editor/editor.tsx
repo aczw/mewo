@@ -169,7 +169,7 @@ const Editor = () => {
   return (
     <>
       <div className={styles.wrapper} ref={parentRef} />
-      <Info info={docInfo} />
+      <Info docInfo={docInfo} />
     </>
   );
 };

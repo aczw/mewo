@@ -11,9 +11,9 @@ const calculateDocInfo = (state: EditorState): DocInfo => {
   return { line: line.number, column: head - line.from + 1, length: state.doc.length };
 };
 
-const Info = ({ info }: { info: DocInfo }) => {
+const Info = ({ docInfo }: { docInfo: DocInfo }) => {
   return (
-    <div className={styles.editorInfo}>
+    <div className={styles.info}>
       <div className={styles.left}>
         <ul className={styles.diagnostics}>
           <li className={styles.iconLabel}>
@@ -34,9 +34,9 @@ const Info = ({ info }: { info: DocInfo }) => {
       </div>
 
       <div className={styles.right}>
-        <p>{info.length} chars</p>
+        <p>{docInfo.length} chars</p>
         <p className={styles.lineColumn}>
-          Ln {info.line}, Col {info.column}
+          Ln {docInfo.line}, Col {docInfo.column}
         </p>
       </div>
     </div>

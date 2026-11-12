@@ -14,6 +14,7 @@
 
   --brd-w: 1.5px;
   --brd-rad: 5px;
+  --brd-rad-macos: 13px; /** Rounded corners on macOS */
 
   --pad: 0.3rem;
   --pad-high: 0.8rem;

@@ -40,4 +40,8 @@
   flex-grow: 1;
   min-height: 0;
   overflow-y: auto;
+
+  [data-platform="darwin"] & {
+    border-radius: 0 0 var(--brd-rad-macos) var(--brd-rad);
+  }
 }
