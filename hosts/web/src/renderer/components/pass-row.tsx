@@ -1,7 +1,7 @@
 import { ArrowDownIcon, ArrowUpIcon, XIcon } from "lucide-react";
 
+import type { Pass } from "../../mewo/types";
 import { useEngine, useEngineSnapshot } from "../engine/context";
-import type { Pass } from "../engine/engine";
 
 import styles from "./pass-row.module.css";
 

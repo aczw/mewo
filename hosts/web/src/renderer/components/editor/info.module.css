@@ -32,19 +32,9 @@
   column-gap: var(--pad);
 }
 
-.time {
-  color: var(--fg-med);
-}
-
 .right {
   display: flex;
   column-gap: var(--pad-high);
-}
-
-@container (width < 30rem) {
-  .compiledText {
-    display: none;
-  }
 }
 
 @container (width < 25rem) {

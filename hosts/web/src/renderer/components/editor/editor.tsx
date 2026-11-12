@@ -110,7 +110,7 @@ const createExtensions = (cb: Callbacks): Extension[] => [
 
 const Editor = () => {
   const engine = useEngine();
-  const { passes, activePass } = useEngineSnapshot();
+  const { passes, activePassId } = useEngineSnapshot();
 
   const parentRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -159,12 +159,12 @@ const Editor = () => {
     for (const id of states.keys()) if (!aliveIds.has(id)) states.delete(id);
 
     // Switch view only if active pass has changed
-    if (activePass !== shownPassRef.current) {
-      view.setState(states.get(activePass)!);
+    if (activePassId !== shownPassRef.current) {
+      view.setState(states.get(activePassId)!);
       setDocInfo(calculateDocInfo(view.state));
-      shownPassRef.current = activePass;
+      shownPassRef.current = activePassId;
     }
-  }, [engine, extensions, passes, activePass]);
+  }, [engine, extensions, passes, activePassId]);
 
   return (
     <>

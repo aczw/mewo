@@ -15,7 +15,7 @@ const kNewPassSource = `fn main(frag_coord: vec2f) -> vec4f {
   return textureSample(prev_tex, prev_smp, uv);
 }`;
 
-type EngineSnapshot = { passes: Pass[]; activePass: PassId; paused: boolean };
+type EngineSnapshot = { passes: Pass[]; activePassId: PassId; paused: boolean };
 type FrameStats = { deltaTime: number; sessionTime: number; dimensions: Dimensions };
 
 const sameDimensions = (a: Dimensions, b: Dimensions): boolean => {
@@ -34,7 +34,7 @@ class Engine implements Disposable {
   #deviceReady = false;
   #dimensions: Dimensions = { width: 0, height: 0 };
 
-  #activePass: PassId;
+  #activePassId: PassId;
   #paused = false;
   #lastStatusRevision: number | null = null;
 
@@ -50,7 +50,7 @@ class Engine implements Disposable {
     this.#project = this.#stack.use(new Project("Pass 1", kDefaultPassSource));
     this.#sessionHolder = this.#stack.use(new Mutable<Session>());
 
-    this.#activePass = this.#project.getPassId(0)!;
+    this.#activePassId = this.#project.getPassId(0)!;
     this.#snapshot = this.#readSnapshot();
 
     this.#rafId = window.requestAnimationFrame(this.#onFrame);
@@ -75,18 +75,18 @@ class Engine implements Disposable {
 
   addPass(): void {
     const passCount = this.#project.getPassCount();
-    this.#activePass = this.#project.addPass(`Pass ${passCount + 1}`, kNewPassSource);
+    this.#activePassId = this.#project.addPass(`Pass ${passCount + 1}`, kNewPassSource);
     this.#emit();
   }
 
   removePass(pass: PassId): void {
     this.#project.removePass(pass);
-    if (pass === this.#activePass) this.#activePass = this.#project.getPassId(0)!;
+    if (pass === this.#activePassId) this.#activePassId = this.#project.getPassId(0)!;
     this.#emit();
   }
 
   setActivePass(pass: PassId): void {
-    this.#activePass = pass;
+    this.#activePassId = pass;
     this.#emit();
   }
 
@@ -204,7 +204,7 @@ class Engine implements Disposable {
       });
     }
 
-    return { passes, activePass: this.#activePass, paused: this.#paused };
+    return { passes, activePassId: this.#activePassId, paused: this.#paused };
   }
 
   [Symbol.dispose](): void {
@@ -215,4 +215,4 @@ class Engine implements Disposable {
 }
 
 export { Engine };
-export type { EngineSnapshot, FrameStats, Pass };
+export type { EngineSnapshot, FrameStats };

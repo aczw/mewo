@@ -1,6 +1,8 @@
 import type { EditorState } from "@codemirror/state";
 import { InfoIcon, OctagonXIcon, TriangleAlertIcon } from "lucide-react";
 
+import { CompilationStatus } from "./compilation-status";
+
 import styles from "./info.module.css";
 
 type DocInfo = { line: number; column: number; length: number };
@@ -27,10 +29,7 @@ const Info = ({ docInfo }: { docInfo: DocInfo }) => {
           </li>
         </ul>
 
-        <p>
-          <span className={styles.compiledText}>Compiled </span>
-          <span className={styles.time}>in 23ms</span>
-        </p>
+        <CompilationStatus />
       </div>
 
       <div className={styles.right}>

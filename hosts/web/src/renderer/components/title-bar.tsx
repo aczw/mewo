@@ -10,7 +10,7 @@ const TitleBar = () => {
 
   let activePassName = "<unknown pass>";
   for (const pass of engineSnapshot.passes) {
-    if (pass.id === engineSnapshot.activePass) {
+    if (pass.id === engineSnapshot.activePassId) {
       activePassName = pass.name;
       break;
     }
