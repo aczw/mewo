@@ -1,10 +1,21 @@
 import { MenuIcon } from "lucide-react";
 
+import { useEngineSnapshot } from "../engine/context";
 import { Wordmark } from "./logo/wordmark";
 
 import styles from "./title-bar.module.css";
 
 const TitleBar = () => {
+  const engineSnapshot = useEngineSnapshot();
+
+  let activePassName = "<unknown pass>";
+  for (const pass of engineSnapshot.passes) {
+    if (pass.id === engineSnapshot.activePass) {
+      activePassName = pass.name;
+      break;
+    }
+  }
+
   return (
     <header className={styles.titleBar}>
       {window.platform === "win32" && (
@@ -19,7 +30,7 @@ const TitleBar = () => {
       <nav className={styles.tab}>
         <div className={styles.project}>New project*</div>
         <span className={styles.slash}>/</span>
-        <p>Pass name</p>
+        <p>{activePassName}</p>
       </nav>
 
       {window.platform === "darwin" && <Wordmark className={styles.wordmark} />}
