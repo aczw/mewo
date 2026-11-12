@@ -270,6 +270,22 @@ EMSCRIPTEN_KEEPALIVE
 bool mewo_web_session_is_paused(mewo_session_t* session) { return mewo_session_is_paused(session); }
 
 EMSCRIPTEN_KEEPALIVE
+double mewo_web_session_get_pass_status_revision(mewo_session_t* session) {
+  return (double)mewo_session_get_pass_status_revision(session);
+}
+
+EMSCRIPTEN_KEEPALIVE
+int mewo_web_session_get_pass_compile_status(mewo_session_t* session, mewo_pass_id_t pass_id) {
+  mewo_pass_compile_status_t status = MEWO_PASS_COMPILE_STATUS_PENDING;
+  last_result = mewo_session_get_pass_compile_status(session, pass_id, &status);
+
+  if (last_result != MEWO_SUCCESS)
+    return -1;
+
+  return (int)status;
+}
+
+EMSCRIPTEN_KEEPALIVE
 double mewo_web_session_get_pass_compile_duration(mewo_session_t* session, mewo_pass_id_t pass_id) {
   uint64_t duration_ns = 0;
   last_result = mewo_session_get_pass_compile_duration(session, pass_id, &duration_ns);

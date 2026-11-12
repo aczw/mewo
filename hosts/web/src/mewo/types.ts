@@ -14,6 +14,9 @@ const MewoResult = {
 } as const;
 type MewoResult = (typeof MewoResult)[keyof typeof MewoResult];
 
+const MewoPassCompileStatus = { Pending: 0, Success: 1, Error: 2 } as const;
+type MewoPassCompileStatus = (typeof MewoPassCompileStatus)[keyof typeof MewoPassCompileStatus];
+
 type Dimensions = { width: number; height: number };
 
 type PassId = number;
@@ -22,5 +25,5 @@ type Pass = { id: PassId; name: string };
 /** Maps to `MEWO_PASS_ID_NONE`. */
 const kPassIdNone: PassId = 0 as const;
 
-export { MewoEvent, MewoResult, kNull, kPassIdNone };
+export { MewoEvent, MewoPassCompileStatus, MewoResult, kNull, kPassIdNone };
 export type { Ptr, Dimensions, PassId, Pass };

@@ -1,4 +1,4 @@
-import { MewoEvent, MewoResult, type PassId, type Ptr } from "./types";
+import { MewoEvent, MewoPassCompileStatus, MewoResult, type PassId, type Ptr } from "./types";
 import createWasmModule from "./wasm/mewo";
 
 const Module = await createWasmModule();
@@ -121,6 +121,16 @@ const Mewo = {
   sessionIsPaused: Module.cwrap("mewo_web_session_is_paused", "boolean", ["number"]) as (
     session: Ptr,
   ) => boolean,
+  sessionGetPassStatusRevision: Module.cwrap(
+    "mewo_web_session_get_pass_status_revision",
+    "number",
+    ["number"],
+  ) as (session: Ptr) => number,
+  // -1 for an unknown pass ID (`lastResult()` says why)
+  sessionGetPassCompileStatus: Module.cwrap("mewo_web_session_get_pass_compile_status", "number", [
+    "number",
+    "number",
+  ]) as (session: Ptr, passId: PassId) => MewoPassCompileStatus | -1,
   // Milliseconds, or -1 (pending or unknown pass ID, call `lastResult()` to find out)
   sessionGetPassCompileDuration: Module.cwrap(
     "mewo_web_session_get_pass_compile_duration",
