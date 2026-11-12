@@ -7,6 +7,7 @@
 #include "impl/runtime.hpp"
 #include "impl/runtime/compile_request.hpp"
 
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -17,11 +18,17 @@ namespace mewo::impl {
 
 class PassState {
  public:
-  struct Pending {};
+  struct Pending {
+    uint64_t start_ns = 0;
+  };
 
-  struct Success {};
+  struct Success {
+    uint64_t duration_ns;
+  };
 
-  struct Error {};
+  struct Error {
+    uint64_t duration_ns;
+  };
 
   using CompileStatus = std::variant<Pending, Success, Error>;
 
@@ -51,11 +58,12 @@ class PassState {
     Runtime& runtime,
     const Pass& pass,
     std::string_view common_source,
-    Revision common_revision
+    Revision common_revision,
+    uint64_t start_ns
   );
 
   /** @return True if the status of this pass state has changed, and false otherwise. */
-  bool poll_compile_request(Runtime& runtime);
+  bool poll_compile_request(Runtime& runtime, uint64_t end_ns);
 
   void discard_compile_request(Runtime& runtime);
 

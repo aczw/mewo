@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cstdint>
 #include <format>
 #include <string>
 #include <string_view>
@@ -46,7 +47,8 @@ void PassState::request_render_pipeline_build(
   Runtime& runtime,
   const Pass& pass,
   std::string_view common_source,
-  Revision common_revision
+  Revision common_revision,
+  uint64_t start_ns
 ) {
   assert(pass_id_ == pass.id() && "PassState rebuilt from a different Pass");
 
@@ -96,10 +98,10 @@ void PassState::request_render_pipeline_build(
 
   current_compile_request_id_ =
     runtime.start_compile_request(render_pipeline_desc, shader_module, assembled_source.segments);
-  compile_status_ = Pending{};
+  compile_status_ = Pending{.start_ns = start_ns};
 }
 
-bool PassState::poll_compile_request(Runtime& runtime) {
+bool PassState::poll_compile_request(Runtime& runtime, uint64_t end_ns) {
   if (!current_compile_request_id_)
     return false;
 
@@ -126,12 +128,13 @@ bool PassState::poll_compile_request(Runtime& runtime) {
     );
   }
 
-  if (
-    PipelineResult& pipeline_result = request_opt->pipeline_result.value();
-    pipeline_result.has_value()
-  ) {
+  uint64_t start_ns = std::get<Pending>(compile_status_).start_ns;
+  uint64_t duration_ns = end_ns > start_ns ? end_ns - start_ns : 0;
+
+  if (PipelineResult& pipeline_result = request_opt->pipeline_result.value();
+      pipeline_result.has_value()) {
     render_pipeline_ = std::move(pipeline_result.value());
-    compile_status_ = Success{};
+    compile_status_ = Success{.duration_ns = duration_ns};
   } else {
     if (std::ranges::none_of(diagnostics_, [](const auto& diagnostic) {
           return diagnostic.severity == Severity::kError;
@@ -144,7 +147,7 @@ bool PassState::poll_compile_request(Runtime& runtime) {
       );
     }
 
-    compile_status_ = Error{};
+    compile_status_ = Error{.duration_ns = duration_ns};
   }
 
   current_compile_request_id_.reset();

@@ -128,6 +128,35 @@ mewo_result_t mewo_session_get_pass_compile_status(
   return MEWO_SUCCESS;
 }
 
+mewo_result_t mewo_session_get_pass_compile_duration(
+  mewo_session_t* session,
+  mewo_pass_id_t pass_id,
+  uint64_t* out
+) {
+  assert(session);
+  assert(out);
+
+  mewo::impl::PassState* state = session->impl->get_state(pass_id);
+
+  if (!state)
+    return MEWO_ERROR_INVALID_ARGUMENT;
+
+  std::optional<uint64_t> duration_ns = std::visit(
+    mewo::Match{
+      [](const mewo::impl::PassState::Pending&) -> std::optional<uint64_t> { return std::nullopt; },
+      [](const auto& variant) -> std::optional<uint64_t> { return variant.duration_ns; }
+    },
+    state->compile_status()
+  );
+
+  if (!duration_ns)
+    return MEWO_ERROR_INVALID_OPERATION;
+
+  *out = duration_ns.value();
+
+  return MEWO_SUCCESS;
+}
+
 mewo_result_t mewo_session_get_pass_diagnostic_count(
   mewo_session_t* session,
   mewo_pass_id_t pass_id,

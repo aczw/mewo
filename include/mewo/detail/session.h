@@ -129,6 +129,22 @@ mewo_result_t mewo_session_get_pass_compile_status(
 );
 
 /**
+ * Gets how long the pass' last compile took, from the frame that started it to the frame that
+ * received the result. Not available while a compile is pending.
+ *
+ * @param session Pointer to the session.
+ * @param pass_id The ID of the pass to check its compile duration for.
+ * @param out Out parameter where the compile duration is stored, in nanoseconds.
+ * @return `MEWO_ERROR_INVALID_ARGUMENT` if the pass ID is invalid, `MEWO_ERROR_INVALID_OPERATION`
+ * if the pass compilation is pending, and `MEWO_SUCCESS` otherwise.
+ */
+mewo_result_t mewo_session_get_pass_compile_duration(
+  mewo_session_t* session,
+  mewo_pass_id_t pass_id,
+  uint64_t* out
+);
+
+/**
  * Gets the number of diagnostics from the pass' last completed compile. While a recompile is
  * pending, the previous diagnostics stay available.
  *

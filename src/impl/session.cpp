@@ -203,7 +203,7 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
   }
 
   for (PassState& state : states_) {
-    if (state.poll_compile_request(runtime_))
+    if (state.poll_compile_request(runtime_, current_time))
       pass_status_revision_ += 1;
   }
 
@@ -221,7 +221,7 @@ void Session::render(impl::Surface* surface, uint64_t current_time) {
 
     if (auto common_revision = project_.common_revision(); state->is_stale(pass, common_revision)) {
       state->request_render_pipeline_build(
-        runtime_, pass, project_.common_source(), common_revision
+        runtime_, pass, project_.common_source(), common_revision, current_time
       );
       pass_status_revision_ += 1;
     }
