@@ -20,7 +20,12 @@ type MewoPassCompileStatus = (typeof MewoPassCompileStatus)[keyof typeof MewoPas
 type Dimensions = { width: number; height: number };
 
 type PassId = number;
-type PassCompilation = { status: MewoPassCompileStatus; duration: number | null };
+type PassCompilation =
+  | { status: typeof MewoPassCompileStatus.Pending }
+  | {
+      status: typeof MewoPassCompileStatus.Success | typeof MewoPassCompileStatus.Error;
+      duration: number;
+    };
 
 type Pass = {
   id: PassId;

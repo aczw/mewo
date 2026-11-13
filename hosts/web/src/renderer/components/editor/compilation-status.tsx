@@ -12,8 +12,9 @@ const CompilationStatus = () => {
 
   if (!activePass || activePass.compilation === null) return <p>Waiting...</p>;
 
-  const { status, duration } = activePass.compilation;
-  if (status === MewoPassCompileStatus.Pending) {
+  const { compilation } = activePass;
+  const { status } = compilation;
+  if (compilation.status === MewoPassCompileStatus.Pending) {
     return (
       <p className={styles.compilationStatus}>
         <span className={styles.hiddenWhenSmall}>Compiling...</span>
@@ -36,7 +37,7 @@ const CompilationStatus = () => {
         {compiledText} <span className={styles.inText}>in</span>
       </span>
       {compiledIcon}
-      <span className={styles.time}>{duration?.toFixed(0)}ms</span>
+      <span className={styles.time}>{compilation.duration.toFixed(0)}ms</span>
     </p>
   );
 };
