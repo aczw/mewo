@@ -16,6 +16,7 @@
   column-gap: var(--pad);
   padding: var(--pad);
   border-radius: var(--brd-rad);
+  font-weight: 500;
 
   &:hover {
     background-color: var(--bg-secondary);

@@ -37,6 +37,7 @@ const CompilationStatus = () => {
         {compiledText} <span className={styles.inText}>in</span>
       </span>
       {compiledIcon}
+
       <span className={styles.time}>{compilation.duration.toFixed(0)}ms</span>
     </p>
   );

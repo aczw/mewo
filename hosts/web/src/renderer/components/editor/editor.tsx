@@ -98,7 +98,7 @@ const createExtensions = (cb: Callbacks): Extension[] => [
   EditorView.theme({
     "&": { height: "100%" },
     "&.cm-focused": { outline: "none" },
-    ".cm-scroller": { overflow: "auto", fontFamily: "var(--font-code)", fontSize: "0.9rem" },
+    ".cm-scroller": { overflow: "auto", fontFamily: "var(--font-code)", fontSize: "0.85rem" },
     ".cm-gutters": {
       backgroundColor: "var(--bg-secondary)",
       color: "var(--fg-med)",

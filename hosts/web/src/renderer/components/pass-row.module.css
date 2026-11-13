@@ -43,6 +43,6 @@
   }
 
   &[data-disabled="true"] {
-    color: var(--fg-med);
+    color: var(--fg-low);
   }
 }

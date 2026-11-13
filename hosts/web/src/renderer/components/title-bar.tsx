@@ -28,7 +28,10 @@ const TitleBar = () => {
       )}
 
       <nav className={styles.tab}>
-        <div className={styles.project}>New project*</div>
+        <button onClick={() => alert("rename project!")} className={styles.renameProject}>
+          <h1>New project*</h1>
+        </button>
+
         <span className={styles.slash}>/</span>
         <p>{activePassName}</p>
       </nav>

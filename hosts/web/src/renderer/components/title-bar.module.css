@@ -16,19 +16,26 @@
 }
 
 .tab {
+  app-region: no-drag;
   display: flex;
   align-items: center;
   justify-content: center;
   column-gap: calc(var(--tb-px) * 5);
-  padding: 0 calc(var(--tb-px) * 10);
+  padding: 0 calc(var(--tb-px) * 9) 0 calc(var(--tb-px) * 5);
   background-color: var(--bg-primary);
   width: fit-content;
   height: 100%;
   border-radius: calc(var(--tb-px) * 5) calc(var(--tb-px) * 5) 0 0;
 }
 
-.project {
+.renameProject {
   font-weight: 500;
+  padding: calc(var(--tb-px) * 2) calc(var(--tb-px) * 4);
+  border-radius: calc(var(--tb-px) * 3);
+
+  &:hover {
+    background-color: var(--bg-secondary);
+  }
 }
 
 .slash {

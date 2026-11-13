@@ -3,7 +3,6 @@
   flex-direction: column;
   padding: var(--pad);
   flex-grow: 1;
-  min-height: 0;
   border-top: var(--brd-w) solid var(--bg-secondary);
 }
 
@@ -25,6 +24,7 @@
   padding: var(--pad);
   border: var(--brd-w) dashed var(--bg-secondary);
   border-radius: var(--brd-rad);
+  font-weight: 500;
 
   &:hover {
     background-color: var(--bg-secondary);
@@ -38,8 +38,6 @@
   border-radius: 0 0 var(--brd-rad) var(--brd-rad);
   padding: var(--pad);
   flex-grow: 1;
-  min-height: 0;
-  overflow-y: auto;
 
   [data-platform="darwin"] & {
     border-radius: 0 0 var(--brd-rad-macos) var(--brd-rad);
