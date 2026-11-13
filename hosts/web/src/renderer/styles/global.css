@@ -20,7 +20,6 @@
 html,
 body {
   font-family: var(--font-ui);
-  font-size: 14px;
   background-color: var(--bg-primary);
   color: var(--fg-high);
   height: 100%;
@@ -33,5 +32,13 @@ body {
     height: 100%;
     display: flex;
     flex-direction: column;
+  }
+
+  [data-platform="darwin"] & {
+    font-size: 14px;
+  }
+
+  [data-platform="win32"] & {
+    font-size: 15px;
   }
 }
