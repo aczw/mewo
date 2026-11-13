@@ -17,6 +17,21 @@ type MewoResult = (typeof MewoResult)[keyof typeof MewoResult];
 const MewoPassCompileStatus = { Pending: 0, Success: 1, Error: 2 } as const;
 type MewoPassCompileStatus = (typeof MewoPassCompileStatus)[keyof typeof MewoPassCompileStatus];
 
+const MewoDiagnosticSeverity = { Error: 0, Warning: 1, Info: 2 } as const;
+type MewoDiagnosticSeverity = (typeof MewoDiagnosticSeverity)[keyof typeof MewoDiagnosticSeverity];
+
+const MewoDiagnosticSource = { None: 0, Pass: 1, Common: 2, Generated: 3 } as const;
+type MewoDiagnosticSource = (typeof MewoDiagnosticSource)[keyof typeof MewoDiagnosticSource];
+
+/** `line` and `column` are 1-based (column in UTF-8 bytes), and 0 when `source` is `None`. */
+type Diagnostic = {
+  severity: MewoDiagnosticSeverity;
+  message: string;
+  source: MewoDiagnosticSource;
+  line: number;
+  column: number;
+};
+
 type Dimensions = { width: number; height: number };
 
 type PassId = number;
@@ -36,5 +51,13 @@ type Pass = {
 /** Maps to `MEWO_PASS_ID_NONE`. */
 const kPassIdNone: PassId = 0 as const;
 
-export { MewoEvent, MewoPassCompileStatus, MewoResult, kNull, kPassIdNone };
-export type { Ptr, Dimensions, PassId, PassCompilation, Pass };
+export {
+  MewoDiagnosticSeverity,
+  MewoDiagnosticSource,
+  MewoEvent,
+  MewoPassCompileStatus,
+  MewoResult,
+  kNull,
+  kPassIdNone,
+};
+export type { Ptr, Diagnostic, Dimensions, PassId, PassCompilation, Pass };

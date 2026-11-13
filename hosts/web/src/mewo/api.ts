@@ -1,4 +1,12 @@
-import { MewoEvent, MewoPassCompileStatus, MewoResult, type PassId, type Ptr } from "./types";
+import {
+  MewoDiagnosticSeverity,
+  MewoDiagnosticSource,
+  MewoEvent,
+  MewoPassCompileStatus,
+  MewoResult,
+  type PassId,
+  type Ptr,
+} from "./types";
 import createWasmModule from "./wasm/mewo";
 
 const Module = await createWasmModule();
@@ -137,6 +145,32 @@ const Mewo = {
     "number",
     ["number", "number"],
   ) as (session: Ptr, passId: PassId) => number,
+  // -1 for an unknown pass ID (`lastResult()` says why)
+  sessionGetPassDiagnosticCount: Module.cwrap(
+    "mewo_web_session_get_pass_diagnostic_count",
+    "number",
+    ["number", "number"],
+  ) as (session: Ptr, passId: PassId) => number,
+  // Selects the diagnostic read by the `diagnostic*` getters below, until the next render
+  sessionSelectPassDiagnostic: Module.cwrap("mewo_web_session_select_pass_diagnostic", "boolean", [
+    "number",
+    "number",
+    "number",
+  ]) as (session: Ptr, passId: PassId, index: number) => boolean,
+
+  diagnosticSeverity: Module.cwrap(
+    "mewo_web_diagnostic_severity",
+    "number",
+    [],
+  ) as () => MewoDiagnosticSeverity,
+  diagnosticMessage: Module.cwrap("mewo_web_diagnostic_message", "string", []) as () => string,
+  diagnosticSource: Module.cwrap(
+    "mewo_web_diagnostic_source",
+    "number",
+    [],
+  ) as () => MewoDiagnosticSource,
+  diagnosticLine: Module.cwrap("mewo_web_diagnostic_line", "number", []) as () => number,
+  diagnosticColumn: Module.cwrap("mewo_web_diagnostic_column", "number", []) as () => number,
 };
 
 export { Mewo };

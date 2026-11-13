@@ -17,6 +17,7 @@ static size_t string_capacity = 0;
 
 static mewo_result_t last_result = MEWO_SUCCESS;
 static mewo_event_t current_event = {0};
+static mewo_diagnostic_t current_diagnostic = {0};
 
 static const char* to_c_string(mewo_string_view_t view) {
   if (view.data == NULL)
@@ -295,3 +296,45 @@ double mewo_web_session_get_pass_compile_duration(mewo_session_t* session, mewo_
 
   return (double)duration_ns / 1e6;
 }
+
+EMSCRIPTEN_KEEPALIVE
+int mewo_web_session_get_pass_diagnostic_count(mewo_session_t* session, mewo_pass_id_t pass_id) {
+  uint32_t count = 0;
+  last_result = mewo_session_get_pass_diagnostic_count(session, pass_id, &count);
+
+  if (last_result != MEWO_SUCCESS)
+    return -1;
+
+  return (int)count;
+}
+
+EMSCRIPTEN_KEEPALIVE
+bool mewo_web_session_select_pass_diagnostic(
+  mewo_session_t* session,
+  mewo_pass_id_t pass_id,
+  uint32_t index
+) {
+  last_result = mewo_session_get_pass_diagnostic(session, pass_id, index, &current_diagnostic);
+
+  if (last_result != MEWO_SUCCESS) {
+    current_diagnostic = (mewo_diagnostic_t){0};
+    return false;
+  }
+
+  return true;
+}
+
+EMSCRIPTEN_KEEPALIVE
+int mewo_web_diagnostic_severity(void) { return (int)current_diagnostic.severity; }
+
+EMSCRIPTEN_KEEPALIVE
+const char* mewo_web_diagnostic_message(void) { return to_c_string(current_diagnostic.message); }
+
+EMSCRIPTEN_KEEPALIVE
+int mewo_web_diagnostic_source(void) { return (int)current_diagnostic.source; }
+
+EMSCRIPTEN_KEEPALIVE
+double mewo_web_diagnostic_line(void) { return (double)current_diagnostic.line; }
+
+EMSCRIPTEN_KEEPALIVE
+double mewo_web_diagnostic_column(void) { return (double)current_diagnostic.column; }

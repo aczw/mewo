@@ -122,4 +122,29 @@ int mewo_web_session_get_pass_compile_status(mewo_session_t* session, mewo_pass_
 
 double mewo_web_session_get_pass_compile_duration(mewo_session_t* session, mewo_pass_id_t pass_id);
 
+/** The number of diagnostics from the pass' last completed compile, or -1 for an unknown pass. */
+int mewo_web_session_get_pass_diagnostic_count(mewo_session_t* session, mewo_pass_id_t pass_id);
+
+/**
+ * Selects one diagnostic as the current diagnostic, readable through the `mewo_web_diagnostic_*`
+ * getters until the next render. Returns false for an unknown pass or out-of-range index.
+ */
+bool mewo_web_session_select_pass_diagnostic(
+  mewo_session_t* session,
+  mewo_pass_id_t pass_id,
+  uint32_t index
+);
+
+int mewo_web_diagnostic_severity(void);
+
+const char* mewo_web_diagnostic_message(void);
+
+int mewo_web_diagnostic_source(void);
+
+/** 1-based, 0 if the diagnostic has no position. */
+double mewo_web_diagnostic_line(void);
+
+/** 1-based, in UTF-8 bytes, 0 if the diagnostic has no position. */
+double mewo_web_diagnostic_column(void);
+
 #endif
