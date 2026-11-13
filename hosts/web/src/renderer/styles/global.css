@@ -10,10 +10,12 @@
   /** Used in the title bar to ignore zoom */
   --tb-px: calc(var(--titlebar-h) / 32);
 
-  --tb-font-size: 12.5;
+  &[data-platform="darwin"] {
+    --tb-font-size: 12.5;
+  }
 
   &[data-platform="win32"] {
-    --tb-font-size: 14;
+    --tb-font-size: 15;
   }
 }
 

@@ -30,6 +30,7 @@ const createWindow = () => {
         ? true
         : {
             color: "#ffffff00",
+            height: 32,
           },
     webPreferences: {
       preload: path.join(distDir, "preload.cjs"),
