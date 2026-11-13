@@ -1,7 +1,7 @@
 import type { EditorState } from "@codemirror/state";
-import { InfoIcon, OctagonXIcon, TriangleAlertIcon } from "lucide-react";
 
 import { CompilationStatus } from "./compilation-status";
+import { DiagnosticsCount } from "./diagnostics-count";
 
 import styles from "./info.module.css";
 
@@ -17,18 +17,7 @@ const Info = ({ docInfo }: { docInfo: DocInfo }) => {
   return (
     <div className={styles.info}>
       <div className={styles.left}>
-        <ul className={styles.diagnostics}>
-          <li className={styles.iconLabel}>
-            <OctagonXIcon size="var(--icon)" /> 0
-          </li>
-          <li className={styles.iconLabel}>
-            <TriangleAlertIcon size="var(--icon)" /> 0
-          </li>
-          <li className={styles.iconLabel}>
-            <InfoIcon size="var(--icon)" /> 0
-          </li>
-        </ul>
-
+        <DiagnosticsCount />
         <CompilationStatus />
       </div>
 

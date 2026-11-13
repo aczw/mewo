@@ -11,28 +11,6 @@
   column-gap: var(--pad-high);
 }
 
-.diagnostics {
-  display: flex;
-  column-gap: var(--pad);
-  padding: var(--pad);
-  border-radius: var(--brd-rad);
-  font-weight: 500;
-
-  &:hover {
-    background-color: var(--bg-secondary);
-  }
-
-  [data-platform="darwin"] & {
-    border-radius: var(--brd-rad) var(--brd-rad) var(--brd-rad) var(--brd-rad-macos);
-  }
-}
-
-.iconLabel {
-  display: flex;
-  align-items: center;
-  column-gap: var(--pad);
-}
-
 .right {
   display: flex;
   column-gap: var(--pad-high);

@@ -46,6 +46,7 @@ type Pass = {
   id: PassId;
   name: string;
   compilation: PassCompilation | null;
+  diagnostics: Diagnostic[];
 };
 
 /** Maps to `MEWO_PASS_ID_NONE`. */

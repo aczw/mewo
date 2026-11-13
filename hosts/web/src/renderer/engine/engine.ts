@@ -201,6 +201,7 @@ class Engine implements Disposable {
         id: passId,
         name: this.#project.getPassName(passId),
         compilation: session?.readPassCompile(passId) ?? null,
+        diagnostics: session?.readPassDiagnostics(passId) ?? [],
       });
     }
 
