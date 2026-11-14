@@ -29,8 +29,8 @@ import {
 } from "@codemirror/view";
 import { useEffect, useRef, useState } from "react";
 
-import { kPassIdNone, type PassId } from "../../../mewo/types";
 import { useEngine, useEngineSnapshot } from "../../engine/context";
+import type { Selection } from "../../engine/engine";
 import { calculateDocInfo, type DocInfo, Info } from "./info";
 
 import styles from "./editor.module.css";
@@ -39,6 +39,9 @@ type Callbacks = {
   onDocChanged: (source: string) => void;
   onSelectionChanged: (state: EditorState) => void;
 };
+
+const keyOf = (selection: Selection): string =>
+  selection.kind === "pass" ? `pass:${selection.id}` : "common";
 
 const createExtensions = (cb: Callbacks): Extension[] => [
   // A line number gutter
@@ -110,18 +113,26 @@ const createExtensions = (cb: Callbacks): Extension[] => [
 
 const Editor = () => {
   const engine = useEngine();
-  const { passes, activePassId } = useEngineSnapshot();
+  const { passes, selection } = useEngineSnapshot();
 
   const parentRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
-  const statesRef = useRef(new Map<PassId, EditorState>());
-  const shownPassRef = useRef<PassId>(kPassIdNone);
+  const statesRef = useRef(new Map<string, EditorState>());
+  const selectionRef = useRef<Selection | null>(null);
 
   const [docInfo, setDocInfo] = useState<DocInfo>({ line: 1, column: 1, length: 0 });
 
   const [extensions] = useState(() =>
     createExtensions({
-      onDocChanged: (source) => engine.setPassSource(shownPassRef.current, source),
+      onDocChanged: (source) => {
+        if (selectionRef.current === null) return;
+
+        if (selectionRef.current.kind === "pass") {
+          engine.setPassSource(selectionRef.current.id, source);
+        } else {
+          engine.setCommonSource(source);
+        }
+      },
       onSelectionChanged: (state) => setDocInfo(calculateDocInfo(state)),
     }),
   );
@@ -131,40 +142,46 @@ const Editor = () => {
     viewRef.current = view;
 
     return () => {
-      // Save the shown pass' state so a remount restores it
-      if (shownPassRef.current !== kPassIdNone)
-        statesRef.current.set(shownPassRef.current, view.state);
-      shownPassRef.current = kPassIdNone;
+      // Save the shown selection so a remount restores it
+      if (selectionRef.current !== null)
+        statesRef.current.set(keyOf(selectionRef.current), view.state);
+      selectionRef.current = null;
 
       view.destroy();
       viewRef.current = null;
     };
   }, []);
 
-  // Reconcile per-pass states with pass list, then show active pass
+  // Reconcile editor states with pass list, then show the active selection
   useEffect(() => {
     const view = viewRef.current!;
     const states = statesRef.current;
 
-    // Save currently shown pass' state before reconciling
-    if (shownPassRef.current !== kPassIdNone) states.set(shownPassRef.current, view.state);
+    // Save currently shown selection before reconciling
+    if (selectionRef.current !== null) states.set(keyOf(selectionRef.current), view.state);
 
-    const aliveIds = new Set<PassId>();
+    const commonKey = keyOf({ kind: "common" });
+    const alive = new Set<string>([commonKey]);
     for (const { id } of passes) {
-      aliveIds.add(id);
-      if (!states.has(id))
-        states.set(id, EditorState.create({ doc: engine.getPassSource(id), extensions }));
+      const passKey = keyOf({ kind: "pass", id });
+      alive.add(passKey);
+
+      if (!states.has(passKey))
+        states.set(passKey, EditorState.create({ doc: engine.getPassSource(id), extensions }));
     }
 
-    for (const id of states.keys()) if (!aliveIds.has(id)) states.delete(id);
+    if (!states.has(commonKey))
+      states.set(commonKey, EditorState.create({ doc: engine.getCommonSource(), extensions }));
 
-    // Switch view only if active pass has changed
-    if (activePassId !== shownPassRef.current) {
-      view.setState(states.get(activePassId)!);
+    for (const key of states.keys()) if (!alive.has(key)) states.delete(key);
+
+    // Switch selection only if active selection has changed
+    if (selectionRef.current === null || keyOf(selection) !== keyOf(selectionRef.current)) {
+      view.setState(states.get(keyOf(selection))!);
       setDocInfo(calculateDocInfo(view.state));
-      shownPassRef.current = activePassId;
+      selectionRef.current = selection;
     }
-  }, [engine, extensions, passes, activePassId]);
+  }, [engine, extensions, passes, selection]);
 
   return (
     <>

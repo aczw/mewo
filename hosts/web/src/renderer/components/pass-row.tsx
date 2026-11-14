@@ -24,7 +24,7 @@ const PassRow = ({ index, pass, active, canDelete }: Props) => {
           {pass.name}
         </div>
       ) : (
-        <button onClick={() => engine.setActivePass(pass.id)} className={styles.inactive}>
+        <button onClick={() => engine.selectPass(pass.id)} className={styles.inactive}>
           <span className={styles.index}>{index}</span>
           {pass.name}
         </button>

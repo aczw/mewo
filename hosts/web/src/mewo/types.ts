@@ -24,13 +24,14 @@ const MewoDiagnosticSource = { None: 0, Pass: 1, Common: 2, Generated: 3 } as co
 type MewoDiagnosticSource = (typeof MewoDiagnosticSource)[keyof typeof MewoDiagnosticSource];
 
 /** `line` and `column` are 1-based (column in UTF-8 bytes), and 0 when `source` is `None`. */
-type Diagnostic = {
+type PassDiagnostic = {
   severity: MewoDiagnosticSeverity;
   message: string;
   source: MewoDiagnosticSource;
   line: number;
   column: number;
 };
+type CommonDiagnostic = PassDiagnostic & { passIds: PassId[] };
 
 type Dimensions = { width: number; height: number };
 
@@ -46,7 +47,7 @@ type Pass = {
   id: PassId;
   name: string;
   compilation: PassCompilation | null;
-  diagnostics: Diagnostic[];
+  diagnostics: PassDiagnostic[];
 };
 
 /** Maps to `MEWO_PASS_ID_NONE`. */
@@ -61,4 +62,4 @@ export {
   kNull,
   kPassIdNone,
 };
-export type { Ptr, Diagnostic, Dimensions, PassId, PassCompilation, Pass };
+export type { Ptr, PassDiagnostic, CommonDiagnostic, Dimensions, PassId, PassCompilation, Pass };

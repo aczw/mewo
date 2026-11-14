@@ -2,7 +2,14 @@ import { Project } from "../../mewo/classes/project";
 import { Runtime } from "../../mewo/classes/runtime";
 import { Session } from "../../mewo/classes/session";
 import { Surface } from "../../mewo/classes/surface";
-import { type Dimensions, MewoEvent, type Pass, type PassId } from "../../mewo/types";
+import {
+  type CommonDiagnostic,
+  type Dimensions,
+  MewoDiagnosticSource,
+  MewoEvent,
+  type Pass,
+  type PassId,
+} from "../../mewo/types";
 import { Mutable } from "./mutable";
 
 const kDefaultPassSource = `fn main(frag_coord: vec2f) -> vec4f {
@@ -15,7 +22,13 @@ const kNewPassSource = `fn main(frag_coord: vec2f) -> vec4f {
   return textureSample(prev_tex, prev_smp, uv);
 }`;
 
-type EngineSnapshot = { passes: Pass[]; activePassId: PassId; paused: boolean };
+type Selection = { kind: "pass"; id: PassId } | { kind: "common" };
+type EngineSnapshot = {
+  passes: Pass[];
+  selection: Selection;
+  paused: boolean;
+  commonDiagnostics: CommonDiagnostic[];
+};
 type FrameStats = { deltaTime: number; sessionTime: number; dimensions: Dimensions };
 
 const sameDimensions = (a: Dimensions, b: Dimensions): boolean => {
@@ -34,7 +47,7 @@ class Engine implements Disposable {
   #deviceReady = false;
   #dimensions: Dimensions = { width: 0, height: 0 };
 
-  #activePassId: PassId;
+  #selection: Selection;
   #paused = false;
   #lastStatusRevision: number | null = null;
 
@@ -50,7 +63,7 @@ class Engine implements Disposable {
     this.#project = this.#stack.use(new Project("Pass 1", kDefaultPassSource));
     this.#sessionHolder = this.#stack.use(new Mutable<Session>());
 
-    this.#activePassId = this.#project.getPassId(0)!;
+    this.#selection = { kind: "pass", id: this.#project.getPassId(0)! };
     this.#snapshot = this.#readSnapshot();
 
     this.#rafId = window.requestAnimationFrame(this.#onFrame);
@@ -75,32 +88,51 @@ class Engine implements Disposable {
 
   addPass(): void {
     const passCount = this.#project.getPassCount();
-    this.#activePassId = this.#project.addPass(`Pass ${passCount + 1}`, kNewPassSource);
+    this.#selection = {
+      kind: "pass",
+      id: this.#project.addPass(`Pass ${passCount + 1}`, kNewPassSource),
+    };
     this.#emit();
   }
 
-  removePass(pass: PassId): void {
-    this.#project.removePass(pass);
-    if (pass === this.#activePassId) this.#activePassId = this.#project.getPassId(0)!;
+  removePass(passId: PassId): void {
+    this.#project.removePass(passId);
+
+    if (this.#selection.kind === "pass" && passId === this.#selection.id)
+      this.#selection = { kind: "pass", id: this.#project.getPassId(0)! };
+
     this.#emit();
   }
 
-  setActivePass(pass: PassId): void {
-    this.#activePassId = pass;
+  selectPass(passId: PassId): void {
+    this.#selection = { kind: "pass", id: passId };
     this.#emit();
   }
 
-  renamePass(pass: PassId, newName: string): void {
-    this.#project.setPassName(pass, newName);
+  selectCommon(): void {
+    this.#selection = { kind: "common" };
     this.#emit();
   }
 
-  getPassSource(pass: PassId): string {
-    return this.#project.getPassSource(pass);
+  renamePass(passId: PassId, newName: string): void {
+    this.#project.setPassName(passId, newName);
+    this.#emit();
   }
 
-  setPassSource(pass: PassId, source: string): void {
-    this.#project.setPassSource(pass, source);
+  getCommonSource(): string {
+    return this.#project.getCommonSource();
+  }
+
+  setCommonSource(source: string): void {
+    this.#project.setCommonSource(source);
+  }
+
+  getPassSource(passId: PassId): string {
+    return this.#project.getPassSource(passId);
+  }
+
+  setPassSource(passId: PassId, source: string): void {
+    this.#project.setPassSource(passId, source);
   }
 
   setPaused(paused: boolean): void {
@@ -205,7 +237,29 @@ class Engine implements Disposable {
       });
     }
 
-    return { passes, activePassId: this.#activePassId, paused: this.#paused };
+    const byKey = new Map<string, CommonDiagnostic>();
+    for (const pass of passes) {
+      for (const diagnostic of pass.diagnostics) {
+        if (diagnostic.source !== MewoDiagnosticSource.Common) continue;
+
+        const { severity, line, column, message } = diagnostic;
+        const key = `${severity}:${line}:${column}:${message}`;
+
+        const exists = byKey.get(key);
+        if (exists) {
+          exists.passIds.push(pass.id);
+        } else {
+          byKey.set(key, { ...diagnostic, passIds: [pass.id] });
+        }
+      }
+    }
+
+    return {
+      passes,
+      selection: this.#selection,
+      paused: this.#paused,
+      commonDiagnostics: [...byKey.values()].sort((a, b) => a.line - b.line || a.column - b.column),
+    };
   }
 
   [Symbol.dispose](): void {
@@ -216,4 +270,4 @@ class Engine implements Disposable {
 }
 
 export { Engine };
-export type { EngineSnapshot, FrameStats };
+export type { EngineSnapshot, FrameStats, Selection };

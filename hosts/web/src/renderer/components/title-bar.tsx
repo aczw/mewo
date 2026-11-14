@@ -6,14 +6,20 @@ import { Wordmark } from "./logo/wordmark";
 import styles from "./title-bar.module.css";
 
 const TitleBar = () => {
-  const engineSnapshot = useEngineSnapshot();
+  const { selection, passes } = useEngineSnapshot();
 
-  let activePassName = "<unknown pass>";
-  for (const pass of engineSnapshot.passes) {
-    if (pass.id === engineSnapshot.activePassId) {
-      activePassName = pass.name;
-      break;
+  let sourceName: string;
+  if (selection.kind === "pass") {
+    let activePassName = "<unknown pass>";
+    for (const pass of passes) {
+      if (pass.id === selection.id) {
+        activePassName = pass.name;
+        break;
+      }
     }
+    sourceName = activePassName;
+  } else {
+    sourceName = "Common";
   }
 
   return (
@@ -33,7 +39,7 @@ const TitleBar = () => {
         </button>
 
         <span className={styles.slash}>/</span>
-        <p>{activePassName}</p>
+        <p>{sourceName}</p>
       </nav>
 
       {window.platform === "darwin" && <Wordmark className={styles.wordmark} />}

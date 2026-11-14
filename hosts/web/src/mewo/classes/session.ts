@@ -1,10 +1,10 @@
 import { Mewo } from "../api";
 import { MewoError } from "../error";
 import {
-  type Diagnostic,
   kNull,
   MewoPassCompileStatus,
   type PassCompilation,
+  type PassDiagnostic,
   type PassId,
   type Ptr,
 } from "../types";
@@ -52,11 +52,11 @@ class Session implements Disposable {
     return { status, duration: duration };
   }
 
-  readPassDiagnostics(passId: PassId): Diagnostic[] | null {
+  readPassDiagnostics(passId: PassId): PassDiagnostic[] | null {
     const count = Mewo.sessionGetPassDiagnosticCount(this.handle, passId);
     if (count === -1) return null;
 
-    const diagnostics: Diagnostic[] = [];
+    const diagnostics: PassDiagnostic[] = [];
     for (let idx = 0; idx < count; ++idx) {
       if (!Mewo.sessionSelectPassDiagnostic(this.handle, passId, idx))
         throw new MewoError("failed to read pass diagnostic");

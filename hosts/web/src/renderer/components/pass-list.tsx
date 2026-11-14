@@ -4,7 +4,7 @@ import { PassRow } from "./pass-row";
 import styles from "./pass-list.module.css";
 
 const PassList = () => {
-  const { passes, activePassId } = useEngineSnapshot();
+  const { passes, selection } = useEngineSnapshot();
 
   return (
     <ul className={styles.passList}>
@@ -13,7 +13,7 @@ const PassList = () => {
           key={pass.id}
           index={index + 1}
           pass={pass}
-          active={pass.id === activePassId}
+          active={selection.kind === "pass" && pass.id === selection.id}
           canDelete={passes.length > 1}
         />
       ))}
