@@ -1,22 +1,26 @@
+import { Group, Panel } from "react-resizable-panels";
+
 import { Controller } from "./controller";
 import { Editor } from "./editor/editor";
 import { TitleBar } from "./title-bar";
 import { Viewport } from "./viewport";
 
-import styles from "./app.module.css";
-
 const App = () => {
   return (
     <>
       <TitleBar />
-      <main className={styles.main}>
-        <div className={styles.left}>
-          <Editor />
-        </div>
-        <div className={styles.right}>
-          <Viewport />
-          <Controller />
-        </div>
+
+      <main className="flex min-h-0 grow">
+        <Group>
+          <Panel className="flex flex-col">
+            <Editor />
+          </Panel>
+
+          <Panel className="flex flex-col overflow-y-auto">
+            <Viewport />
+            <Controller />
+          </Panel>
+        </Group>
       </main>
     </>
   );
