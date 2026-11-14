@@ -2,51 +2,49 @@
 
 @theme {
   --color-*: initial;
-  --color-bg-primary: #f0f0f0;
-  --color-bg-secondary: #e0e0e0;
-  --color-fg-low: #c7c7c7;
-  --color-fg-med: #808080;
-  --color-fg-high: #4e4e4e;
+  --color-gray-dark: #cdcdcd;
+  --color-gray-med: #dcdcdc;
+  --color-gray-light: #f1f1f1;
+  --color-fg-dark: #2f2f2f;
+  --color-fg-light: #6d6d6d;
 
-  --spacing-pad: 0.3rem;
-  --spacing-pad-high: 0.8rem;
-  --spacing-icon: 1rem;
-  --radius-brd: 5px;
-  --radius-brd-macos: 13px;
-
+  --font-*: initial;
   --font-ui: "IBM Plex Sans", system-ui, sans-serif;
   --font-code: "Geist Mono", ui-monospace, monospace;
 }
 
 @layer base {
   :root {
-    --titlebar-x: env(titlebar-area-x, 0px);
-    --titlebar-w: env(titlebar-area-width, 100%);
-    --titlebar-h: env(titlebar-area-height, 32px);
+    font-size: 15px;
+
+    --env-tb-x: env(titlebar-area-x, 0px);
+    --env-tb-w: env(titlebar-area-width, 100%);
+    --env-tb-h: env(titlebar-area-height, 40px);
 
     /** Used in the title bar to ignore zoom */
-    --tb-px: calc(var(--titlebar-h) / 32);
-    --tb-font-size: 13;
+    --tb-px: calc(var(--env-tb-h) / 40);
   }
 
   html,
   body {
-    font-family: var(--font-ui);
-    background-color: var(--color-bg-primary);
-    color: var(--color-fg-high);
-    height: 100%;
-    overflow: hidden;
-    cursor: default;
-    user-select: none;
-
-    * {
-      scrollbar-width: thin;
-    }
+    @apply relative h-full cursor-default overflow-hidden bg-gray-light font-ui text-fg-dark select-none *:scrollbar-thin;
 
     #root {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
+      @apply isolate flex h-full flex-col;
     }
   }
+}
+
+@custom-variant win32 (&:where([data-platform="win32"] *));
+@custom-variant darwin (&:where([data-platform="darwin"] *));
+
+/** Rescales Tailwind's units to the title bar's zoom-independent units. */
+@utility tb-units {
+  --spacing: calc(var(--tb-px) * 4);
+  --text-base: calc(var(--tb-px) * 15);
+}
+
+@utility tb-insets {
+  padding-left: var(--env-tb-x);
+  padding-right: calc(100% - var(--env-tb-x) - var(--env-tb-w));
 }

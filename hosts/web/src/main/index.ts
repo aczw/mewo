@@ -3,6 +3,8 @@ import path from "node:path";
 
 import { app, BrowserWindow } from "electron";
 
+const kTitleBarHeight = 40;
+
 const distDir = path.join(import.meta.dirname, "..", "..", "dist");
 
 const reloadOnChange = (win: BrowserWindow) => {
@@ -25,16 +27,9 @@ const createWindow = () => {
     minWidth: 550,
     minHeight: 400,
     titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "hidden",
-    titleBarOverlay:
-      process.platform === "darwin"
-        ? true
-        : {
-            color: "#ffffff00",
-            height: 32,
-          },
-    webPreferences: {
-      preload: path.join(distDir, "preload.cjs"),
-    },
+    titleBarOverlay: { color: "#ffffff00", height: kTitleBarHeight },
+    trafficLightPosition: { x: 18, y: 13 },
+    webPreferences: { preload: path.join(distDir, "preload.cjs") },
   });
 
   win.once("ready-to-show", () => win.show());

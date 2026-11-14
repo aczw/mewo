@@ -1,9 +1,8 @@
-import { MenuIcon } from "lucide-react";
+import { Button } from "@base-ui/react";
+import { ChevronDown } from "lucide-react";
 
 import { useEngineSnapshot } from "../engine/context";
 import { Wordmark } from "./logo/wordmark";
-
-import styles from "./title-bar.module.css";
 
 const TitleBar = () => {
   const { selection, passes } = useEngineSnapshot();
@@ -23,26 +22,23 @@ const TitleBar = () => {
   }
 
   return (
-    <header className={styles.titleBar}>
-      {window.platform === "win32" && (
-        <button onClick={() => alert("menu!")} className={styles.menu}>
-          <div className={styles.menuButtonWrapper}>
-            <Wordmark className={styles.wordmark} />
-            <MenuIcon width="auto" height="100%" />
-          </div>
-        </button>
-      )}
+    <header className="flex h-(--env-tb-h) w-full items-center justify-between bg-gray-dark tb-insets text-base tb-units [app-region:drag]">
+      <nav className="flex items-center gap-x-2">
+        <Button
+          onClick={() => alert("project!")}
+          className="flex items-center gap-x-1 rounded-full bg-gray-light py-0.5 pr-1.5 pl-2.5 font-medium [app-region:no-drag] hover:bg-gray-med"
+        >
+          <h1>Untitled</h1>
+          <ChevronDown className="size-4" />
+        </Button>
 
-      <nav className={styles.tab}>
-        <button onClick={() => alert("rename project!")} className={styles.renameProject}>
-          <h1>New project*</h1>
-        </button>
-
-        <span className={styles.slash}>/</span>
         <p>{sourceName}</p>
       </nav>
 
-      {window.platform === "darwin" && <Wordmark className={styles.wordmark} />}
+      <div className="flex h-full items-center gap-x-4 pr-4">
+        <p className="text-fg-light">Unsaved</p>
+        <Wordmark className="h-1/3 w-auto" />
+      </div>
     </header>
   );
 };

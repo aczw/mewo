@@ -5,3 +5,6 @@ linker = "hoisted"
 printWidth = 100
 sortImports = true
 sortPackageJson = true
+
+[fmt.sortTailwindcss]
+stylesheet = "./src/renderer/styles/main.css"
