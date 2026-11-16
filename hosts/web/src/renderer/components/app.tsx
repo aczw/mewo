@@ -1,8 +1,8 @@
 import { Group, Panel } from "react-resizable-panels";
 
+import { Compilation } from "./compilation.tsx";
 import { Controller } from "./controller";
-import { CompilationStatus } from "./left/compilation-status";
-import { Editor } from "./left/editor";
+import { Editor } from "./editor";
 import { TitleBar } from "./title-bar";
 import { Viewport } from "./viewport";
 
@@ -15,7 +15,7 @@ const App = () => {
         <Group>
           <Panel className="flex flex-col">
             <Editor />
-            <CompilationStatus />
+            <Compilation />
           </Panel>
 
           <Panel className="flex flex-col overflow-y-auto">

@@ -26,7 +26,7 @@ const TitleBar = () => {
       <nav className="flex items-center gap-x-2">
         <Button
           onClick={() => alert("project!")}
-          className="btn btn-icon-right bg-gray-light [app-region:no-drag] hover:bg-gray-med"
+          className="btn btn-icon bg-gray-light [app-region:no-drag] hover:bg-white"
         >
           <h1>Untitled</h1>
           <ChevronDown className="size-[calc(var(--tb-px)*15)]" />

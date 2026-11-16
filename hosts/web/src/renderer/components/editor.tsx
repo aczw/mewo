@@ -29,10 +29,10 @@ import {
 } from "@codemirror/view";
 import { useEffect, useRef, useState } from "react";
 
-import { useEngine, useEngineSnapshot } from "../../engine/context";
-import type { Selection } from "../../engine/engine";
-import { calculateDocInfo, type DocInfo, StatusBar } from "./status-bar";
-import { Toolbar } from "./toolbar";
+import { useEngine, useEngineSnapshot } from "../engine/context";
+import type { Selection } from "../engine/engine";
+import { calculateDocInfo, type DocInfo, StatusBar } from "./left/status-bar";
+import { Toolbar } from "./left/toolbar";
 
 type Callbacks = {
   onDocChanged: (source: string) => void;

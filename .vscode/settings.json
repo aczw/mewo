@@ -41,5 +41,6 @@
   },
   "[jsonc]": {
     "editor.defaultFormatter": "jkillian.custom-local-formatters"
-  }
+  },
+  "tailwindCSS.rootFontSize": 15
 }

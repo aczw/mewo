@@ -4,6 +4,7 @@
 
 @theme {
   --color-*: initial;
+  --color-white: #ffffff;
   --color-gray-dark: #cdcdcd;
   --color-gray-med: #dcdcdc;
   --color-gray-light: #f1f1f1;
