@@ -1,9 +1,9 @@
+import { Button } from "@base-ui/react";
 import { InfoIcon, OctagonXIcon, TriangleAlertIcon } from "lucide-react";
 
 import { MewoDiagnosticSeverity, MewoDiagnosticSource } from "../../../mewo/types";
 import { useEngineSnapshot } from "../../engine/context";
-
-import styles from "./diagnostics-count.module.css";
+import { kIconSize } from "../../scripts/constants";
 
 const DiagnosticsCount = () => {
   const { passes, selection, commonDiagnostics } = useEngineSnapshot();
@@ -19,20 +19,22 @@ const DiagnosticsCount = () => {
     diagnostics?.filter((diag) => diag.severity === severity).length.toString() ?? "?";
 
   return (
-    <ul className={styles.diagnostics}>
-      <li className={styles.iconLabel}>
-        <OctagonXIcon size="var(--icon)" />
-        {count(MewoDiagnosticSeverity.Error)}
-      </li>
-      <li className={styles.iconLabel}>
-        <TriangleAlertIcon size="var(--icon)" />
-        {count(MewoDiagnosticSeverity.Warning)}
-      </li>
-      <li className={styles.iconLabel}>
-        <InfoIcon size="var(--icon)" />
-        {count(MewoDiagnosticSeverity.Info)}
-      </li>
-    </ul>
+    <Button className="btn bg-gray-med hover:bg-gray-light">
+      <ul className="flex gap-x-2 *:flex *:gap-x-1">
+        <li>
+          <OctagonXIcon size={kIconSize} />
+          {count(MewoDiagnosticSeverity.Error)}
+        </li>
+        <li>
+          <TriangleAlertIcon size={kIconSize} />
+          {count(MewoDiagnosticSeverity.Warning)}
+        </li>
+        <li>
+          <InfoIcon size={kIconSize} />
+          {count(MewoDiagnosticSeverity.Info)}
+        </li>
+      </ul>
+    </Button>
   );
 };
 

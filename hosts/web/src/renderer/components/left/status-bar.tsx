@@ -2,8 +2,6 @@ import type { EditorState } from "@codemirror/state";
 
 import { DiagnosticsCount } from "./diagnostics-count";
 
-import styles from "./info.module.css";
-
 type DocInfo = { line: number; column: number; length: number };
 
 const calculateDocInfo = (state: EditorState): DocInfo => {
@@ -14,14 +12,12 @@ const calculateDocInfo = (state: EditorState): DocInfo => {
 
 const StatusBar = ({ docInfo }: { docInfo: DocInfo }) => {
   return (
-    <div className={styles.info}>
-      <div className={styles.left}>
-        <DiagnosticsCount />
-      </div>
+    <div className="flex justify-between rounded-b-lg bg-gray-dark p-1.5">
+      <DiagnosticsCount />
 
-      <div className={styles.right}>
+      <div className="flex items-center gap-x-3 *:leading-none">
         <p>{docInfo.length} chars</p>
-        <p className={styles.lineColumn}>
+        <p>
           Ln {docInfo.line}, Col {docInfo.column}
         </p>
       </div>

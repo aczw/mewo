@@ -34,8 +34,6 @@ import type { Selection } from "../../engine/engine";
 import { calculateDocInfo, type DocInfo, StatusBar } from "./status-bar";
 import { Toolbar } from "./toolbar";
 
-import styles from "./editor.module.css";
-
 type Callbacks = {
   onDocChanged: (source: string) => void;
   onSelectionChanged: (state: EditorState) => void;
@@ -187,7 +185,7 @@ const Editor = () => {
   return (
     <div className="flex h-full flex-col p-1.5">
       <Toolbar />
-      <div className={styles.wrapper} ref={parentRef} />
+      <div className="grow" ref={parentRef} />
       <StatusBar docInfo={docInfo} />
     </div>
   );

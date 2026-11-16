@@ -1,8 +1,8 @@
 import { Group, Panel } from "react-resizable-panels";
 
 import { Controller } from "./controller";
-import { CompilationStatus } from "./editor/compilation-status";
-import { Editor } from "./editor/editor";
+import { CompilationStatus } from "./left/compilation-status";
+import { Editor } from "./left/editor";
 import { TitleBar } from "./title-bar";
 import { Viewport } from "./viewport";
 
