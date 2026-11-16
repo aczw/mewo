@@ -183,7 +183,7 @@ const Editor = () => {
   }, [engine, extensions, passes, selection]);
 
   return (
-    <div className="flex h-full flex-col p-1.5">
+    <div className="flex h-full flex-col py-1.5 pr-0.75 pl-1.5">
       <Toolbar />
       <div className="grow" ref={parentRef} />
       <StatusBar docInfo={docInfo} />

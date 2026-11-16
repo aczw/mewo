@@ -1,10 +1,10 @@
+import { Toolbar } from "@base-ui/react";
 import { ExpandIcon, FocusIcon, PauseIcon, PlayIcon, RotateCcwIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import { useEngine, useEngineSnapshot } from "../engine/context";
+import { kIconSize } from "../scripts/constants";
 import { FpsCounter } from "../scripts/fps-counter";
-
-import styles from "./viewport.module.css";
 
 const Viewport = () => {
   const engine = useEngine();
@@ -33,60 +33,64 @@ const Viewport = () => {
   }, [engine]);
 
   return (
-    <div className={styles.viewport}>
-      <canvas id="mewo" ref={canvasRef}></canvas>
+    <div className="flex flex-col py-1.5 pr-1.5 pl-0.75">
+      <Toolbar.Root className="flex justify-between rounded-t-lg bg-gray-light p-1.5">
+        <Toolbar.Button className="btn btn-icon hover:bg-gray-med">
+          <FocusIcon size={kIconSize} />
+          Capture
+        </Toolbar.Button>
+        <Toolbar.Button className="btn hover:bg-gray-med">Viewport</Toolbar.Button>
+      </Toolbar.Root>
 
-      <div className={styles.info}>
-        <p>
+      <canvas id="mewo" ref={canvasRef} className="aspect-video h-auto w-full"></canvas>
+
+      <div className="flex justify-between bg-gray-dark p-1.5">
+        <p className="leading-none">
           <span ref={timeRef}>0.0</span>
-          <span className={styles.unit}>s</span>
+          <span className="text-fg-light">s</span>
         </p>
 
-        <div className={styles.infoRight}>
+        <div className="flex gap-x-3 *:leading-none">
           <p>
-            <span ref={fpsRef}>0.0</span> <span className={styles.unit}>FPS</span>
+            <span ref={fpsRef}>0.0</span> <span className="text-fg-light">FPS</span>
           </p>
           <p>
             <span ref={widthRef}>0</span>
-            <span className={styles.unit}>×</span>
+            <span className="text-fg-light">×</span>
             <span ref={heightRef}>0</span>
           </p>
         </div>
       </div>
 
-      <div className={styles.controls}>
-        <div className={styles.controlsGroup}>
-          <button onClick={() => engine.setPaused(!paused)} className={styles.playPause}>
+      <Toolbar.Root className="flex justify-between rounded-b-lg bg-gray-light p-1.5">
+        <Toolbar.Group className="flex">
+          <Toolbar.Button className="btn btn-icon hover:bg-gray-med">
+            <RotateCcwIcon size={kIconSize} />
+          </Toolbar.Button>
+
+          <Toolbar.Button
+            className="btn btn-icon w-21 hover:bg-gray-med"
+            onClick={() => engine.setPaused(!paused)}
+          >
             {paused ? (
               <>
-                <PlayIcon size="var(--icon)" />
-                <span className={styles.hiddenWhenSmall}>Play</span>
+                <PlayIcon size={kIconSize} />
+                Play
               </>
             ) : (
               <>
-                <PauseIcon size="var(--icon)" />
-                <span className={styles.hiddenWhenSmall}>Pause</span>
+                <PauseIcon size={kIconSize} />
+                Pause
               </>
             )}
-          </button>
+          </Toolbar.Button>
+        </Toolbar.Group>
 
-          <button className={styles.button}>
-            <RotateCcwIcon size="var(--icon)" />
-            <span className={styles.hiddenWhenSmall}>Reset</span>
-          </button>
-        </div>
-
-        <div className={styles.controlsGroup}>
-          <button className={styles.button}>
-            <FocusIcon size="var(--icon)" />
-            <span className={styles.hiddenWhenSmall}>Capture</span>
-          </button>
-          <button className={styles.button}>
-            <ExpandIcon size="var(--icon)" />
-            <span className={styles.hiddenWhenSmall}>Fullscreen</span>
-          </button>
-        </div>
-      </div>
+        <Toolbar.Button className="btn btn-icon hover:bg-gray-med">
+          <ExpandIcon size={kIconSize} />
+          Fullscreen
+        </Toolbar.Button>
+      </Toolbar.Root>
     </div>
   );
 };
