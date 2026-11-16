@@ -31,7 +31,8 @@ import { useEffect, useRef, useState } from "react";
 
 import { useEngine, useEngineSnapshot } from "../../engine/context";
 import type { Selection } from "../../engine/engine";
-import { calculateDocInfo, type DocInfo, Info } from "./info";
+import { calculateDocInfo, type DocInfo, StatusBar } from "./status-bar";
+import { Toolbar } from "./toolbar";
 
 import styles from "./editor.module.css";
 
@@ -103,8 +104,8 @@ const createExtensions = (cb: Callbacks): Extension[] => [
     "&.cm-focused": { outline: "none" },
     ".cm-scroller": { overflow: "auto", fontFamily: "var(--font-code)", fontSize: "0.85rem" },
     ".cm-gutters": {
-      backgroundColor: "var(--bg-secondary)",
-      color: "var(--fg-med)",
+      backgroundColor: "var(--color-gray-dark)",
+      color: "var(--color-fg-light)",
       border: "none",
     },
     ".cm-content": { backgroundColor: "white" },
@@ -184,10 +185,11 @@ const Editor = () => {
   }, [engine, extensions, passes, selection]);
 
   return (
-    <>
+    <div className="flex h-full flex-col p-1.5">
+      <Toolbar />
       <div className={styles.wrapper} ref={parentRef} />
-      <Info docInfo={docInfo} />
-    </>
+      <StatusBar docInfo={docInfo} />
+    </div>
   );
 };
 

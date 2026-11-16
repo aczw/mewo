@@ -1,6 +1,5 @@
 import type { EditorState } from "@codemirror/state";
 
-import { CompilationStatus } from "./compilation-status";
 import { DiagnosticsCount } from "./diagnostics-count";
 
 import styles from "./info.module.css";
@@ -13,12 +12,11 @@ const calculateDocInfo = (state: EditorState): DocInfo => {
   return { line: line.number, column: head - line.from + 1, length: state.doc.length };
 };
 
-const Info = ({ docInfo }: { docInfo: DocInfo }) => {
+const StatusBar = ({ docInfo }: { docInfo: DocInfo }) => {
   return (
     <div className={styles.info}>
       <div className={styles.left}>
         <DiagnosticsCount />
-        <CompilationStatus />
       </div>
 
       <div className={styles.right}>
@@ -31,4 +29,4 @@ const Info = ({ docInfo }: { docInfo: DocInfo }) => {
   );
 };
 
-export { Info, calculateDocInfo, type DocInfo };
+export { StatusBar, calculateDocInfo, type DocInfo };

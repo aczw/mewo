@@ -1,0 +1,9 @@
+@layer components {
+  .btn {
+    @apply rounded-full px-2.5 py-1.5 leading-none font-medium;
+
+    &.btn-icon-right {
+      @apply flex items-center gap-x-1 pr-1.5 pl-2.5;
+    }
+  }
+}
