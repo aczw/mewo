@@ -105,6 +105,13 @@ void mewo_session_set_paused(mewo_session_t* session, bool paused);
 bool mewo_session_is_paused(mewo_session_t* session);
 
 /**
+ * Resets the session's playback time and frame number to 0.
+ *
+ * @param session Pointer to the session.
+ */
+void mewo_session_reset(mewo_session_t* session);
+
+/**
  * Each time the compile status or diagnostics of a pass change, the revision count is incremented.
  * Use this to check if the status of any pass in the session has changed.
  *

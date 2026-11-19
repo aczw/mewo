@@ -129,6 +129,7 @@ const Mewo = {
   sessionIsPaused: Module.cwrap("mewo_web_session_is_paused", "boolean", ["number"]) as (
     session: Ptr,
   ) => boolean,
+  sessionReset: Module.cwrap("mewo_web_session_reset", null, ["number"]) as (session: Ptr) => void,
   sessionGetPassStatusRevision: Module.cwrap(
     "mewo_web_session_get_pass_status_revision",
     "number",

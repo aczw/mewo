@@ -271,6 +271,9 @@ EMSCRIPTEN_KEEPALIVE
 bool mewo_web_session_is_paused(mewo_session_t* session) { return mewo_session_is_paused(session); }
 
 EMSCRIPTEN_KEEPALIVE
+void mewo_web_session_reset(mewo_session_t* session) { mewo_session_reset(session); }
+
+EMSCRIPTEN_KEEPALIVE
 double mewo_web_session_get_pass_status_revision(mewo_session_t* session) {
   return (double)mewo_session_get_pass_status_revision(session);
 }

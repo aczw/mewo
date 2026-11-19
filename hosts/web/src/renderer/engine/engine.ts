@@ -146,6 +146,10 @@ class Engine implements Disposable {
     this.#emit();
   }
 
+  reset(): void {
+    this.#sessionHolder.value?.reset();
+  }
+
   createSurfaceAndAttachCanvas(canvas: HTMLCanvasElement): () => void {
     if (this.#surface !== null) throw new Error("canvas is already attached");
 

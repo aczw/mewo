@@ -38,6 +38,10 @@ class Session implements Disposable {
     Mewo.sessionSetPaused(this.handle, paused);
   }
 
+  reset(): void {
+    Mewo.sessionReset(this.handle);
+  }
+
   getPassStatusRevision(): number {
     return Mewo.sessionGetPassStatusRevision(this.handle);
   }

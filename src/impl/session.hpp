@@ -36,6 +36,11 @@ class Session : private Pinned {
 
   void set_is_paused(bool is_paused) { is_paused_ = is_paused; }
 
+  void reset() {
+    elapsed_ = 0;
+    frame_number_ = 0;
+  }
+
   Revision pass_status_revision() const { return pass_status_revision_; }
 
   PassState* get_state(Pass::Id pass_id);

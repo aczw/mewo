@@ -98,6 +98,11 @@ bool mewo_session_is_paused(mewo_session_t* session) {
   return session->impl->is_paused();
 }
 
+void mewo_session_reset(mewo_session_t* session) {
+  assert(session);
+  session->impl->reset();
+}
+
 uint64_t mewo_session_get_pass_status_revision(mewo_session_t* session) {
   assert(session);
   return session->impl->pass_status_revision();
