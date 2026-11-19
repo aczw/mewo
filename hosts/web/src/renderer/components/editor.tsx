@@ -122,9 +122,11 @@ const Editor = () => {
   const toolbarContentRef = useRef<HTMLDivElement>(null);
 
   const toolbarPanelRef = usePanelRef();
+  const statusBarRef = usePanelRef();
 
   const [docInfo, setDocInfo] = useState<DocInfo>({ line: 1, column: 1, length: 0 });
   const [tab, setTab] = useState<ToolbarTab>(null);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [extensions] = useState(() =>
     createExtensions({
       onDocChanged: (source) => {
@@ -198,6 +200,17 @@ const Editor = () => {
     }
   }, [tab]);
 
+  const toggleDiagnostics = (show: boolean) => {
+    const panel = statusBarRef.current;
+    if (panel === null) return;
+
+    if (show) {
+      panel.resize(128);
+    } else {
+      panel.collapse();
+    }
+  };
+
   return (
     <div className="flex h-full flex-col">
       <Group orientation="vertical">
@@ -206,11 +219,22 @@ const Editor = () => {
         </Panel>
 
         <Panel>
-          <div className="h-full" ref={parentRef} />
+          <div className="h-full border-b border-b-border" ref={parentRef} />
         </Panel>
 
-        <Panel minSize={36} defaultSize={36}>
-          <StatusBar docInfo={docInfo} />
+        <Panel
+          collapsible
+          collapsedSize={37}
+          minSize={96}
+          defaultSize={37}
+          panelRef={statusBarRef}
+          onResize={() => setShowDiagnostics(!statusBarRef.current!.isCollapsed())}
+        >
+          <StatusBar
+            docInfo={docInfo}
+            showDiagnostics={showDiagnostics}
+            setShowDiagnostics={toggleDiagnostics}
+          />
         </Panel>
       </Group>
     </div>

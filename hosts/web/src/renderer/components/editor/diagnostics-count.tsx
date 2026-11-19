@@ -5,7 +5,12 @@ import { MewoDiagnosticSeverity, MewoDiagnosticSource } from "../../../mewo/type
 import { useEngineSnapshot } from "../../engine/context";
 import { kIconSize } from "../../scripts/constants";
 
-const DiagnosticsCount = () => {
+type Props = {
+  showDiagnostics: boolean;
+  setShowDiagnostics: (show: boolean) => void;
+};
+
+const DiagnosticsCount = ({ showDiagnostics, setShowDiagnostics }: Props) => {
   const { passes, selection, commonDiagnostics } = useEngineSnapshot();
 
   const diagnostics =
@@ -19,7 +24,10 @@ const DiagnosticsCount = () => {
     diagnostics?.filter((diag) => diag.severity === severity).length.toString() ?? "?";
 
   return (
-    <Button className="btn bg-gray-med hover:bg-gray-light">
+    <Button
+      className={() => (showDiagnostics ? "btn bg-overlay" : "btn hover:bg-overlay")}
+      onClick={() => setShowDiagnostics(!showDiagnostics)}
+    >
       <ul className="flex gap-x-2 *:flex *:gap-x-1">
         <li>
           <OctagonXIcon size={kIconSize} />
