@@ -1,13 +1,11 @@
 import { useEngineSnapshot } from "../engine/context";
 import { PassRow } from "./pass-row";
 
-import styles from "./pass-list.module.css";
-
 const PassList = () => {
   const { passes, selection } = useEngineSnapshot();
 
   return (
-    <ul className={styles.passList}>
+    <ul className="min-h-0 grow overflow-y-auto">
       {passes.map((pass, index) => (
         <PassRow
           key={pass.id}

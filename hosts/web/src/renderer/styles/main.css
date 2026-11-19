@@ -34,7 +34,7 @@
 
   html,
   body {
-    @apply relative h-full cursor-default overflow-hidden bg-surface font-ui text-fg-normal select-none *:scrollbar-thin;
+    @apply relative h-full cursor-default overflow-hidden bg-surface font-ui text-fg-normal select-none **:scrollbar-thin;
 
     #root {
       @apply isolate flex h-full flex-col;

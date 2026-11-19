@@ -1,9 +1,9 @@
-import { ArrowDownIcon, ArrowUpIcon, XIcon } from "lucide-react";
+import { Button } from "@base-ui/react";
+import { ArrowDownIcon, ArrowUpIcon, PencilIcon, XIcon } from "lucide-react";
 
 import type { Pass } from "../../mewo/types";
 import { useEngine, useEngineSnapshot } from "../engine/context";
-
-import styles from "./pass-row.module.css";
+import { kIconSize } from "../scripts/constants";
 
 type Props = {
   index: number;
@@ -17,32 +17,50 @@ const PassRow = ({ index, pass, active, canDelete }: Props) => {
   const { passes } = useEngineSnapshot();
 
   return (
-    <li className={styles.passRow}>
-      {active ? (
-        <div className={styles.active}>
-          <span className={styles.index}>{index}</span>
-          {pass.name}
-        </div>
-      ) : (
-        <button onClick={() => engine.selectPass(pass.id)} className={styles.inactive}>
-          <span className={styles.index}>{index}</span>
-          {pass.name}
+    <li
+      className="relative flex items-center justify-between border-b border-b-border p-1.5 hover:bg-base data-[active='true']:bg-base"
+      data-active={active}
+    >
+      <div className="flex items-center">
+        <p className="px-1.5 text-fg-subtle">{index}</p>
+
+        {active ? (
+          <Button className="btn btn-icon group hover:bg-overlay">
+            {pass.name} <PencilIcon size={kIconSize} className="hidden group-hover:block" />
+          </Button>
+        ) : (
+          <button
+            className="btn after:absolute after:inset-0"
+            onClick={() => engine.selectPass(pass.id)}
+          >
+            {pass.name}
+          </button>
+        )}
+      </div>
+
+      <div className="flex items-center">
+        <button
+          disabled={index === 1}
+          className="btn z-1 not-disabled:hover:bg-overlay disabled:text-fg-subtle"
+        >
+          <ArrowUpIcon size={kIconSize} />
         </button>
-      )}
-      <button className={styles.buttonIcon} data-disabled={index === 1}>
-        <ArrowUpIcon size="var(--icon)" />
-      </button>
-      <button className={styles.buttonIcon} data-disabled={index === passes.length}>
-        <ArrowDownIcon size="var(--icon)" />
-      </button>
-      <button
-        disabled={!canDelete}
-        onClick={() => engine.removePass(pass.id)}
-        className={styles.buttonIcon}
-        data-disabled={canDelete ? "false" : "true"}
-      >
-        <XIcon size="var(--icon)" />
-      </button>
+
+        <button
+          disabled={index === passes.length}
+          className="btn z-1 not-disabled:hover:bg-overlay disabled:text-fg-subtle"
+        >
+          <ArrowDownIcon size={kIconSize} />
+        </button>
+
+        <button
+          disabled={!canDelete}
+          onClick={() => engine.removePass(pass.id)}
+          className="btn z-1 not-disabled:hover:bg-overlay disabled:text-fg-subtle"
+        >
+          <XIcon size={kIconSize} />
+        </button>
+      </div>
     </li>
   );
 };

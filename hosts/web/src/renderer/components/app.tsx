@@ -18,7 +18,7 @@ const App = () => {
             <Compilation />
           </Panel>
 
-          <Panel className="flex flex-col overflow-y-auto">
+          <Panel className="flex flex-col">
             <Viewport />
             <Controller />
           </Panel>

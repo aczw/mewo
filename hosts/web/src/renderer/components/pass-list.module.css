@@ -1,6 +1,0 @@
-.passList {
-  display: flex;
-  flex-direction: column;
-  row-gap: var(--pad);
-  margin-bottom: var(--pad);
-}
