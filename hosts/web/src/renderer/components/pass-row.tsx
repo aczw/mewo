@@ -22,7 +22,7 @@ const PassRow = ({ index, pass, active, canDelete }: Props) => {
       data-active={active}
     >
       <div className="flex items-center">
-        <p className="px-1.5 text-fg-subtle">{index}</p>
+        <p className="px-1.5 text-fg-subtle">{index + 1}</p>
 
         {active ? (
           <Button className="btn btn-icon group hover:bg-overlay">
@@ -40,14 +40,16 @@ const PassRow = ({ index, pass, active, canDelete }: Props) => {
 
       <div className="flex items-center">
         <button
-          disabled={index === 1}
+          disabled={index === 0}
+          onClick={() => engine.movePass(pass.id, index - 1)}
           className="btn z-1 not-disabled:hover:bg-overlay disabled:text-fg-subtle"
         >
           <ArrowUpIcon size={kIconSize} />
         </button>
 
         <button
-          disabled={index === passes.length}
+          disabled={index === passes.length - 1}
+          onClick={() => engine.movePass(pass.id, index + 1)}
           className="btn z-1 not-disabled:hover:bg-overlay disabled:text-fg-subtle"
         >
           <ArrowDownIcon size={kIconSize} />

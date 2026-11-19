@@ -109,6 +109,11 @@ class Engine implements Disposable {
     this.#emit();
   }
 
+  movePass(passId: PassId, newIndex: number): void {
+    this.#project.movePass(passId, newIndex);
+    this.#emit();
+  }
+
   selectCommon(): void {
     this.#selection = { kind: "common" };
     this.#emit();
