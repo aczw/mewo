@@ -103,11 +103,11 @@ const createExtensions = (cb: Callbacks): Extension[] => [
     "&.cm-focused": { outline: "none" },
     ".cm-scroller": { overflow: "auto", fontFamily: "var(--font-code)", fontSize: "0.90rem" },
     ".cm-gutters": {
-      backgroundColor: "var(--color-gray-dark)",
-      color: "var(--color-fg-light)",
+      backgroundColor: "var(--color-base)",
+      color: "var(--color-fg-subtle)",
       border: "none",
     },
-    ".cm-content": { backgroundColor: "white" },
+    ".cm-content": { backgroundColor: "var(--color-surface)" },
   }),
 ];
 
@@ -204,9 +204,11 @@ const Editor = () => {
         <Panel minSize={36} defaultSize={36} disabled={tab === null} panelRef={toolbarPanelRef}>
           <Toolbar tab={tab} onTabChange={setTab} contentRef={toolbarContentRef} />
         </Panel>
+
         <Panel>
           <div className="h-full" ref={parentRef} />
         </Panel>
+
         <Panel minSize={36} defaultSize={36}>
           <StatusBar docInfo={docInfo} />
         </Panel>
