@@ -1,5 +1,12 @@
 import { Toolbar } from "@base-ui/react";
-import { ExpandIcon, FocusIcon, PauseIcon, PlayIcon, RotateCcwIcon } from "lucide-react";
+import {
+  ExpandIcon,
+  FocusIcon,
+  PauseIcon,
+  PlayIcon,
+  ProportionsIcon,
+  RotateCcwIcon,
+} from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import { useEngine, useEngineSnapshot } from "../engine/context";
@@ -33,60 +40,64 @@ const Viewport = () => {
   }, [engine]);
 
   return (
-    <div className="flex flex-col py-1.5 pr-1.5 pl-0.75">
-      <Toolbar.Root className="flex justify-between rounded-t-lg bg-gray-light p-1.5">
-        <Toolbar.Button className="btn btn-icon hover:bg-gray-med">
+    <div className="flex flex-col border-b border-b-border">
+      <Toolbar.Root className="flex justify-between border-b border-b-border bg-base p-1.5">
+        <Toolbar.Button className="btn btn-icon hover:bg-overlay">
           <FocusIcon size={kIconSize} />
-          Capture
+          Capture...
         </Toolbar.Button>
-        <Toolbar.Button className="btn hover:bg-gray-med">Viewport</Toolbar.Button>
+
+        <Toolbar.Group className="flex items-center gap-x-4 *:leading-none">
+          <p>
+            <span ref={fpsRef}>0.0</span> <span className="text-fg-subtle">FPS</span>
+          </p>
+          <p>
+            <span ref={widthRef}>0</span>
+            <span className="text-fg-subtle">×</span>
+            <span ref={heightRef}>0</span>
+          </p>
+
+          <Toolbar.Button className="btn btn-icon hover:bg-overlay">
+            <ProportionsIcon size={kIconSize} />
+            Viewport...
+          </Toolbar.Button>
+        </Toolbar.Group>
       </Toolbar.Root>
 
       <canvas id="mewo" ref={canvasRef} className="aspect-video h-auto w-full"></canvas>
 
-      <div className="flex justify-between bg-gray-dark p-1.5">
-        <p className="leading-none">
-          <span ref={timeRef}>0.0</span>
-          <span className="text-fg-light">s</span>
-        </p>
+      <Toolbar.Root className="bg-gray-light flex justify-between rounded-b-lg p-1.5">
+        <Toolbar.Group className="flex items-center gap-x-2">
+          <div className="flex items-center gap-x-1">
+            <Toolbar.Button
+              className="btn btn-icon btn-accent w-22"
+              onClick={() => engine.setPaused(!paused)}
+            >
+              {paused ? (
+                <>
+                  <PlayIcon size={kIconSize} />
+                  Play
+                </>
+              ) : (
+                <>
+                  <PauseIcon size={kIconSize} />
+                  Pause
+                </>
+              )}
+            </Toolbar.Button>
 
-        <div className="flex gap-x-3 *:leading-none">
-          <p>
-            <span ref={fpsRef}>0.0</span> <span className="text-fg-light">FPS</span>
+            <Toolbar.Button className="btn hover:bg-overlay">
+              <RotateCcwIcon size={kIconSize} />
+            </Toolbar.Button>
+          </div>
+
+          <p className="leading-none">
+            <span ref={timeRef}>0.0</span>
+            <span className="text-fg-subtle">s</span>
           </p>
-          <p>
-            <span ref={widthRef}>0</span>
-            <span className="text-fg-light">×</span>
-            <span ref={heightRef}>0</span>
-          </p>
-        </div>
-      </div>
-
-      <Toolbar.Root className="flex justify-between rounded-b-lg bg-gray-light p-1.5">
-        <Toolbar.Group className="flex">
-          <Toolbar.Button className="btn btn-icon hover:bg-gray-med">
-            <RotateCcwIcon size={kIconSize} />
-          </Toolbar.Button>
-
-          <Toolbar.Button
-            className="btn btn-icon w-21 hover:bg-gray-med"
-            onClick={() => engine.setPaused(!paused)}
-          >
-            {paused ? (
-              <>
-                <PlayIcon size={kIconSize} />
-                Play
-              </>
-            ) : (
-              <>
-                <PauseIcon size={kIconSize} />
-                Pause
-              </>
-            )}
-          </Toolbar.Button>
         </Toolbar.Group>
 
-        <Toolbar.Button className="btn btn-icon hover:bg-gray-med">
+        <Toolbar.Button className="btn btn-icon hover:bg-overlay">
           <ExpandIcon size={kIconSize} />
           Fullscreen
         </Toolbar.Button>
