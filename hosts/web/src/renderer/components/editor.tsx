@@ -214,7 +214,13 @@ const Editor = () => {
   return (
     <div className="flex h-full flex-col">
       <Group orientation="vertical">
-        <Panel minSize={36} defaultSize={36} disabled={tab === null} panelRef={toolbarPanelRef}>
+        <Panel
+          minSize={36}
+          defaultSize={36}
+          disabled={tab === null}
+          panelRef={toolbarPanelRef}
+          groupResizeBehavior="preserve-pixel-size"
+        >
           <Toolbar tab={tab} onTabChange={setTab} contentRef={toolbarContentRef} />
         </Panel>
 
@@ -229,6 +235,7 @@ const Editor = () => {
           defaultSize={37}
           panelRef={statusBarRef}
           onResize={() => setShowDiagnostics(!statusBarRef.current!.isCollapsed())}
+          groupResizeBehavior="preserve-pixel-size"
         >
           <StatusBar
             docInfo={docInfo}
