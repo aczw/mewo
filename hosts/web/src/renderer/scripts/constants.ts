@@ -1,3 +1,3 @@
-const kIconSize = 15;
+const kIconSize = 14;
 
 export { kIconSize };

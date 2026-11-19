@@ -29,7 +29,7 @@ const TitleBar = () => {
             onClick={() => alert("menu!")}
             className="btn btn-icon [app-region:no-drag] hover:bg-surface"
           >
-            <Wordmark className="h-(--text-base) w-auto" />
+            <Wordmark className="h-(--text-base) w-auto text-accent-base" />
             <MenuIcon className="size-(--text-base)" />
           </Button>
         )}
@@ -47,7 +47,7 @@ const TitleBar = () => {
 
       <div className="flex h-full items-center pr-4 darwin:gap-x-4">
         <p className="leading-none text-fg-subtle">Unsaved</p>
-        {window.platform === "darwin" && <Wordmark className="h-1/3 w-auto" />}
+        {window.platform === "darwin" && <Wordmark className="h-1/3 w-auto text-accent-base" />}
       </div>
     </header>
   );

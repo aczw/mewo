@@ -6,11 +6,11 @@ import {
 } from "../../../mewo/types";
 import { useEngineSnapshot } from "../../engine/context";
 
-const Pending = () => <p className="leading-none text-fg-light">Compiling...</p>;
+const Pending = () => <p className="leading-none text-fg-subtle">Compiling...</p>;
 
 const ResultLabel = ({ isSuccess, duration }: { isSuccess: boolean; duration: number }) => {
   return (
-    <p className="leading-none text-fg-light">
+    <p className="leading-none text-fg-subtle">
       {isSuccess ? "Done" : "Failed"} in {duration.toFixed(0)}ms
     </p>
   );

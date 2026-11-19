@@ -6,18 +6,18 @@ import { kIconSize } from "../../scripts/constants";
 const Run = () => {
   return (
     <div className="flex items-center gap-x-3">
-      <Button className="btn btn-icon bg-gray-light hover:bg-white">
+      <Button onClick={() => alert("run!")} className="btn btn-icon btn-accent">
         <HammerIcon size={kIconSize} />
         Run
       </Button>
 
-      <label className="flex items-center gap-x-1 leading-none font-medium">
+      <label className="flex items-center gap-x-1.5 leading-none">
         <Checkbox.Root
           defaultChecked
-          className="flex size-4 items-center justify-center rounded-sm border-[1.5px] border-fg-dark data-checked:bg-fg-dark"
+          className="flex size-4 items-center justify-center rounded-sm border border-border bg-overlay data-checked:border-none data-checked:bg-accent-base"
         >
           <Checkbox.Indicator className="data-unchecked:hidden">
-            <CheckIcon size={kIconSize} strokeWidth={3} className="text-gray-med" />
+            <CheckIcon size={kIconSize} className="text-surface" />
           </Checkbox.Indicator>
         </Checkbox.Root>
         Auto
