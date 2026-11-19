@@ -40,15 +40,15 @@ const Viewport = () => {
   }, [engine]);
 
   return (
-    <div className="flex flex-col border-b border-b-border">
+    <div className="@container flex flex-col border-b border-b-border">
       <Toolbar.Root className="flex justify-between border-b border-b-border bg-base p-1.5">
         <Toolbar.Button className="btn btn-icon hover:bg-overlay">
           <FocusIcon size={kIconSize} />
-          Capture...
+          Capture
         </Toolbar.Button>
 
         <Toolbar.Group className="flex items-center gap-x-4 *:leading-none">
-          <p>
+          <p className="@max-[24.5rem]:hidden">
             <span ref={fpsRef}>0.0</span> <span className="text-fg-subtle">FPS</span>
           </p>
           <p>
@@ -59,12 +59,16 @@ const Viewport = () => {
 
           <Toolbar.Button className="btn btn-icon hover:bg-overlay">
             <ProportionsIcon size={kIconSize} />
-            Viewport...
+            Viewport
           </Toolbar.Button>
         </Toolbar.Group>
       </Toolbar.Root>
 
-      <canvas id="mewo" ref={canvasRef} className="aspect-video h-auto w-full"></canvas>
+      <canvas
+        id="mewo"
+        ref={canvasRef}
+        className="aspect-video h-auto w-full border-b border-b-border"
+      ></canvas>
 
       <Toolbar.Root className="bg-gray-light flex justify-between rounded-b-lg p-1.5">
         <Toolbar.Group className="flex items-center gap-x-2">
@@ -86,7 +90,7 @@ const Viewport = () => {
               )}
             </Toolbar.Button>
 
-            <Toolbar.Button className="btn hover:bg-overlay">
+            <Toolbar.Button className="btn hover:bg-overlay" onClick={() => engine.reset()}>
               <RotateCcwIcon size={kIconSize} />
             </Toolbar.Button>
           </div>

@@ -11,7 +11,7 @@ const Controller = () => {
 
   return (
     <Tabs.Root defaultValue="passes" className="flex min-h-0 grow flex-col bg-base">
-      <Tabs.List className="relative z-1 flex h-[36px] shrink-0 items-center gap-x-1.5 border-b border-b-border px-1.5">
+      <Tabs.List className="relative z-1 flex h-10 shrink-0 items-center gap-x-1.5 border-b border-b-border px-1.5">
         <Tabs.Tab value="passes" className="btn not-data-active:hover:bg-overlay">
           Passes
         </Tabs.Tab>

@@ -22,7 +22,7 @@ const createWindow = () => {
     show: false,
     width: 1280,
     height: 720,
-    minWidth: 575,
+    minWidth: 525,
     minHeight: 400,
     titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "hidden",
     titleBarOverlay: { color: "#ffffff00", height: 44 },

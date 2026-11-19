@@ -18,7 +18,7 @@ const calculateDocInfo = (state: EditorState): DocInfo => {
 
 const StatusBar = ({ docInfo, showDiagnostics, setShowDiagnostics }: Props) => {
   return (
-    <div className="flex h-full flex-col bg-base">
+    <div className="@container flex h-full flex-col bg-base">
       <div className="flex shrink-0 justify-between border-b border-b-border p-1.5">
         <DiagnosticsCount
           showDiagnostics={showDiagnostics}
@@ -26,7 +26,7 @@ const StatusBar = ({ docInfo, showDiagnostics, setShowDiagnostics }: Props) => {
         />
 
         <div className="flex items-center gap-x-3 *:leading-none">
-          <p>
+          <p className="@max-[19rem]:hidden">
             {docInfo.length} <span className="text-fg-subtle">chars</span>
           </p>
           <p>

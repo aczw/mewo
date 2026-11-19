@@ -22,7 +22,7 @@ const TitleBar = () => {
   }
 
   return (
-    <header className="flex h-(--env-tb-h) w-full items-center justify-between border-b border-b-border bg-overlay tb-insets text-fg-normal tb-units [app-region:drag] **:text-(length:--text-base) **:tb-units">
+    <header className="flex h-(--env-tb-h) w-full shrink-0 items-center justify-between border-b border-b-border bg-overlay tb-insets text-fg-normal tb-units [app-region:drag] **:text-(length:--text-base) **:tb-units">
       <nav className="flex items-center gap-x-3 win32:pl-2">
         {window.platform === "win32" && (
           <Button

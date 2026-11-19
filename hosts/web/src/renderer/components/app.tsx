@@ -13,12 +13,12 @@ const App = () => {
 
       <main className="flex min-h-0 grow">
         <Group>
-          <Panel className="flex flex-col border-r border-r-border">
+          <Panel minSize="18rem" className="flex flex-col border-r border-r-border">
             <Editor />
             <Compilation />
           </Panel>
 
-          <Panel className="flex flex-col">
+          <Panel minSize="19rem" className="flex flex-col">
             <Viewport />
             <Controller />
           </Panel>
