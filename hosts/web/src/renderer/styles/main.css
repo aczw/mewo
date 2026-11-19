@@ -4,12 +4,16 @@
 
 @theme {
   --color-*: initial;
-  --color-white: #ffffff;
-  --color-gray-dark: #cdcdcd;
-  --color-gray-med: #dcdcdc;
-  --color-gray-light: #f1f1f1;
-  --color-fg-dark: #2f2f2f;
-  --color-fg-light: #6d6d6d;
+  --color-base: #F0F0F0;
+  --color-surface: #F8F8F8;
+  --color-overlay: #E4E4E4;
+  --color-fg-normal: #434343;
+  --color-fg-subtle: #737373;
+  --color-border: #D5D5D5;
+  --color-accent-dark: #3F3C55;
+  --color-accent-base: #464261;
+  --color-accent-light: #76719E;
+  --color-accent-highlight: #8C86B8;
 
   --font-*: initial;
   --font-ui: "IBM Plex Sans", system-ui, sans-serif;
@@ -18,7 +22,7 @@
 
 @layer base {
   :root {
-    font-size: 15px;
+    font-size: 14px;
 
     --env-tb-x: env(titlebar-area-x, 0px);
     --env-tb-w: env(titlebar-area-width, 100%);
@@ -30,7 +34,7 @@
 
   html,
   body {
-    @apply relative h-full cursor-default overflow-hidden bg-gray-med font-ui text-fg-dark select-none *:scrollbar-thin;
+    @apply relative h-full cursor-default overflow-hidden bg-surface font-ui text-fg-normal select-none *:scrollbar-thin;
 
     #root {
       @apply isolate flex h-full flex-col;
@@ -44,7 +48,7 @@
 /** Rescales Tailwind's units to the title bar's zoom-independent units. */
 @utility tb-units {
   --spacing: calc(var(--tb-px) * 4);
-  --text-base: calc(var(--tb-px) * 15);
+  --text-base: calc(var(--tb-px) * 14);
 }
 
 @utility tb-insets {
