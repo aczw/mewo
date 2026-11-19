@@ -1,9 +1,43 @@
 @layer components {
   .btn {
-    @apply rounded-full px-2.25 py-1.25 leading-none font-medium;
+    --btn-border: 1px;
+    --btn-box-shadow: 2px;
+
+    @apply rounded-lg px-2 py-1.5 leading-none;
 
     &.btn-icon {
-      @apply flex items-center gap-x-1;
+      @apply flex items-center gap-x-1.5;
+    }
+
+    &.btn-accent {
+      border: var(--btn-border) solid var(--color-accent-dark);
+      background: linear-gradient(
+        180deg,
+        var(--color-accent-light) 0%,
+        var(--color-accent-base) 100%
+      );
+      box-shadow: 0 var(--btn-box-shadow) 0 0 var(--color-accent-highlight) inset;
+      color: var(--color-surface);
+
+      * {
+        text-shadow: 0 1px 0 var(--color-accent-dark);
+      }
+
+      &:hover {
+        background: linear-gradient(
+          180deg,
+          var(--color-accent-base) 0%,
+          var(--color-accent-dark) 100%
+        );
+        box-shadow: 0 var(--btn-box-shadow) 0 0 var(--color-accent-base) inset;
+      }
+    }
+
+    .tb-units & {
+      --btn-border: var(--tb-px);
+      --btn-box-shadow: calc(var(--tb-px) * 2);
+
+      border-radius: calc(var(--tb-px) * 7.5);
     }
   }
 }

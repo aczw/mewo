@@ -26,10 +26,10 @@
 
     --env-tb-x: env(titlebar-area-x, 0px);
     --env-tb-w: env(titlebar-area-width, 100%);
-    --env-tb-h: env(titlebar-area-height, 40px);
+    --env-tb-h: env(titlebar-area-height, 44px);
 
     /** Used in the title bar to ignore zoom */
-    --tb-px: calc(var(--env-tb-h) / 40);
+    --tb-px: calc(var(--env-tb-h) / 44);
   }
 
   html,
