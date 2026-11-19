@@ -13,7 +13,7 @@ const App = () => {
 
       <main className="flex min-h-0 grow">
         <Group>
-          <Panel className="flex flex-col">
+          <Panel className="flex flex-col border-r border-r-border">
             <Editor />
             <Compilation />
           </Panel>

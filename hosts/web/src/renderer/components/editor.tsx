@@ -27,12 +27,13 @@ import {
   keymap,
   lineNumbers,
 } from "@codemirror/view";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Group, Panel, usePanelRef } from "react-resizable-panels";
 
 import { useEngine, useEngineSnapshot } from "../engine/context";
 import type { Selection } from "../engine/engine";
-import { calculateDocInfo, type DocInfo, StatusBar } from "./left/status-bar";
-import { Toolbar } from "./left/toolbar";
+import { calculateDocInfo, type DocInfo, StatusBar } from "./editor/status-bar";
+import { Toolbar, type ToolbarTab } from "./editor/toolbar";
 
 type Callbacks = {
   onDocChanged: (source: string) => void;
@@ -100,7 +101,7 @@ const createExtensions = (cb: Callbacks): Extension[] => [
   EditorView.theme({
     "&": { height: "100%" },
     "&.cm-focused": { outline: "none" },
-    ".cm-scroller": { overflow: "auto", fontFamily: "var(--font-code)", fontSize: "0.85rem" },
+    ".cm-scroller": { overflow: "auto", fontFamily: "var(--font-code)", fontSize: "0.90rem" },
     ".cm-gutters": {
       backgroundColor: "var(--color-gray-dark)",
       color: "var(--color-fg-light)",
@@ -118,9 +119,12 @@ const Editor = () => {
   const viewRef = useRef<EditorView | null>(null);
   const statesRef = useRef(new Map<string, EditorState>());
   const selectionRef = useRef<Selection | null>(null);
+  const toolbarContentRef = useRef<HTMLDivElement>(null);
+
+  const toolbarPanelRef = usePanelRef();
 
   const [docInfo, setDocInfo] = useState<DocInfo>({ line: 1, column: 1, length: 0 });
-
+  const [tab, setTab] = useState<ToolbarTab>(null);
   const [extensions] = useState(() =>
     createExtensions({
       onDocChanged: (source) => {
@@ -182,11 +186,31 @@ const Editor = () => {
     }
   }, [engine, extensions, passes, selection]);
 
+  useLayoutEffect(() => {
+    const panel = toolbarPanelRef.current;
+    if (panel === null) return;
+
+    if (tab === null) {
+      panel.resize(36);
+    } else {
+      // Tab list (36px) + bottom border (1px) + open panel's content
+      panel.resize(36 + 1 + toolbarContentRef.current!.offsetHeight);
+    }
+  }, [tab]);
+
   return (
-    <div className="flex h-full flex-col py-1.5 pr-0.75 pl-1.5">
-      <Toolbar />
-      <div className="grow" ref={parentRef} />
-      <StatusBar docInfo={docInfo} />
+    <div className="flex h-full flex-col">
+      <Group orientation="vertical">
+        <Panel minSize={36} defaultSize={36} disabled={tab === null} panelRef={toolbarPanelRef}>
+          <Toolbar tab={tab} onTabChange={setTab} contentRef={toolbarContentRef} />
+        </Panel>
+        <Panel>
+          <div className="h-full" ref={parentRef} />
+        </Panel>
+        <Panel minSize={36} defaultSize={36}>
+          <StatusBar docInfo={docInfo} />
+        </Panel>
+      </Group>
     </div>
   );
 };
