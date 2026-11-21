@@ -212,7 +212,7 @@ const Editor = () => {
     if (panel === null) return;
 
     if (show) {
-      panel.resize(128);
+      panel.resize(96);
     } else {
       panel.collapse();
     }

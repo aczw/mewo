@@ -1,5 +1,7 @@
 import type { EditorState } from "@codemirror/state";
 
+import { MewoDiagnosticSource } from "../../../mewo/types";
+import { useEngineSnapshot } from "../../engine/context";
 import { DiagnosticsCount } from "./diagnostics-count";
 
 type DocInfo = { line: number; column: number; length: number };
@@ -17,6 +19,16 @@ const calculateDocInfo = (state: EditorState): DocInfo => {
 };
 
 const StatusBar = ({ docInfo, showDiagnostics, setShowDiagnostics }: Props) => {
+  const { passes, selection, commonDiagnostics } = useEngineSnapshot();
+
+  const activePass =
+    selection.kind === "pass" ? passes.find((pass) => pass.id === selection.id) : undefined;
+  const hasDiagnostics =
+    selection.kind === "pass"
+      ? (activePass?.diagnostics.filter((diag) => diag.source !== MewoDiagnosticSource.Common)
+          .length ?? 0) > 0
+      : commonDiagnostics.length > 0;
+
   return (
     <div className="@container flex h-full flex-col bg-base">
       <div className="flex shrink-0 justify-between border-b border-b-border p-1.5">
@@ -40,13 +52,17 @@ const StatusBar = ({ docInfo, showDiagnostics, setShowDiagnostics }: Props) => {
 
       {showDiagnostics && (
         <div className="min-h-0 grow overflow-y-auto border-b border-b-border bg-surface p-1.5">
-          <ul>
-            <li>Diagnostics</li>
-            <li>Diagnostics</li>
-            <li>Diagnostics</li>
-            <li>Diagnostics</li>
-            <li>Diagnostics</li>
-          </ul>
+          {hasDiagnostics ? (
+            <ul>
+              <li>Diagnostics</li>
+              <li>Diagnostics</li>
+              <li>Diagnostics</li>
+              <li>Diagnostics</li>
+              <li>Diagnostics</li>
+            </ul>
+          ) : (
+            <p className="text-fg-subtle">No diagnostics.</p>
+          )}
         </div>
       )}
     </div>
