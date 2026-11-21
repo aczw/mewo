@@ -1,5 +1,5 @@
 import { Button, Tabs } from "@base-ui/react";
-import { ComponentIcon, SquarePlusIcon } from "lucide-react";
+import { AsteriskIcon, ComponentIcon, SquarePlusIcon } from "lucide-react";
 
 import { useEngine, useEngineSnapshot } from "../engine/context";
 import { kIconSize } from "../scripts/constants";
@@ -7,7 +7,7 @@ import { PassList } from "./pass-list";
 
 const Controller = () => {
   const engine = useEngine();
-  const { selection } = useEngineSnapshot();
+  const { selection, dirty } = useEngineSnapshot();
 
   return (
     <Tabs.Root defaultValue="passes" className="flex min-h-0 grow flex-col bg-base">
@@ -23,9 +23,12 @@ const Controller = () => {
       </Tabs.List>
 
       <div className="flex min-h-0 grow flex-col bg-surface">
-        <Tabs.Panel value="passes" className="flex h-full flex-col">
+        <Tabs.Panel value="passes" className="@container flex h-full flex-col">
           <div className="flex shrink-0 items-center justify-between border-b border-b-border p-1.5">
-            <Button onClick={() => engine.addPass()} className="btn btn-icon hover:bg-overlay">
+            <Button
+              onClick={() => engine.addPass()}
+              className="btn btn-icon w-1/2 hover:bg-overlay"
+            >
               <SquarePlusIcon size={kIconSize} /> Add new pass
             </Button>
 
@@ -33,11 +36,19 @@ const Controller = () => {
               onClick={() => engine.selectCommon()}
               className={() =>
                 selection.kind === "common"
-                  ? "btn btn-icon bg-overlay"
-                  : "btn btn-icon hover:bg-overlay"
+                  ? "btn flex w-1/2 justify-between bg-overlay"
+                  : "btn flex w-1/2 justify-between bg-base hover:bg-overlay"
               }
             >
-              <ComponentIcon size={kIconSize} /> Edit common
+              <span className="flex items-center gap-x-1.5">
+                <ComponentIcon size={kIconSize} /> Common
+              </span>
+              {dirty.common && (
+                <p className="text-fg-subtle">
+                  <span className="hidden @min-[21rem]:inline">Edited</span>
+                  <AsteriskIcon size={kIconSize} className="@min-[21rem]:hidden" />
+                </p>
+              )}
             </Button>
           </div>
 

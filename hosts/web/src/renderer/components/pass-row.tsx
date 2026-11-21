@@ -14,7 +14,9 @@ type Props = {
 
 const PassRow = ({ index, pass, active, canDelete }: Props) => {
   const engine = useEngine();
-  const { passes } = useEngineSnapshot();
+  const { passes, dirty } = useEngineSnapshot();
+
+  const isDirty = dirty.passes.has(pass.id);
 
   return (
     <li
@@ -39,6 +41,8 @@ const PassRow = ({ index, pass, active, canDelete }: Props) => {
       </div>
 
       <div className="flex items-center">
+        {isDirty && <p className="pr-2 text-fg-subtle">Edited</p>}
+
         <button
           disabled={index === 0}
           onClick={() => engine.movePass(pass.id, index - 1)}
