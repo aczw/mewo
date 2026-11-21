@@ -1,5 +1,6 @@
-import { Button } from "@base-ui/react";
+import { Button, Input } from "@base-ui/react";
 import { ArrowDownIcon, ArrowUpIcon, PencilIcon, XIcon } from "lucide-react";
+import { useState } from "react";
 
 import type { Pass } from "../../mewo/types";
 import { useEngine, useEngineSnapshot } from "../engine/context";
@@ -16,20 +17,49 @@ const PassRow = ({ index, pass, active, canDelete }: Props) => {
   const engine = useEngine();
   const { passes, dirty } = useEngineSnapshot();
 
+  const [isEditingName, setIsEditingName] = useState(false);
+
   const isDirty = dirty.passes.has(pass.id);
 
   return (
     <li
-      className="relative flex items-center justify-between border-b border-b-border p-1.5 hover:bg-base data-[active='true']:bg-base"
+      className="relative flex items-center justify-between gap-x-1.5 border-b border-b-border p-1.5 hover:bg-base data-[active='true']:bg-base"
       data-active={active}
     >
-      <div className="flex items-center">
-        <p className="px-1.5 text-fg-subtle">{index + 1}</p>
+      <div className="flex min-w-0 items-center">
+        <p className="shrink-0 px-1.5 text-fg-subtle">{index + 1}</p>
 
         {active ? (
-          <Button className="btn btn-icon group hover:bg-overlay">
-            {pass.name} <PencilIcon size={kIconSize} className="hidden group-hover:block" />
-          </Button>
+          isEditingName ? (
+            <Input
+              autoFocus
+              onFocus={(ev) => ev.currentTarget.select()}
+              onBlur={(ev) => {
+                const trimmed = ev.currentTarget.value.trim();
+                if (trimmed.length > 0) engine.renamePass(pass.id, trimmed);
+                setIsEditingName(false);
+              }}
+              onKeyDown={(ev) => {
+                if (ev.key === "Enter") {
+                  ev.currentTarget.blur();
+                } else if (ev.key === "Escape") {
+                  ev.currentTarget.value = pass.name;
+                  ev.currentTarget.blur();
+                }
+              }}
+              defaultValue={pass.name}
+              placeholder={pass.name}
+              className="min-w-0 rounded-md bg-surface px-2 py-0.75 leading-none text-fg-normal placeholder:text-fg-subtle focus:outline-2 focus:outline-accent-light"
+            />
+          ) : (
+            <Button
+              className="btn btn-icon group min-w-0 hover:bg-overlay"
+              onClick={() => setIsEditingName(true)}
+            >
+              <span className="truncate">{pass.name}</span>
+              <PencilIcon size={kIconSize} className="hidden shrink-0 group-hover:block" />
+            </Button>
+          )
         ) : (
           <button
             className="btn after:absolute after:inset-0"
@@ -40,7 +70,7 @@ const PassRow = ({ index, pass, active, canDelete }: Props) => {
         )}
       </div>
 
-      <div className="flex items-center">
+      <div className="flex shrink-0 items-center">
         {isDirty && <p className="pr-2 text-fg-subtle">Edited</p>}
 
         <button
