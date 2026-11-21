@@ -108,6 +108,11 @@ void Session::set_render_size(Dimensions render_size) {
   targets_.resize(device, render_size);
 }
 
+void Session::reset() {
+  elapsed_ = 0;
+  frame_number_ = 0;
+}
+
 Session::Session(
   impl::Runtime& runtime,
   impl::Project& project,

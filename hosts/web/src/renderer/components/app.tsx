@@ -1,6 +1,7 @@
 import { Group, Panel } from "react-resizable-panels";
 
-import { Compilation } from "./compilation.tsx";
+import { Run } from "./compilation/run.tsx";
+import { Status } from "./compilation/status.tsx";
 import { Controller } from "./controller";
 import { Editor } from "./editor";
 import { TitleBar } from "./title-bar";
@@ -15,7 +16,11 @@ const App = () => {
         <Group>
           <Panel minSize="18rem" className="flex flex-col border-r border-r-border">
             <Editor />
-            <Compilation />
+
+            <div className="flex items-center justify-between p-1.5">
+              <Run />
+              <Status />
+            </div>
           </Panel>
 
           <Panel minSize="19rem" className="flex flex-col">

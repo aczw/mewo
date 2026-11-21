@@ -59,6 +59,8 @@ class Project : private Pinned {
  private:
   Project() = default;
 
+  Pass* find_pass(Pass::Id pass_id);
+
   /**
    * Single source of truth for the order in which passes operate.
    */

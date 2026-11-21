@@ -79,8 +79,8 @@ bool Project::move_pass(Pass::Id pass_id, uint32_t new_index) {
 bool Project::set_pass_source(Pass::Id pass_id, std::string new_source) {
   assert(passes_.size() >= 1 && "project does not have at least 1 pass");
 
-  if (auto pass_it = std::ranges::find(passes_, pass_id, &Pass::id); pass_it != passes_.end()) {
-    pass_it->set_source(std::move(new_source));
+  if (Pass* pass = find_pass(pass_id); pass) {
+    pass->set_source(std::move(new_source));
     return true;
   }
 
@@ -88,8 +88,8 @@ bool Project::set_pass_source(Pass::Id pass_id, std::string new_source) {
 }
 
 bool Project::set_pass_name(Pass::Id pass_id, std::string new_name) {
-  if (auto pass_it = std::ranges::find(passes_, pass_id, &Pass::id); pass_it != passes_.end()) {
-    pass_it->set_name(std::move(new_name));
+  if (Pass* pass = find_pass(pass_id); pass) {
+    pass->set_name(std::move(new_name));
     return true;
   }
 
@@ -97,10 +97,16 @@ bool Project::set_pass_name(Pass::Id pass_id, std::string new_name) {
 }
 
 void Project::set_common_source(std::string new_source) {
-  assert(passes_.size() >= 1 && "project does not have at least 1 pass");
+  if (common_source_ == new_source)
+    return;
 
   common_source_ = std::move(new_source);
   common_revision_ += 1;
+}
+
+Pass* Project::find_pass(Pass::Id pass_id) {
+  auto pass_it = std::ranges::find(passes_, pass_id, &Pass::id);
+  return pass_it != passes_.end() ? std::to_address(pass_it) : nullptr;
 }
 
 }  // namespace mewo::impl

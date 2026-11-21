@@ -28,6 +28,11 @@ type EngineSnapshot = {
   selection: Selection;
   paused: boolean;
   commonDiagnostics: CommonDiagnostic[];
+  autoCompile: boolean;
+  dirty: {
+    passes: ReadonlySet<PassId>;
+    common: boolean;
+  };
 };
 type FrameStats = { deltaTime: number; sessionTime: number; dimensions: Dimensions };
 
@@ -57,6 +62,10 @@ class Engine implements Disposable {
 
   #rafId = 0;
   #prevFrameTime: number | null = null;
+
+  #autoCompile = true;
+  readonly #pendingPasses = new Map<PassId, string>();
+  #pendingCommon: string | null = null;
 
   constructor() {
     this.#runtime = this.#stack.use(new Runtime());
@@ -101,6 +110,8 @@ class Engine implements Disposable {
     if (this.#selection.kind === "pass" && passId === this.#selection.id)
       this.#selection = { kind: "pass", id: this.#project.getPassId(0)! };
 
+    this.#pendingPasses.delete(passId);
+
     this.#emit();
   }
 
@@ -124,20 +135,54 @@ class Engine implements Disposable {
     this.#emit();
   }
 
-  getCommonSource(): string {
+  getCommittedCommonSource(): string {
     return this.#project.getCommonSource();
   }
 
-  setCommonSource(source: string): void {
-    this.#project.setCommonSource(source);
+  editCommonSource(source: string): void {
+    if (this.#autoCompile) {
+      this.#project.setCommonSource(source);
+      return;
+    }
+
+    const wasClean = this.#pendingCommon === null;
+    this.#pendingCommon = source;
+    if (wasClean) this.#emit();
   }
 
-  getPassSource(passId: PassId): string {
+  getCommittedPassSource(passId: PassId): string {
     return this.#project.getPassSource(passId);
   }
 
-  setPassSource(passId: PassId, source: string): void {
-    this.#project.setPassSource(passId, source);
+  editPassSource(passId: PassId, source: string): void {
+    if (this.#autoCompile) {
+      this.#project.setPassSource(passId, source);
+      return;
+    }
+
+    const wasClean = !this.#pendingPasses.has(passId);
+    this.#pendingPasses.set(passId, source);
+    if (wasClean) this.#emit();
+  }
+
+  compile(): void {
+    if (this.#pendingPasses.size === 0 && this.#pendingCommon === null) return;
+
+    for (const [passId, source] of this.#pendingPasses) {
+      this.#project.setPassSource(passId, source);
+    }
+
+    if (this.#pendingCommon !== null) this.#project.setCommonSource(this.#pendingCommon);
+
+    this.#pendingPasses.clear();
+    this.#pendingCommon = null;
+    this.#emit();
+  }
+
+  setAutoCompile(autoCompile: boolean): void {
+    this.#autoCompile = autoCompile;
+    if (autoCompile) this.compile();
+    this.#emit();
   }
 
   setPaused(paused: boolean): void {
@@ -268,6 +313,11 @@ class Engine implements Disposable {
       selection: this.#selection,
       paused: this.#paused,
       commonDiagnostics: [...byKey.values()].sort((a, b) => a.line - b.line || a.column - b.column),
+      autoCompile: this.#autoCompile,
+      dirty: {
+        passes: new Set(this.#pendingPasses.keys()),
+        common: this.#pendingCommon !== null,
+      },
     };
   }
 

@@ -130,12 +130,13 @@ const Editor = () => {
   const [extensions] = useState(() =>
     createExtensions({
       onDocChanged: (source) => {
-        if (selectionRef.current === null) return;
+        const selection = selectionRef.current;
+        if (selection === null) return;
 
-        if (selectionRef.current.kind === "pass") {
-          engine.setPassSource(selectionRef.current.id, source);
+        if (selection.kind === "pass") {
+          engine.editPassSource(selection.id, source);
         } else {
-          engine.setCommonSource(source);
+          engine.editCommonSource(source);
         }
       },
       onSelectionChanged: (state) => setDocInfo(calculateDocInfo(state)),
@@ -172,11 +173,17 @@ const Editor = () => {
       alive.add(passKey);
 
       if (!states.has(passKey))
-        states.set(passKey, EditorState.create({ doc: engine.getPassSource(id), extensions }));
+        states.set(
+          passKey,
+          EditorState.create({ doc: engine.getCommittedPassSource(id), extensions }),
+        );
     }
 
     if (!states.has(commonKey))
-      states.set(commonKey, EditorState.create({ doc: engine.getCommonSource(), extensions }));
+      states.set(
+        commonKey,
+        EditorState.create({ doc: engine.getCommittedCommonSource(), extensions }),
+      );
 
     for (const key of states.keys()) if (!alive.has(key)) states.delete(key);
 
