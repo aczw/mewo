@@ -97,9 +97,6 @@ bool Project::set_pass_name(Pass::Id pass_id, std::string new_name) {
 }
 
 void Project::set_common_source(std::string new_source) {
-  if (common_source_ == new_source)
-    return;
-
   common_source_ = std::move(new_source);
   common_revision_ += 1;
 }

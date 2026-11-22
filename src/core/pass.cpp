@@ -6,9 +6,6 @@
 namespace mewo {
 
 void Pass::set_source(std::string new_source) {
-  if (source_ == new_source)
-    return;
-
   source_ = std::move(new_source);
   revision_ += 1;
 }

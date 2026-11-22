@@ -21,6 +21,8 @@ add_library(mewo STATIC
   core/pass.cpp
   core/pass.hpp
   core/pinned.hpp
+  core/validation.cpp
+  core/validation.hpp
 
   impl/common/dimensions.hpp
   impl/common/string.cpp
