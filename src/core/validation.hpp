@@ -16,4 +16,7 @@ namespace mewo {
  */
 bool is_valid_name(std::string_view name);
 
+/** Compares two strings, treating ASCII letters case-insensitively. */
+bool equals_ignore_case(std::string_view a, std::string_view b);
+
 }  // namespace mewo

@@ -50,9 +50,20 @@ typedef struct mewo_project_descriptor {
 } mewo_project_descriptor_t;
 
 /**
+ * Pass names become file names when a project is saved, so they must be valid on every OS:
+ *
+ * - 1 to 64 characters.
+ * - Only ASCII letters and digits, space, `_`, `-`, `(`, `)`, `+`, and `.`
+ * - No leading or trailing space or `.`
+ * - Not a Windows reserved device name (`CON`, `PRN`, `AUX`, `NUL`, `COM0`-`COM9`,
+ *   `LPT0`-`LPT9`), compared case-insensitively against the part before the first `.`
+ * - Unique within the project, compared case-insensitively.
+ *
  * @param desc Pointer to the project descriptor.
- * @param out Out parameter where a pointer to the project will be stored.
- * @return Returns whether the operation was successful.
+ * @param out Out parameter where a pointer to the project will be stored. Set to `NULL` on
+ * failure.
+ * @return `MEWO_ERROR_INVALID_ARGUMENT` if a string view is invalid or the first pass name breaks
+ * the pass name rules, and `MEWO_SUCCESS` otherwise.
  */
 mewo_result_t mewo_project_create(const mewo_project_descriptor_t* desc, mewo_project_t** out);
 
@@ -70,13 +81,14 @@ mewo_result_t mewo_project_set_pass_source(
 );
 
 /**
- * Renames a pass. Names don't have to be unique.
+ * Renames a pass. A pass can be renamed to a different capitalization of its own name.
  *
  * @param project Pointer to the project.
  * @param pass_id The ID of the pass.
- * @param name New display name of the pass. Can be empty.
- * @return `MEWO_ERROR_INVALID_ARGUMENT` if the pass ID is unknown or the string view is invalid,
- * and `MEWO_SUCCESS` otherwise.
+ * @param name New name of the pass. Must follow the pass name rules.
+ * @return `MEWO_ERROR_INVALID_ARGUMENT` if the pass ID is unknown, the string view is invalid, or
+ * the name breaks the pass name rules, and `MEWO_SUCCESS` otherwise. On failure the pass keeps
+ * its old name.
  */
 mewo_result_t mewo_project_set_pass_name(
   mewo_project_t* project,
@@ -103,11 +115,12 @@ mewo_result_t mewo_project_set_common_source(mewo_project_t* project, mewo_strin
  * call to `mewo_session_render()`. Until then, they keep reporting status for the old pass list.
  *
  * @param project Pointer to the project.
- * @param name Display name of the pass.
+ * @param name Name of the pass. Must follow the pass name rules.
  * @param source WGSL source of the pass.
  * @param out Out parameter where the new pass ID will be stored. Set to `MEWO_PASS_ID_NONE`
  * on failure.
- * @return `MEWO_ERROR_INVALID_ARGUMENT` if a string view is invalid, and `MEWO_SUCCESS` otherwise.
+ * @return `MEWO_ERROR_INVALID_ARGUMENT` if a string view is invalid or the name breaks the pass
+ * name rules, and `MEWO_SUCCESS` otherwise. On failure the pass list is unchanged.
  */
 mewo_result_t mewo_project_add_pass(
   mewo_project_t* project,

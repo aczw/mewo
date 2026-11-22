@@ -27,10 +27,6 @@ unsigned char to_ascii_upper(unsigned char character) {
   return is_ascii_lower(character) ? character - ('a' - 'A') : character;
 }
 
-bool equals_ignore_case(std::string_view a, std::string_view b) {
-  return std::ranges::equal(a, b, {}, to_ascii_upper, to_ascii_upper);
-}
-
 }  // namespace
 
 bool is_valid_name(std::string_view name) {
@@ -59,6 +55,10 @@ bool is_valid_name(std::string_view name) {
   }
 
   return true;
+}
+
+bool equals_ignore_case(std::string_view a, std::string_view b) {
+  return std::ranges::equal(a, b, {}, to_ascii_upper, to_ascii_upper);
 }
 
 }  // namespace mewo

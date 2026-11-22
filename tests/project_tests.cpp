@@ -8,8 +8,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -27,7 +29,17 @@ constexpr mewo_project_descriptor_t kDescriptor = {
 
 /** A project whose single pass is named `kName` with source `kSource`. */
 std::unique_ptr<Project> create_project() {
-  return Project::create(kName, kSource);
+  std::optional<std::unique_ptr<Project>> project = Project::create(kName, kSource);
+  REQUIRE(project);
+  return std::move(project.value());
+}
+
+/** Appends a pass with a name no other pass has and source `kSource`, and returns its ID. */
+Pass::Id add_pass(Project& project) {
+  static int counter = 0;
+  std::optional<Pass::Id> id = project.add_pass("Extra " + std::to_string(++counter), kSource);
+  REQUIRE(id);
+  return id.value();
 }
 
 /** The project's pass IDs in list (execution) order. */
@@ -50,13 +62,57 @@ TEST_CASE("project can be created and destroyed", "[project]") {
   mewo_project_destroy(project);
 }
 
+TEST_CASE("mewo_project_create rejects an invalid first pass name", "[project][c_api][names]") {
+  mewo_project_descriptor_t desc = kDescriptor;
+  mewo_project_t* project = reinterpret_cast<mewo_project_t*>(std::uintptr_t{1});
+
+  SECTION("a name that breaks the name rules") {
+    desc.first_pass_name = {"con.v2", MEWO_STRING_VIEW_SENTINEL};
+  }
+
+  SECTION("an invalid string view") {
+    desc.first_pass_name = {nullptr, 4};
+  }
+
+  CHECK(mewo_project_create(&desc, &project) == MEWO_ERROR_INVALID_ARGUMENT);
+  CHECK(project == nullptr);
+}
+
+TEST_CASE("mewo_project_add_pass rejects invalid and taken names", "[project][c_api][names]") {
+  mewo_project_t* project = nullptr;
+  REQUIRE(mewo_project_create(&kDescriptor, &project) == MEWO_SUCCESS);
+
+  mewo_pass_id_t added = 1234;
+
+  SECTION("a name that breaks the name rules") {
+    CHECK(
+      mewo_project_add_pass(
+        project, {"a|b", MEWO_STRING_VIEW_SENTINEL}, {kSource, MEWO_STRING_VIEW_SENTINEL}, &added
+      ) == MEWO_ERROR_INVALID_ARGUMENT
+    );
+  }
+
+  SECTION("a name another pass has, ignoring case") {
+    CHECK(
+      mewo_project_add_pass(
+        project, {"pass", MEWO_STRING_VIEW_SENTINEL}, {kSource, MEWO_STRING_VIEW_SENTINEL}, &added
+      ) == MEWO_ERROR_INVALID_ARGUMENT
+    );
+  }
+
+  CHECK(added == MEWO_PASS_ID_NONE);
+  CHECK(mewo_project_get_pass_count(project) == 1);
+
+  mewo_project_destroy(project);
+}
+
 TEST_CASE("set_pass_source edits one pass and bumps its revision", "[project]") {
   using mewo::Pass;
   using mewo::impl::Project;
 
   std::unique_ptr<Project> project = create_project();
   // Don't rely on how many passes the default project has; just make sure there are at least two.
-  project->add_pass(kName, kSource);
+  add_pass(*project);
 
   const std::size_t pass_count = project->passes().size();
   REQUIRE(pass_count >= 2);
@@ -222,23 +278,106 @@ TEST_CASE("add_pass appends a pass and returns its new ID", "[project][structure
   const Pass::Id first = project->passes().front().id();
   const auto revision = project->structure_revision();
 
-  const Pass::Id a = project->add_pass(kName, kSource);
-  const Pass::Id b = project->add_pass(kName, kSource);
+  const std::optional<Pass::Id> a = project->add_pass("Blur", kSource);
+  const std::optional<Pass::Id> b = project->add_pass("Bloom", "fn b() {}");
+  REQUIRE(a);
+  REQUIRE(b);
 
-  CHECK(a != Pass::Id{0});
-  CHECK(a != first);
-  CHECK(b > a);
-  CHECK(pass_ids(*project) == std::vector<Pass::Id>{first, a, b});
-  CHECK(project->passes().back().name() == kName);
-  CHECK(project->passes().back().source() == kSource);
+  CHECK(*a != Pass::Id{0});
+  CHECK(*a != first);
+  CHECK(*b > *a);
+  CHECK(pass_ids(*project) == std::vector<Pass::Id>{first, *a, *b});
+  CHECK(project->passes().back().name() == "Bloom");
+  CHECK(project->passes().back().source() == "fn b() {}");
   CHECK(project->structure_revision() == revision + 2);
+}
+
+TEST_CASE("add_pass rejects invalid and taken names", "[project][structure][names]") {
+  std::unique_ptr<Project> project = create_project();
+  const std::vector<Pass::Id> ids = pass_ids(*project);
+  const auto revision = project->structure_revision();
+
+  SECTION("a name that breaks the name rules fails and changes nothing") {
+    CHECK_FALSE(project->add_pass("", kSource));
+    CHECK_FALSE(project->add_pass("a/b", kSource));
+    CHECK_FALSE(project->add_pass(" blur", kSource));
+    CHECK_FALSE(project->add_pass("con", kSource));
+
+    CHECK(pass_ids(*project) == ids);
+    CHECK(project->structure_revision() == revision);
+  }
+
+  SECTION("a name another pass has fails, ignoring case") {
+    CHECK_FALSE(project->add_pass(kName, kSource));
+    CHECK_FALSE(project->add_pass("PASS", kSource));
+    CHECK_FALSE(project->add_pass("pass", kSource));
+
+    CHECK(pass_ids(*project) == ids);
+    CHECK(project->structure_revision() == revision);
+  }
+
+  SECTION("a removed pass' name can be used again") {
+    const Pass::Id extra = add_pass(*project);
+    const std::string name = project->passes().back().name();
+    REQUIRE(project->remove_pass(extra) == Project::RemovePassResult::kSuccess);
+
+    CHECK(project->add_pass(name, kSource));
+  }
+}
+
+TEST_CASE("Project::create rejects an invalid first pass name", "[project][names]") {
+  CHECK_FALSE(Project::create("", kSource));
+  CHECK_FALSE(Project::create("a:b", kSource));
+  CHECK_FALSE(Project::create("NUL", kSource));
+}
+
+TEST_CASE("set_pass_name validates the new name", "[project][names]") {
+  std::unique_ptr<Project> project = create_project();
+  const Pass::Id first = project->passes().front().id();
+  const Pass::Id other = add_pass(*project);
+  const std::string other_name = project->passes().back().name();
+
+  SECTION("a valid, unused name succeeds") {
+    CHECK(project->set_pass_name(first, "Bloom"));
+    CHECK(project->passes().front().name() == "Bloom");
+  }
+
+  SECTION("a name that breaks the name rules fails and keeps the old name") {
+    CHECK_FALSE(project->set_pass_name(first, ""));
+    CHECK_FALSE(project->set_pass_name(first, "trailing."));
+    CHECK_FALSE(project->set_pass_name(first, "lpt1.v2"));
+
+    CHECK(project->passes().front().name() == kName);
+  }
+
+  SECTION("another pass' name fails, ignoring case") {
+    CHECK_FALSE(project->set_pass_name(first, other_name));
+
+    std::string upper = other_name;
+    for (char& c : upper)
+      if (c >= 'a' && c <= 'z')
+        c = static_cast<char>(c - ('a' - 'A'));
+    CHECK_FALSE(project->set_pass_name(first, upper));
+
+    CHECK(project->passes().front().name() == kName);
+  }
+
+  SECTION("a pass can keep its name or change only its case") {
+    CHECK(project->set_pass_name(first, kName));
+    CHECK(project->set_pass_name(first, "PASS"));
+    CHECK(project->passes().front().name() == "PASS");
+  }
+
+  SECTION("an unknown ID fails") {
+    CHECK_FALSE(project->set_pass_name(other + 100, "Bloom"));
+  }
 }
 
 TEST_CASE("remove_pass removes one pass and keeps the rest in order", "[project][structure]") {
   std::unique_ptr<Project> project = create_project();
   const Pass::Id first = project->passes().front().id();
-  const Pass::Id a = project->add_pass(kName, kSource);
-  const Pass::Id b = project->add_pass(kName, kSource);
+  const Pass::Id a = add_pass(*project);
+  const Pass::Id b = add_pass(*project);
   const auto revision = project->structure_revision();
 
   SECTION("removing a middle pass") {
@@ -272,7 +411,7 @@ TEST_CASE("remove_pass removes one pass and keeps the rest in order", "[project]
   SECTION("IDs are never reused after a removal") {
     REQUIRE(project->remove_pass(b) == Project::RemovePassResult::kSuccess);
 
-    const Pass::Id c = project->add_pass(kName, kSource);
+    const Pass::Id c = add_pass(*project);
     CHECK(c != b);
     CHECK(c > b);
   }
@@ -294,7 +433,7 @@ TEST_CASE("remove_pass refuses to remove the last pass", "[project][structure]")
   }
 
   SECTION("after removing down to one pass, that one can't be removed") {
-    const Pass::Id a = project->add_pass(kName, kSource);
+    const Pass::Id a = add_pass(*project);
     REQUIRE(project->remove_pass(only) == Project::RemovePassResult::kSuccess);
 
     CHECK(project->remove_pass(a) == Project::RemovePassResult::kFailedBecauseLast);
@@ -307,7 +446,7 @@ TEST_CASE("move_pass puts a pass at its new index", "[project][structure]") {
   std::unique_ptr<Project> project = create_project();
   std::vector<Pass::Id> p = {project->passes().front().id()};
   for (int i = 1; i < 5; ++i)
-    p.push_back(project->add_pass(kName, kSource));
+    p.push_back(add_pass(*project));
   REQUIRE(pass_ids(*project) == p);
 
   const auto revision = project->structure_revision();
@@ -452,11 +591,29 @@ TEST_CASE("mewo_project_set_pass_name renames one pass", "[project][c_api]") {
     CHECK(project->impl->passes().front().revision() == revision);
   }
 
-  SECTION("an empty name is allowed") {
-    REQUIRE(mewo_project_set_pass_name(project, first, {"", 0}) == MEWO_SUCCESS);
+  SECTION("an invalid name is rejected and the old name stays") {
+    CHECK(mewo_project_set_pass_name(project, first, {"", 0}) == MEWO_ERROR_INVALID_ARGUMENT);
+    CHECK(
+      mewo_project_set_pass_name(project, first, {"a/b", MEWO_STRING_VIEW_SENTINEL}) ==
+      MEWO_ERROR_INVALID_ARGUMENT
+    );
     REQUIRE(mewo_project_get_pass_name(project, first, &name) == MEWO_SUCCESS);
 
-    CHECK(name.length == 0);
+    CHECK(std::string_view(name.data, name.length) == kName);
+  }
+
+  SECTION("another pass' name is rejected") {
+    mewo_pass_id_t added = MEWO_PASS_ID_NONE;
+    REQUIRE(
+      mewo_project_add_pass(
+        project, {"Blur", MEWO_STRING_VIEW_SENTINEL}, {kSource, MEWO_STRING_VIEW_SENTINEL}, &added
+      ) == MEWO_SUCCESS
+    );
+
+    CHECK(
+      mewo_project_set_pass_name(project, first, {"BLUR", MEWO_STRING_VIEW_SENTINEL}) ==
+      MEWO_ERROR_INVALID_ARGUMENT
+    );
   }
 
   SECTION("an unknown ID is rejected") {

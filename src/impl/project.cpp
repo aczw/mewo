@@ -1,29 +1,38 @@
 #include "impl/project.hpp"
 
 #include "core/pass.hpp"
+#include "core/validation.hpp"
 
 #include <algorithm>
 #include <cassert>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
 namespace mewo::impl {
 
-std::unique_ptr<Project> Project::create(
+std::optional<std::unique_ptr<Project>> Project::create(
   std::string&& first_pass_name,
   std::string&& first_pass_source
 ) {
   // Constructor is private so can't use `std::make_unique`
   std::unique_ptr<Project> project(new Project());
-  project->add_pass(std::move(first_pass_name), std::move(first_pass_source));
+
+  if (!project->add_pass(std::move(first_pass_name), std::move(first_pass_source)))
+    return std::nullopt;
+
   return project;
 }
 
-Pass::Id Project::add_pass(std::string name, std::string source) {
+std::optional<Pass::Id> Project::add_pass(std::string name, std::string source) {
   assert(next_pass_id_ != std::numeric_limits<Pass::Id>::max() && "pass IDs exhausted");
+
+  if (!is_valid_name(name) || is_name_taken(name))
+    return std::nullopt;
 
   Pass::Id next_pass_id = next_pass_id_++;
   passes_.emplace_back(next_pass_id, std::move(name), std::move(source));
@@ -88,17 +97,24 @@ bool Project::set_pass_source(Pass::Id pass_id, std::string new_source) {
 }
 
 bool Project::set_pass_name(Pass::Id pass_id, std::string new_name) {
-  if (Pass* pass = find_pass(pass_id); pass) {
-    pass->set_name(std::move(new_name));
-    return true;
-  }
+  Pass* pass = find_pass(pass_id);
 
-  return false;
+  if (!pass || !is_valid_name(new_name) || is_name_taken(new_name, pass_id))
+    return false;
+
+  pass->set_name(std::move(new_name));
+  return true;
 }
 
 void Project::set_common_source(std::string new_source) {
   common_source_ = std::move(new_source);
   common_revision_ += 1;
+}
+
+bool Project::is_name_taken(std::string_view name, std::optional<Pass::Id> except) const {
+  return std::ranges::any_of(passes_, [&](const Pass& pass) {
+    return pass.id() != except && equals_ignore_case(pass.name(), name);
+  });
 }
 
 Pass* Project::find_pass(Pass::Id pass_id) {

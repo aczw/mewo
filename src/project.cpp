@@ -23,13 +23,19 @@ mewo_result_t mewo_project_create(const mewo_project_descriptor_t* desc, mewo_pr
   *out = nullptr;
 
   try {
-    std::string first_pass_name =
-      mewo::impl::to_string(desc->first_pass_name).value_or("<invalid pass name>");
-    std::string first_pass_source = mewo::impl::to_string(desc->first_pass_source).value_or("");
+    auto name_opt = mewo::impl::to_string(desc->first_pass_name);
+    auto source_opt = mewo::impl::to_string(desc->first_pass_source);
 
-    *out = new mewo_project_t(
-      mewo::impl::Project::create(std::move(first_pass_name), std::move(first_pass_source))
-    );
+    if (!name_opt || !source_opt)
+      return MEWO_ERROR_INVALID_ARGUMENT;
+
+    auto project_opt =
+      mewo::impl::Project::create(std::move(name_opt.value()), std::move(source_opt.value()));
+
+    if (!project_opt)
+      return MEWO_ERROR_INVALID_ARGUMENT;
+
+    *out = new mewo_project_t(std::move(project_opt.value()));
   } catch (...) {
     return MEWO_ERROR_INTERNAL;
   }
@@ -121,7 +127,13 @@ mewo_result_t mewo_project_add_pass(
     if (!name_opt || !source_opt)
       return MEWO_ERROR_INVALID_ARGUMENT;
 
-    *out = project->impl->add_pass(std::move(name_opt.value()), std::move(source_opt.value()));
+    auto pass_id_opt =
+      project->impl->add_pass(std::move(name_opt.value()), std::move(source_opt.value()));
+
+    if (!pass_id_opt)
+      return MEWO_ERROR_INVALID_ARGUMENT;
+
+    *out = pass_id_opt.value();
   } catch (...) {
     return MEWO_ERROR_INTERNAL;
   }

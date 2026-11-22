@@ -6,7 +6,9 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace mewo::impl {
@@ -20,7 +22,8 @@ class Project : private Pinned {
     kFailedBecauseLast,
   };
 
-  static std::unique_ptr<Project> create(
+  /** @return Nothing if the first pass name breaks the name rules. */
+  static std::optional<std::unique_ptr<Project>> create(
     std::string&& first_pass_name,
     std::string&& first_pass_source
   );
@@ -33,7 +36,11 @@ class Project : private Pinned {
 
   Revision structure_revision() const { return structure_revision_; }
 
-  Pass::Id add_pass(std::string name, std::string source);
+  /**
+   * @return The new pass' ID, or nothing if the name breaks the name rules
+   * or another pass already has it (compared case-insensitively).
+   */
+  std::optional<Pass::Id> add_pass(std::string name, std::string source);
 
   RemovePassResult remove_pass(Pass::Id pass_id);
 
@@ -48,9 +55,11 @@ class Project : private Pinned {
   bool set_pass_source(Pass::Id pass_id, std::string new_source);
 
   /**
-   * Renames the pass. Bumps no revision, since sessions don't depend on pass names.
+   * Renames the pass. Bumps no revision, since sessions don't depend on pass names. A pass can be
+   * renamed to a different capitalization of its own name.
    *
-   * @return True if the operation succeeded, false if the pass with the given ID was not found.
+   * @return True if the operation succeeded, false if the pass with the given ID was not found,
+   * the name breaks the name rules, or another pass already has it.
    */
   bool set_pass_name(Pass::Id pass_id, std::string new_name);
 
@@ -60,6 +69,9 @@ class Project : private Pinned {
   Project() = default;
 
   Pass* find_pass(Pass::Id pass_id);
+
+  /** True if a pass other than `except` has this name, compared case-insensitively. */
+  bool is_name_taken(std::string_view name, std::optional<Pass::Id> except = std::nullopt) const;
 
   /**
    * Single source of truth for the order in which passes operate.
