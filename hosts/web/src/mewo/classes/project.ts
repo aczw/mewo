@@ -1,4 +1,4 @@
-import { kNull, kPassIdNone, type PassId, type Ptr } from "../types";
+import { kNull, kPassIdNone, MewoPassNameCheck, type PassId, type Ptr } from "../types";
 import { check, readCString, wasm, withCStrings } from "../wasm";
 
 class Project implements Disposable {
@@ -17,15 +17,20 @@ class Project implements Disposable {
   }
 
   setPassSource(passId: PassId, source: string): void {
-    withCStrings([source], ([s]) =>
-      wasm._project_set_pass_source(this.handle, passId, s!),
-    );
+    withCStrings([source], ([s]) => wasm._project_set_pass_source(this.handle, passId, s!));
     check(undefined, "failed to set pass source");
   }
 
   setPassName(passId: PassId, name: string): void {
     withCStrings([name], ([n]) => wasm._project_set_pass_name(this.handle, passId, n!));
     check(undefined, "failed to rename pass");
+  }
+
+  checkPassName(name: string, renamedPassId: PassId = kPassIdNone): MewoPassNameCheck {
+    const result = withCStrings([name], ([n]) =>
+      wasm._project_check_pass_name(this.handle, renamedPassId, n!),
+    );
+    return check(result as MewoPassNameCheck, "failed to check pass name");
   }
 
   setCommonSource(source: string): void {

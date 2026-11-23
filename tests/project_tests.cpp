@@ -106,6 +106,81 @@ TEST_CASE("mewo_project_add_pass rejects invalid and taken names", "[project][c_
   mewo_project_destroy(project);
 }
 
+TEST_CASE("mewo_project_check_pass_name reports why a name can't be used", "[project][c_api][names]") {
+  mewo_project_t* project = nullptr;
+  REQUIRE(mewo_project_create(&kDescriptor, &project) == MEWO_SUCCESS);
+  const mewo_pass_id_t first = mewo_project_get_pass_id(project, 0);
+
+  mewo_pass_id_t second = MEWO_PASS_ID_NONE;
+  REQUIRE(
+    mewo_project_add_pass(
+      project, {"Blur", MEWO_STRING_VIEW_SENTINEL}, {kSource, MEWO_STRING_VIEW_SENTINEL}, &second
+    ) == MEWO_SUCCESS
+  );
+
+  auto check = [&](mewo_pass_id_t pass_id, mewo_string_view_t name) {
+    mewo_pass_name_check_t result = MEWO_PASS_NAME_CHECK_FORCE_INT;
+    REQUIRE(mewo_project_check_pass_name(project, pass_id, name, &result) == MEWO_SUCCESS);
+    return result;
+  };
+
+  SECTION("maps every rule to its own value") {
+    CHECK(check(MEWO_PASS_ID_NONE, {"Bloom", MEWO_STRING_VIEW_SENTINEL}) == MEWO_PASS_NAME_CHECK_OK);
+    CHECK(check(MEWO_PASS_ID_NONE, {"", 0}) == MEWO_PASS_NAME_CHECK_EMPTY);
+    const std::string too_long(65, 'a');
+    CHECK(
+      check(MEWO_PASS_ID_NONE, {too_long.data(), too_long.size()}) ==
+      MEWO_PASS_NAME_CHECK_TOO_LONG
+    );
+    CHECK(
+      check(MEWO_PASS_ID_NONE, {"a/b", MEWO_STRING_VIEW_SENTINEL}) ==
+      MEWO_PASS_NAME_CHECK_INVALID_CHARACTER
+    );
+    CHECK(
+      check(MEWO_PASS_ID_NONE, {"blur.", MEWO_STRING_VIEW_SENTINEL}) ==
+      MEWO_PASS_NAME_CHECK_LEADING_OR_TRAILING
+    );
+    CHECK(
+      check(MEWO_PASS_ID_NONE, {"con", MEWO_STRING_VIEW_SENTINEL}) == MEWO_PASS_NAME_CHECK_RESERVED
+    );
+    CHECK(
+      check(MEWO_PASS_ID_NONE, {"bLUR", MEWO_STRING_VIEW_SENTINEL}) == MEWO_PASS_NAME_CHECK_TAKEN
+    );
+  }
+
+  SECTION("respects the explicit length, not the NUL terminator") {
+    // "Blur" is taken, but only "Bl" is checked
+    CHECK(check(MEWO_PASS_ID_NONE, {"Blur", 2}) == MEWO_PASS_NAME_CHECK_OK);
+  }
+
+  SECTION("a pass's own name isn't taken when renaming it") {
+    CHECK(check(second, {"BLUR", MEWO_STRING_VIEW_SENTINEL}) == MEWO_PASS_NAME_CHECK_OK);
+    CHECK(check(first, {"Blur", MEWO_STRING_VIEW_SENTINEL}) == MEWO_PASS_NAME_CHECK_TAKEN);
+  }
+
+  SECTION("rejects an unknown pass ID and an invalid string view") {
+    mewo_pass_name_check_t result = MEWO_PASS_NAME_CHECK_TAKEN;
+
+    CHECK(
+      mewo_project_check_pass_name(
+        project, second + 100, {"Bloom", MEWO_STRING_VIEW_SENTINEL}, &result
+      ) == MEWO_ERROR_INVALID_ARGUMENT
+    );
+    CHECK(result == MEWO_PASS_NAME_CHECK_OK);
+
+    result = MEWO_PASS_NAME_CHECK_TAKEN;
+    CHECK(
+      mewo_project_check_pass_name(project, MEWO_PASS_ID_NONE, {nullptr, 3}, &result) ==
+      MEWO_ERROR_INVALID_ARGUMENT
+    );
+    CHECK(result == MEWO_PASS_NAME_CHECK_OK);
+  }
+
+  CHECK(mewo_project_get_pass_count(project) == 2);
+
+  mewo_project_destroy(project);
+}
+
 TEST_CASE("set_pass_source edits one pass and bumps its revision", "[project]") {
   using mewo::Pass;
   using mewo::impl::Project;

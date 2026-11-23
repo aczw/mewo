@@ -1,6 +1,7 @@
 #include "impl/project.hpp"
 
 #include "core/pass.hpp"
+#include "core/validation.hpp"
 #include "impl/common/string.hpp"
 
 #include <mewo/mewo.h>
@@ -9,12 +10,36 @@
 #include <cassert>
 #include <cstdint>
 #include <limits>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
 static_assert(std::is_same_v<mewo_pass_id_t, mewo::Pass::Id>);
+
+namespace mewo {
+namespace {
+
+mewo_pass_name_check_t to_pass_name_check(std::optional<NameError> error) {
+  if (!error)
+    return MEWO_PASS_NAME_CHECK_OK;
+
+  switch (error.value()) {
+    case NameError::kEmpty: return MEWO_PASS_NAME_CHECK_EMPTY;
+    case NameError::kTooLong: return MEWO_PASS_NAME_CHECK_TOO_LONG;
+    case NameError::kInvalidCharacter: return MEWO_PASS_NAME_CHECK_INVALID_CHARACTER;
+    case NameError::kLeadingOrTrailing: return MEWO_PASS_NAME_CHECK_LEADING_OR_TRAILING;
+    case NameError::kReserved: return MEWO_PASS_NAME_CHECK_RESERVED;
+    case NameError::kTaken: return MEWO_PASS_NAME_CHECK_TAKEN;
+  }
+
+  std::unreachable();
+}
+
+}  // namespace
+}  // namespace mewo
 
 extern "C" {
 mewo_result_t mewo_project_create(const mewo_project_descriptor_t* desc, mewo_project_t** out) {
@@ -105,6 +130,34 @@ mewo_result_t mewo_project_set_common_source(mewo_project_t* project, mewo_strin
   } catch (...) {
     return MEWO_ERROR_INTERNAL;
   }
+
+  return MEWO_SUCCESS;
+}
+
+mewo_result_t mewo_project_check_pass_name(
+  mewo_project_t* project,
+  mewo_pass_id_t pass_id,
+  mewo_string_view_t name,
+  mewo_pass_name_check_t* out
+) {
+  assert(project);
+  assert(out);
+  *out = MEWO_PASS_NAME_CHECK_OK;
+
+  std::optional<std::string_view> name_opt = mewo::impl::to_std_string_view(name);
+
+  if (!name_opt)
+    return MEWO_ERROR_INVALID_ARGUMENT;
+
+  std::optional<mewo::Pass::Id> except;
+
+  if (pass_id != MEWO_PASS_ID_NONE) {
+    if (!std::ranges::contains(project->impl->passes(), pass_id, &mewo::Pass::id))
+      return MEWO_ERROR_INVALID_ARGUMENT;
+    except = pass_id;
+  }
+
+  *out = mewo::to_pass_name_check(project->impl->check_pass_name(name_opt.value(), except));
 
   return MEWO_SUCCESS;
 }

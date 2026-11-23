@@ -22,9 +22,7 @@ enum class NameError {
    * matched case-insensitively against the part before the first `.`, ignoring trailing spaces.
    */
   kReserved,
-  /**
-   * Another pass in the project already has this name, compared case-insensitively.
-   */
+  /** Another pass in the project already has this name, compared case-insensitively. */
   kTaken,
 };
 

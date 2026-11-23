@@ -40,6 +40,22 @@ typedef struct mewo_diagnostic {
   uint64_t column;
 } mewo_diagnostic_t;
 
+typedef enum mewo_pass_name_check {
+  MEWO_PASS_NAME_CHECK_OK = 0,
+  MEWO_PASS_NAME_CHECK_EMPTY,
+  /** Longer than 64 characters. */
+  MEWO_PASS_NAME_CHECK_TOO_LONG,
+  /** Contains a character outside the allowed set. */
+  MEWO_PASS_NAME_CHECK_INVALID_CHARACTER,
+  /** Starts or ends with a space or `.` */
+  MEWO_PASS_NAME_CHECK_LEADING_OR_TRAILING,
+  /** A Windows reserved device name. */
+  MEWO_PASS_NAME_CHECK_RESERVED,
+  /** Another pass already has this name, compared case-insensitively. */
+  MEWO_PASS_NAME_CHECK_TAKEN,
+  MEWO_PASS_NAME_CHECK_FORCE_INT = MEWO_ENUM_FORCE_INT,
+} mewo_pass_name_check_t;
+
 /**
  * A project always has at least 1 pass. Therefore, the descriptor for the project asks you
  * to provide the first pass name and source.
@@ -105,6 +121,27 @@ mewo_result_t mewo_project_set_pass_name(
  * @return `MEWO_SUCCESS` if the operation was successful.
  */
 mewo_result_t mewo_project_set_common_source(mewo_project_t* project, mewo_string_view_t source);
+
+/**
+ * Checks whether a name could be used for a pass, without changing anything. If several rules are
+ * broken, only the first is reported.
+ *
+ * @param project Pointer to the project.
+ * @param pass_id The pass being renamed, whose own name (in any capitalization) doesn't count as
+ * taken, or `MEWO_PASS_ID_NONE` when checking a name for a new pass.
+ * @param name The name to check.
+ * @param out Out parameter where the result will be stored. Set to `MEWO_PASS_NAME_CHECK_OK` on
+ * failure.
+ * @return `MEWO_ERROR_INVALID_ARGUMENT` if the pass ID is neither `MEWO_PASS_ID_NONE` nor a pass in
+ * the project, or the string view is invalid, and `MEWO_SUCCESS` otherwise. A rejected name is
+ * still `MEWO_SUCCESS`.
+ */
+mewo_result_t mewo_project_check_pass_name(
+  mewo_project_t* project,
+  mewo_pass_id_t pass_id,
+  mewo_string_view_t name,
+  mewo_pass_name_check_t* out
+);
 
 /**
  * Appends a new pass to the end of the pass list.
