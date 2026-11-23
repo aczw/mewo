@@ -11,6 +11,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * JS-friendly bindings over `mewo.h`. Conventions:
+ *
+ * - Handles are passed and returned as numbers in JS. `NULL` = 0, unsurprisingly.
+ * - Functions that can fail store the result in `last_result`.
+ * - Strings in are NULL-terminated UTF-8 (the JS `string` type).
+ * - Strings out are NULL-terminated and stay valid until the next binding call that returns a
+ * string (`ccall` copies them into a JS string immediately, so JS never sees this).
+ */
+
 /** One buffer for all string results; see `to_c_string()`. */
 static char* string_buffer = NULL;
 static size_t string_capacity = 0;
@@ -135,29 +145,26 @@ EMSCRIPTEN_KEEPALIVE
 void mewo_web_project_destroy(mewo_project_t* project) { mewo_project_destroy(project); }
 
 EMSCRIPTEN_KEEPALIVE
-bool mewo_web_project_set_pass_source(
+void mewo_web_project_set_pass_source(
   mewo_project_t* project,
   mewo_pass_id_t pass_id,
   const char* source
 ) {
   last_result = mewo_project_set_pass_source(project, pass_id, to_string_view(source));
-  return last_result == MEWO_SUCCESS;
 }
 
 EMSCRIPTEN_KEEPALIVE
-bool mewo_web_project_set_pass_name(
+void mewo_web_project_set_pass_name(
   mewo_project_t* project,
   mewo_pass_id_t pass_id,
   const char* name
 ) {
   last_result = mewo_project_set_pass_name(project, pass_id, to_string_view(name));
-  return last_result == MEWO_SUCCESS;
 }
 
 EMSCRIPTEN_KEEPALIVE
-bool mewo_web_project_set_common_source(mewo_project_t* project, const char* source) {
+void mewo_web_project_set_common_source(mewo_project_t* project, const char* source) {
   last_result = mewo_project_set_common_source(project, to_string_view(source));
-  return last_result == MEWO_SUCCESS;
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -173,19 +180,17 @@ mewo_pass_id_t mewo_web_project_add_pass(
 }
 
 EMSCRIPTEN_KEEPALIVE
-bool mewo_web_project_remove_pass(mewo_project_t* project, mewo_pass_id_t pass_id) {
+void mewo_web_project_remove_pass(mewo_project_t* project, mewo_pass_id_t pass_id) {
   last_result = mewo_project_remove_pass(project, pass_id);
-  return last_result == MEWO_SUCCESS;
 }
 
 EMSCRIPTEN_KEEPALIVE
-bool mewo_web_project_move_pass(
+void mewo_web_project_move_pass(
   mewo_project_t* project,
   mewo_pass_id_t pass_id,
   uint32_t new_index
 ) {
   last_result = mewo_project_move_pass(project, pass_id, new_index);
-  return last_result == MEWO_SUCCESS;
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -202,10 +207,6 @@ EMSCRIPTEN_KEEPALIVE
 const char* mewo_web_project_get_pass_name(mewo_project_t* project, mewo_pass_id_t pass_id) {
   mewo_string_view_t name = {0};
   last_result = mewo_project_get_pass_name(project, pass_id, &name);
-
-  if (last_result != MEWO_SUCCESS)
-    return NULL;
-
   return to_c_string(name);
 }
 
@@ -213,10 +214,6 @@ EMSCRIPTEN_KEEPALIVE
 const char* mewo_web_project_get_pass_source(mewo_project_t* project, mewo_pass_id_t pass_id) {
   mewo_string_view_t source = {0};
   last_result = mewo_project_get_pass_source(project, pass_id, &source);
-
-  if (last_result != MEWO_SUCCESS)
-    return NULL;
-
   return to_c_string(source);
 }
 
@@ -246,15 +243,13 @@ EMSCRIPTEN_KEEPALIVE
 void mewo_web_session_destroy(mewo_session_t* session) { mewo_session_destroy(session); }
 
 EMSCRIPTEN_KEEPALIVE
-bool mewo_web_session_set_render_size(mewo_session_t* session, uint32_t width, uint32_t height) {
+void mewo_web_session_set_render_size(mewo_session_t* session, uint32_t width, uint32_t height) {
   last_result = mewo_session_set_render_size(session, width, height);
-  return last_result == MEWO_SUCCESS;
 }
 
 EMSCRIPTEN_KEEPALIVE
-bool mewo_web_session_render(mewo_session_t* session, mewo_surface_t* surface, double time_ms) {
+void mewo_web_session_render(mewo_session_t* session, mewo_surface_t* surface, double time_ms) {
   last_result = mewo_session_render(session, surface, (uint64_t)(time_ms * 1e6));
-  return last_result == MEWO_SUCCESS;
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -279,52 +274,39 @@ double mewo_web_session_get_pass_status_revision(mewo_session_t* session) {
 }
 
 EMSCRIPTEN_KEEPALIVE
-int mewo_web_session_get_pass_compile_status(mewo_session_t* session, mewo_pass_id_t pass_id) {
+mewo_pass_compile_status_t mewo_web_session_get_pass_compile_status(
+  mewo_session_t* session,
+  mewo_pass_id_t pass_id
+) {
   mewo_pass_compile_status_t status = MEWO_PASS_COMPILE_STATUS_PENDING;
   last_result = mewo_session_get_pass_compile_status(session, pass_id, &status);
-
-  if (last_result != MEWO_SUCCESS)
-    return -1;
-
-  return (int)status;
+  return status;
 }
 
 EMSCRIPTEN_KEEPALIVE
 double mewo_web_session_get_pass_compile_duration(mewo_session_t* session, mewo_pass_id_t pass_id) {
   uint64_t duration_ns = 0;
   last_result = mewo_session_get_pass_compile_duration(session, pass_id, &duration_ns);
-
-  if (last_result != MEWO_SUCCESS)
-    return -1;
-
-  return (double)duration_ns / 1e6;
+  return (double)duration_ns * 1e-6;
 }
 
 EMSCRIPTEN_KEEPALIVE
-int mewo_web_session_get_pass_diagnostic_count(mewo_session_t* session, mewo_pass_id_t pass_id) {
+uint32_t mewo_web_session_get_pass_diagnostic_count(
+  mewo_session_t* session,
+  mewo_pass_id_t pass_id
+) {
   uint32_t count = 0;
   last_result = mewo_session_get_pass_diagnostic_count(session, pass_id, &count);
-
-  if (last_result != MEWO_SUCCESS)
-    return -1;
-
-  return (int)count;
+  return count;
 }
 
 EMSCRIPTEN_KEEPALIVE
-bool mewo_web_session_select_pass_diagnostic(
+void mewo_web_session_select_pass_diagnostic(
   mewo_session_t* session,
   mewo_pass_id_t pass_id,
   uint32_t index
 ) {
   last_result = mewo_session_get_pass_diagnostic(session, pass_id, index, &current_diagnostic);
-
-  if (last_result != MEWO_SUCCESS) {
-    current_diagnostic = (mewo_diagnostic_t){0};
-    return false;
-  }
-
-  return true;
 }
 
 EMSCRIPTEN_KEEPALIVE

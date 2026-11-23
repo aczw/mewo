@@ -6,16 +6,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-/*
- * JS-friendly bindings over `mewo.h`. Conventions:
- *
- * - Handles are passed and returned as numbers in JS. `NULL` = 0, unsurprisingly.
- * - Functions that can fail return `NULL` or `false`, and then `mewo_web_last_result()` says why.
- * - Strings in are NULL-terminated UTF-8 (the JS `string` type).
- * - Strings out are NULL-terminated and stay valid until the next binding call that returns a
- *   string (`ccall` copies them into a JS string immediately, so JS never sees this).
- */
-
 /** The `mewo_result_t` of the most recent failable binding call. */
 int mewo_web_last_result(void);
 
@@ -57,19 +47,19 @@ mewo_project_t* mewo_web_project_create(const char* first_pass_name, const char*
 
 void mewo_web_project_destroy(mewo_project_t* project);
 
-bool mewo_web_project_set_pass_source(
+void mewo_web_project_set_pass_source(
   mewo_project_t* project,
   mewo_pass_id_t pass_id,
   const char* source
 );
 
-bool mewo_web_project_set_pass_name(
+void mewo_web_project_set_pass_name(
   mewo_project_t* project,
   mewo_pass_id_t pass_id,
   const char* name
 );
 
-bool mewo_web_project_set_common_source(mewo_project_t* project, const char* source);
+void mewo_web_project_set_common_source(mewo_project_t* project, const char* source);
 
 mewo_pass_id_t mewo_web_project_add_pass(
   mewo_project_t* project,
@@ -77,9 +67,9 @@ mewo_pass_id_t mewo_web_project_add_pass(
   const char* source
 );
 
-bool mewo_web_project_remove_pass(mewo_project_t* project, mewo_pass_id_t pass_id);
+void mewo_web_project_remove_pass(mewo_project_t* project, mewo_pass_id_t pass_id);
 
-bool mewo_web_project_move_pass(
+void mewo_web_project_move_pass(
   mewo_project_t* project,
   mewo_pass_id_t pass_id,
   uint32_t new_index
@@ -106,9 +96,9 @@ mewo_session_t* mewo_web_session_create(
 void mewo_web_session_destroy(mewo_session_t* session);
 
 /** Passing 0 for the width and height is invalid. */
-bool mewo_web_session_set_render_size(mewo_session_t* session, uint32_t width, uint32_t height);
+void mewo_web_session_set_render_size(mewo_session_t* session, uint32_t width, uint32_t height);
 
-bool mewo_web_session_render(mewo_session_t* session, mewo_surface_t* surface, double time_ms);
+void mewo_web_session_render(mewo_session_t* session, mewo_surface_t* surface, double time_ms);
 
 double mewo_web_session_get_time(mewo_session_t* session);
 
@@ -120,18 +110,24 @@ void mewo_web_session_reset(mewo_session_t* session);
 
 double mewo_web_session_get_pass_status_revision(mewo_session_t* session);
 
-int mewo_web_session_get_pass_compile_status(mewo_session_t* session, mewo_pass_id_t pass_id);
+mewo_pass_compile_status_t mewo_web_session_get_pass_compile_status(
+  mewo_session_t* session,
+  mewo_pass_id_t pass_id
+);
 
 double mewo_web_session_get_pass_compile_duration(mewo_session_t* session, mewo_pass_id_t pass_id);
 
 /** The number of diagnostics from the pass' last completed compile, or -1 for an unknown pass. */
-int mewo_web_session_get_pass_diagnostic_count(mewo_session_t* session, mewo_pass_id_t pass_id);
+uint32_t mewo_web_session_get_pass_diagnostic_count(
+  mewo_session_t* session,
+  mewo_pass_id_t pass_id
+);
 
 /**
  * Selects one diagnostic as the current diagnostic, readable through the `mewo_web_diagnostic_*`
  * getters until the next render. Returns false for an unknown pass or out-of-range index.
  */
-bool mewo_web_session_select_pass_diagnostic(
+void mewo_web_session_select_pass_diagnostic(
   mewo_session_t* session,
   mewo_pass_id_t pass_id,
   uint32_t index
