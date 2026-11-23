@@ -1,14 +1,12 @@
-import { Mewo } from "../api";
-import { MewoError } from "../error";
 import { kNull, MewoEvent, type Ptr } from "../types";
+import { check, readCString, wasm } from "../wasm";
 import type { Surface } from "./surface";
 
 class Runtime implements Disposable {
   #handle: Ptr;
 
   constructor() {
-    this.#handle = Mewo.runtimeCreate();
-    if (this.#handle === kNull) throw new MewoError("runtime creation failed");
+    this.#handle = check(wasm._mewo_web_runtime_create(), "runtime creation failed");
   }
 
   get handle(): Ptr {
@@ -17,23 +15,26 @@ class Runtime implements Disposable {
   }
 
   tick(): void {
-    Mewo.runtimeTick(this.handle);
+    wasm._mewo_web_runtime_tick(this.handle);
   }
 
   requestDevice(surface: Surface): void {
-    Mewo.runtimeRequestDevice(this.handle, surface.handle);
+    wasm._mewo_web_runtime_request_device(this.handle, surface.handle);
   }
 
   *pollEvents(): Generator<{ type: MewoEvent; message: string }> {
-    for (let event; (event = Mewo.runtimePollEvent(this.handle)) !== MewoEvent.None;) {
-      yield { type: event, message: Mewo.eventMessage() };
+    for (
+      let event;
+      (event = wasm._mewo_web_runtime_poll_event(this.handle) as MewoEvent) !== MewoEvent.None;
+    ) {
+      yield { type: event, message: readCString(wasm._mewo_web_event_message()) };
     }
   }
 
   [Symbol.dispose](): void {
     if (this.#handle === kNull) return;
 
-    Mewo.runtimeDestroy(this.#handle);
+    wasm._mewo_web_runtime_destroy(this.#handle);
     this.#handle = kNull;
   }
 }

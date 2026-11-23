@@ -7,10 +7,12 @@ target_link_options(mewo_web PRIVATE
   -sENVIRONMENT=web
   -sSINGLE_FILE=1
   -sALLOW_MEMORY_GROWTH=1
-  -sEXPORTED_RUNTIME_METHODS=ccall,cwrap
+  -sEXPORTED_RUNTIME_METHODS=stringToNewUTF8,UTF8ToString
+  -sEXPORTED_FUNCTIONS=_free
   --no-entry
+  --emit-tsd "${PROJECT_SOURCE_DIR}/hosts/web/src/mewo/generated/mewo.d.ts"
 )
 set_target_properties(mewo_web PROPERTIES
   OUTPUT_NAME mewo
-  RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/hosts/web/src/mewo/wasm"
+  RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/hosts/web/src/mewo/generated"
 )

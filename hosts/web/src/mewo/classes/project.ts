@@ -1,13 +1,14 @@
-import { Mewo } from "../api";
-import { MewoError } from "../error";
-import { kNull, kPassIdNone, MewoResult, type PassId, type Ptr } from "../types";
+import { kNull, kPassIdNone, type PassId, type Ptr } from "../types";
+import { check, readCString, wasm, withCStrings } from "../wasm";
 
 class Project implements Disposable {
   #handle: Ptr;
 
   constructor(firstPassName: string, firstPassSource: string) {
-    this.#handle = Mewo.projectCreate(firstPassName, firstPassSource);
-    if (this.#handle === kNull) throw new MewoError("project creation failed");
+    const handle = withCStrings([firstPassName, firstPassSource], ([n, s]) =>
+      wasm._mewo_web_project_create(n!, s!),
+    );
+    this.#handle = check(handle, "project creation failed");
   }
 
   get handle(): Ptr {
@@ -16,70 +17,67 @@ class Project implements Disposable {
   }
 
   setPassSource(passId: PassId, source: string): void {
-    if (!Mewo.projectSetPassSource(this.handle, passId, source))
-      throw new MewoError("failed to set pass source");
+    withCStrings([source], ([s]) =>
+      wasm._mewo_web_project_set_pass_source(this.handle, passId, s!),
+    );
+    check(undefined, "failed to set pass source");
   }
 
   setPassName(passId: PassId, name: string): void {
-    if (!Mewo.projectSetPassName(this.handle, passId, name))
-      throw new MewoError("failed to rename pass");
+    withCStrings([name], ([n]) => wasm._mewo_web_project_set_pass_name(this.handle, passId, n!));
+    check(undefined, "failed to rename pass");
   }
 
   setCommonSource(source: string): void {
-    if (!Mewo.projectSetCommonSource(this.handle, source))
-      throw new MewoError("failed to set common source");
+    withCStrings([source], ([s]) => wasm._mewo_web_project_set_common_source(this.handle, s!));
+    check(undefined, "failed to set common source");
   }
 
   addPass(name: string, source: string): PassId {
-    const passId = Mewo.projectAddPass(this.handle, name, source);
-    if (passId === kPassIdNone) throw new MewoError("failed to add pass");
-    return passId;
+    const passId = withCStrings([name, source], ([n, s]) =>
+      wasm._mewo_web_project_add_pass(this.handle, n!, s!),
+    );
+    return check(passId, "failed to add pass");
   }
 
   removePass(passId: PassId): void {
-    if (!Mewo.projectRemovePass(this.handle, passId)) throw new MewoError("failed to remove pass");
+    wasm._mewo_web_project_remove_pass(this.handle, passId);
+    check(undefined, "failed to remove pass");
   }
 
   movePass(passId: PassId, newIndex: number): void {
-    if (!Mewo.projectMovePass(this.handle, passId, newIndex))
-      throw new MewoError("failed to move pass");
+    wasm._mewo_web_project_move_pass(this.handle, passId, newIndex);
+    check(undefined, "failed to move pass");
   }
 
   getPassCount(): number {
-    return Mewo.projectGetPassCount(this.handle);
+    return wasm._mewo_web_project_get_pass_count(this.handle);
   }
 
   getPassId(index: number): PassId | null {
-    const passId = Mewo.projectGetPassId(this.handle, index);
+    // Can't fail: an out-of-range index returns `MEWO_PASS_ID_NONE` instead of an error
+    const passId = wasm._mewo_web_project_get_pass_id(this.handle, index);
     return passId === kPassIdNone ? null : passId;
   }
 
   getPassName(passId: PassId): string {
-    const name = Mewo.projectGetPassName(this.handle, passId);
-
-    // An empty string is a valid name, so we have to check the result explicitly
-    if (Mewo.lastResult() !== MewoResult.Success) throw new MewoError("failed to get pass name");
-
-    return name;
+    const ptr = wasm._mewo_web_project_get_pass_name(this.handle, passId);
+    return readCString(check(ptr, "failed to get pass name"));
   }
 
   getPassSource(passId: PassId): string {
-    const source = Mewo.projectGetPassSource(this.handle, passId);
-
-    // An empty string is a valid source, so we have to check the result explicitly
-    if (Mewo.lastResult() !== MewoResult.Success) throw new MewoError("failed to get pass source");
-
-    return source;
+    const ptr = wasm._mewo_web_project_get_pass_source(this.handle, passId);
+    return readCString(check(ptr, "failed to get pass source"));
   }
 
   getCommonSource(): string {
-    return Mewo.projectGetCommonSource(this.handle);
+    return readCString(wasm._mewo_web_project_get_common_source(this.handle));
   }
 
   [Symbol.dispose](): void {
     if (this.#handle === kNull) return;
 
-    Mewo.projectDestroy(this.#handle);
+    wasm._mewo_web_project_destroy(this.#handle);
     this.#handle = kNull;
   }
 }

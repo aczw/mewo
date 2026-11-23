@@ -1,14 +1,27 @@
-import { Mewo } from "./api";
 import { MewoResult } from "./types";
-import { resultToString } from "./util";
+
+const resultToString = (result: MewoResult): string => {
+  switch (result) {
+    case MewoResult.Success:
+      return "success";
+    case MewoResult.NotReady:
+      return "not ready";
+    case MewoResult.Internal:
+      return "internal";
+    case MewoResult.InvalidArgument:
+      return "invalid argument";
+    case MewoResult.InvalidOperation:
+      return "invalid operation";
+    default:
+      return `unknown (${result})`;
+  }
+};
 
 class MewoError extends Error {
   readonly result: MewoResult;
 
-  constructor(message: string) {
-    const result = Mewo.lastResult();
+  constructor(message: string, result: MewoResult) {
     super(`[libmewo] ${message}: ${resultToString(result)}`);
-
     this.name = "MewoError";
     this.result = result;
   }
