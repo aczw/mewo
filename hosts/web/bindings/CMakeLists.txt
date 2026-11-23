@@ -12,6 +12,9 @@ target_link_options(mewo_web PRIVATE
   --no-entry
   --emit-tsd "${PROJECT_SOURCE_DIR}/hosts/web/src/mewo/generated/mewo.d.ts"
 )
+set_source_files_properties(wrappers.c PROPERTIES
+  COMPILE_OPTIONS -Wno-missing-prototypes
+)
 set_target_properties(mewo_web PROPERTIES
   OUTPUT_NAME mewo
   RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/hosts/web/src/mewo/generated"

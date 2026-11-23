@@ -1,5 +1,3 @@
-#include "wrappers.h"
-
 #include <mewo/mewo.h>
 
 #include <emscripten/em_macros.h>
@@ -15,13 +13,14 @@
  * JS-friendly bindings over `mewo.h`. Conventions:
  *
  * - Handles are passed and returned as numbers in JS. `NULL` = 0, unsurprisingly.
- * - Functions that can fail store the result in `last_result`.
- * - Strings in are NULL-terminated UTF-8 (the JS `string` type).
- * - Strings out are NULL-terminated and stay valid until the next binding call that returns a
- * string (`ccall` copies them into a JS string immediately, so JS never sees this).
+ * - Functions always return their value directly.
+ *   Functions that can fail store the result in `last_result`.
+ * - Strings in are NUL-terminated UTF-8, allocated by JS and freed after the call.
+ * - Strings out are NUL-terminated and stay valid until the next binding call that returns a
+ *   string, so JS copies them right away.
  */
 
-/** One buffer for all string results; see `to_c_string()`. */
+/** One buffer for all string results. */
 static char* string_buffer = NULL;
 static size_t string_capacity = 0;
 
@@ -58,6 +57,7 @@ static mewo_string_view_t to_string_view(const char* string) {
   };
 }
 
+/** The `mewo_result_t` of the most recent failable binding call. */
 EMSCRIPTEN_KEEPALIVE
 int mewo_web_last_result(void) { return (int)last_result; }
 
@@ -83,6 +83,10 @@ void mewo_web_runtime_request_device(mewo_runtime_t* runtime, mewo_surface_t* su
   mewo_runtime_request_device(runtime, surface);
 }
 
+/**
+ * Pops one event and keeps it as the current event, readable through the `mewo_web_event_*`
+ * getters. Returns its `mewo_event_type_t`, or `MEWO_EVENT_NONE` if the queue is empty.
+ */
 EMSCRIPTEN_KEEPALIVE
 int mewo_web_runtime_poll_event(mewo_runtime_t* runtime) {
   if (!mewo_runtime_poll_event(runtime, &current_event))
@@ -91,6 +95,7 @@ int mewo_web_runtime_poll_event(mewo_runtime_t* runtime) {
   return (int)current_event.type;
 }
 
+/** The current event's message, or "" if it has none. */
 EMSCRIPTEN_KEEPALIVE
 const char* mewo_web_event_message(void) {
   switch (current_event.type) {
@@ -101,6 +106,9 @@ const char* mewo_web_event_message(void) {
   }
 }
 
+/**
+ * Initial size in device pixels.
+ */
 EMSCRIPTEN_KEEPALIVE
 mewo_surface_t* mewo_web_surface_create_canvas(
   mewo_runtime_t* runtime,
@@ -122,6 +130,7 @@ mewo_surface_t* mewo_web_surface_create_canvas(
 EMSCRIPTEN_KEEPALIVE
 void mewo_web_surface_destroy(mewo_surface_t* surface) { mewo_surface_destroy(surface); }
 
+/** Resizes the surface to the new size in device pixels. 0 is valid. */
 EMSCRIPTEN_KEEPALIVE
 void mewo_web_surface_resize(mewo_surface_t* surface, uint32_t width, uint32_t height) {
   mewo_surface_resize(surface, width, height);
@@ -222,6 +231,7 @@ const char* mewo_web_project_get_common_source(mewo_project_t* project) {
   return to_c_string(mewo_project_get_common_source(project));
 }
 
+/** Passing 0 for the width and height is invalid. */
 EMSCRIPTEN_KEEPALIVE
 mewo_session_t* mewo_web_session_create(
   mewo_runtime_t* runtime,
@@ -242,6 +252,7 @@ mewo_session_t* mewo_web_session_create(
 EMSCRIPTEN_KEEPALIVE
 void mewo_web_session_destroy(mewo_session_t* session) { mewo_session_destroy(session); }
 
+/** Passing 0 for the width and height is invalid. */
 EMSCRIPTEN_KEEPALIVE
 void mewo_web_session_set_render_size(mewo_session_t* session, uint32_t width, uint32_t height) {
   last_result = mewo_session_set_render_size(session, width, height);
@@ -290,6 +301,7 @@ double mewo_web_session_get_pass_compile_duration(mewo_session_t* session, mewo_
   return (double)duration_ns * 1e-6;
 }
 
+/** The number of diagnostics from the pass' last completed compile. */
 EMSCRIPTEN_KEEPALIVE
 uint32_t mewo_web_session_get_pass_diagnostic_count(
   mewo_session_t* session,
@@ -300,6 +312,10 @@ uint32_t mewo_web_session_get_pass_diagnostic_count(
   return count;
 }
 
+/**
+ * Selects one diagnostic as the current diagnostic, readable through the
+ * getters until the next render.
+ */
 EMSCRIPTEN_KEEPALIVE
 void mewo_web_session_select_pass_diagnostic(
   mewo_session_t* session,
@@ -318,8 +334,10 @@ const char* mewo_web_diagnostic_message(void) { return to_c_string(current_diagn
 EMSCRIPTEN_KEEPALIVE
 int mewo_web_diagnostic_source(void) { return (int)current_diagnostic.source; }
 
+/** 1-based, 0 if the diagnostic has no position. */
 EMSCRIPTEN_KEEPALIVE
 double mewo_web_diagnostic_line(void) { return (double)current_diagnostic.line; }
 
+/** 1-based, in UTF-8 bytes, 0 if the diagnostic has no position. */
 EMSCRIPTEN_KEEPALIVE
 double mewo_web_diagnostic_column(void) { return (double)current_diagnostic.column; }
