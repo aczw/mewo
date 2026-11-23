@@ -15,7 +15,7 @@ class Surface implements Disposable {
 
     const { width, height } = this.#dimensions;
     const handle = withCStrings([`#${canvas.id}`], ([selector]) =>
-      wasm._mewo_web_surface_create_canvas(runtime.handle, selector!, width, height),
+      wasm._surface_create_canvas(runtime.handle, selector!, width, height),
     );
     this.#handle = check(handle, "surface creation failed");
   }
@@ -35,7 +35,7 @@ class Surface implements Disposable {
     if (current.width === this.#dimensions.width && current.height === this.#dimensions.height)
       return false;
 
-    wasm._mewo_web_surface_resize(this.handle, current.width, current.height);
+    wasm._surface_resize(this.handle, current.width, current.height);
     this.#dimensions = current;
     return true;
   }
@@ -50,7 +50,7 @@ class Surface implements Disposable {
   [Symbol.dispose](): void {
     if (this.#handle === kNull) return;
 
-    wasm._mewo_web_surface_destroy(this.#handle);
+    wasm._surface_destroy(this.#handle);
     this.#handle = kNull;
   }
 }

@@ -6,7 +6,7 @@ class Runtime implements Disposable {
   #handle: Ptr;
 
   constructor() {
-    this.#handle = check(wasm._mewo_web_runtime_create(), "runtime creation failed");
+    this.#handle = check(wasm._runtime_create(), "runtime creation failed");
   }
 
   get handle(): Ptr {
@@ -15,26 +15,26 @@ class Runtime implements Disposable {
   }
 
   tick(): void {
-    wasm._mewo_web_runtime_tick(this.handle);
+    wasm._runtime_tick(this.handle);
   }
 
   requestDevice(surface: Surface): void {
-    wasm._mewo_web_runtime_request_device(this.handle, surface.handle);
+    wasm._runtime_request_device(this.handle, surface.handle);
   }
 
   *pollEvents(): Generator<{ type: MewoEvent; message: string }> {
     for (
       let event;
-      (event = wasm._mewo_web_runtime_poll_event(this.handle) as MewoEvent) !== MewoEvent.None;
+      (event = wasm._runtime_poll_event(this.handle) as MewoEvent) !== MewoEvent.None;
     ) {
-      yield { type: event, message: readCString(wasm._mewo_web_event_message()) };
+      yield { type: event, message: readCString(wasm._event_message()) };
     }
   }
 
   [Symbol.dispose](): void {
     if (this.#handle === kNull) return;
 
-    wasm._mewo_web_runtime_destroy(this.#handle);
+    wasm._runtime_destroy(this.#handle);
     this.#handle = kNull;
   }
 }

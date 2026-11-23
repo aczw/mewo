@@ -6,7 +6,7 @@ const module = await createWasmModule();
 
 /** Call right after a fallible operation. Throws if it failed. */
 const check = <T>(value: T, what: string): T => {
-  const result = module._mewo_web_last_result() as MewoResult;
+  const result = module._web_last_result() as MewoResult;
   if (result !== MewoResult.Success) throw new MewoError(what, result);
   return value;
 };
