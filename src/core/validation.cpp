@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <optional>
 #include <string_view>
 
 namespace mewo {
@@ -29,20 +30,23 @@ unsigned char to_ascii_upper(unsigned char character) {
 
 }  // namespace
 
-bool is_valid_name(std::string_view name) {
-  if (name.empty() || name.length() > 64)
-    return false;
+std::optional<NameError> check_name(std::string_view name) {
+  if (name.empty())
+    return NameError::kEmpty;
+
+  if (name.length() > kMaxNameLength)
+    return NameError::kTooLong;
 
   if (!std::ranges::all_of(name, [](unsigned char character) {
         return is_ascii_digit(character) || is_ascii_upper(character) ||
                is_ascii_lower(character) || is_allowed_symbols(character);
       })) {
-    return false;
+    return NameError::kInvalidCharacter;
   }
 
   if (name.starts_with(' ') || name.starts_with('.') || name.ends_with(' ') ||
       name.ends_with('.')) {
-    return false;
+    return NameError::kLeadingOrTrailing;
   }
 
   // Windows matches device names on the part before the first dot, ignoring trailing spaces
@@ -51,11 +55,13 @@ bool is_valid_name(std::string_view name) {
   if (std::ranges::any_of(kReservedNames, [&stem](std::string_view reserved_name) {
         return equals_ignore_case(stem, reserved_name);
       })) {
-    return false;
+    return NameError::kReserved;
   }
 
-  return true;
+  return std::nullopt;
 }
+
+bool is_valid_name(std::string_view name) { return !check_name(name).has_value(); }
 
 bool equals_ignore_case(std::string_view a, std::string_view b) {
   return std::ranges::equal(a, b, {}, to_ascii_upper, to_ascii_upper);

@@ -31,7 +31,7 @@ std::optional<std::unique_ptr<Project>> Project::create(
 std::optional<Pass::Id> Project::add_pass(std::string name, std::string source) {
   assert(next_pass_id_ != std::numeric_limits<Pass::Id>::max() && "pass IDs exhausted");
 
-  if (!is_valid_name(name) || is_name_taken(name))
+  if (check_pass_name(name))
     return std::nullopt;
 
   Pass::Id next_pass_id = next_pass_id_++;
@@ -99,7 +99,7 @@ bool Project::set_pass_source(Pass::Id pass_id, std::string new_source) {
 bool Project::set_pass_name(Pass::Id pass_id, std::string new_name) {
   Pass* pass = find_pass(pass_id);
 
-  if (!pass || !is_valid_name(new_name) || is_name_taken(new_name, pass_id))
+  if (!pass || check_pass_name(new_name, pass_id))
     return false;
 
   pass->set_name(std::move(new_name));
@@ -109,6 +109,19 @@ bool Project::set_pass_name(Pass::Id pass_id, std::string new_name) {
 void Project::set_common_source(std::string new_source) {
   common_source_ = std::move(new_source);
   common_revision_ += 1;
+}
+
+std::optional<NameError> Project::check_pass_name(
+  std::string_view name,
+  std::optional<Pass::Id> except
+) const {
+  if (auto error = check_name(name))
+    return error;
+
+  if (is_name_taken(name, except))
+    return NameError::kTaken;
+
+  return std::nullopt;
 }
 
 bool Project::is_name_taken(std::string_view name, std::optional<Pass::Id> except) const {

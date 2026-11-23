@@ -331,6 +331,52 @@ TEST_CASE("Project::create rejects an invalid first pass name", "[project][names
   CHECK_FALSE(Project::create("NUL", kSource));
 }
 
+TEST_CASE("check_pass_name reports why a name can't be used", "[project][names]") {
+  using mewo::NameError;
+
+  std::unique_ptr<Project> project = create_project();
+  const Pass::Id first = project->passes().front().id();
+  const std::optional<Pass::Id> blur = project->add_pass("Blur", kSource);
+  REQUIRE(blur);
+  const auto revision = project->structure_revision();
+
+  SECTION("an unused, valid name has no error") {
+    CHECK_FALSE(project->check_pass_name("Bloom"));
+    CHECK_FALSE(project->check_pass_name("Bloom", first));
+  }
+
+  SECTION("name rule errors come through from check_name") {
+    CHECK(project->check_pass_name("") == NameError::kEmpty);
+    CHECK(project->check_pass_name("a/b") == NameError::kInvalidCharacter);
+    CHECK(project->check_pass_name("blur ") == NameError::kLeadingOrTrailing);
+    CHECK(project->check_pass_name("con.v2") == NameError::kReserved);
+  }
+
+  SECTION("another pass' name is taken, ignoring case") {
+    CHECK(project->check_pass_name("Blur") == NameError::kTaken);
+    CHECK(project->check_pass_name("BLUR") == NameError::kTaken);
+    CHECK(project->check_pass_name("blur", first) == NameError::kTaken);
+  }
+
+  SECTION("a pass' own name isn't taken when it's the one being renamed") {
+    CHECK_FALSE(project->check_pass_name("Blur", *blur));
+    CHECK_FALSE(project->check_pass_name("bLuR", *blur));
+  }
+
+  SECTION("an unknown `except` ID excludes nothing") {
+    CHECK(project->check_pass_name("Blur", Pass::Id{9999}) == NameError::kTaken);
+  }
+
+  SECTION("checking changes nothing") {
+    CHECK_FALSE(project->check_pass_name("Bloom"));
+    CHECK(project->check_pass_name("Blur") == NameError::kTaken);
+
+    CHECK(project->passes().size() == 2);
+    CHECK(project->passes().back().name() == "Blur");
+    CHECK(project->structure_revision() == revision);
+  }
+}
+
 TEST_CASE("set_pass_name validates the new name", "[project][names]") {
   std::unique_ptr<Project> project = create_project();
   const Pass::Id first = project->passes().front().id();

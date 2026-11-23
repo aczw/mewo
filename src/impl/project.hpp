@@ -3,6 +3,7 @@
 #include "core/common.hpp"
 #include "core/pass.hpp"
 #include "core/pinned.hpp"
+#include "core/validation.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -37,8 +38,20 @@ class Project : private Pinned {
   Revision structure_revision() const { return structure_revision_; }
 
   /**
-   * @return The new pass' ID, or nothing if the name breaks the name rules
-   * or another pass already has it (compared case-insensitively).
+   * Checks whether `name` could be used for a pass. We follow the name rules and check
+   * no other pass has the same name, compared case-insensitively.
+   *
+   * @param except The pass being renamed, whose own name doesn't count as taken. Nothing when
+   * checking a name for a new pass.
+   * @return Nothing if the name can be used, otherwise the first error found.
+   */
+  std::optional<NameError> check_pass_name(
+    std::string_view name,
+    std::optional<Pass::Id> except = std::nullopt
+  ) const;
+
+  /**
+   * @return The new pass' ID, or nothing if `check_pass_name` rejects the name.
    */
   std::optional<Pass::Id> add_pass(std::string name, std::string source);
 
@@ -58,8 +71,8 @@ class Project : private Pinned {
    * Renames the pass. Bumps no revision, since sessions don't depend on pass names. A pass can be
    * renamed to a different capitalization of its own name.
    *
-   * @return True if the operation succeeded, false if the pass with the given ID was not found,
-   * the name breaks the name rules, or another pass already has it.
+   * @return True if the operation succeeded, false if the pass with the given ID was not found or
+   * `check_pass_name` rejects the name.
    */
   bool set_pass_name(Pass::Id pass_id, std::string new_name);
 
