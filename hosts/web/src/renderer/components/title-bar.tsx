@@ -1,8 +1,9 @@
 import { Button } from "@base-ui/react";
-import { ChevronDown, MenuIcon } from "lucide-react";
+import { MenuIcon } from "lucide-react";
 
 import { useEngineSnapshot } from "../engine/context";
 import { Wordmark } from "./logo/wordmark";
+import { ProjectButton } from "./project-button";
 
 const TitleBar = () => {
   const { selection, passes } = useEngineSnapshot();
@@ -34,13 +35,7 @@ const TitleBar = () => {
           </Button>
         )}
 
-        <Button
-          onClick={() => alert("project!")}
-          className="btn btn-icon btn-accent shrink-0 [app-region:no-drag]"
-        >
-          <h1>Untitled</h1>
-          <ChevronDown className="size-(--text-base)" />
-        </Button>
+        <ProjectButton />
 
         <p className="truncate leading-none">{sourceName}</p>
       </nav>

@@ -25,8 +25,8 @@ class Project implements Disposable {
     return readCString(wasm._project_get_name(this.handle));
   }
 
-  setName(name: string): void {
-    withCStrings([name], ([n]) => wasm._project_set_name(this.handle, n!));
+  setName(newName: string): void {
+    withCStrings([newName], ([n]) => wasm._project_set_name(this.handle, n!));
     check(undefined, "failed to rename project");
   }
 

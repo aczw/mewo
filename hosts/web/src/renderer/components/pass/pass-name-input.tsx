@@ -4,16 +4,7 @@ import { useState } from "react";
 
 import { MewoNameCheck, type Pass } from "../../../mewo/types";
 import { useEngine } from "../../engine/context";
-
-const kNameErrorMessages = {
-  [MewoNameCheck.Empty]: "Name cannot be empty",
-  [MewoNameCheck.TooLong]: "Name is too long",
-  [MewoNameCheck.InvalidCharacter]: "Name has invalid characters",
-  [MewoNameCheck.LeadingOrTrailing]:
-    "Name cannot have leading or trailing whitespace or periods",
-  [MewoNameCheck.Reserved]: "Name cannot use a reserved name",
-  [MewoNameCheck.Taken]: "Name is already taken",
-};
+import { kIconSize, kNameErrorMessages } from "../../scripts/constants";
 
 type Props = {
   pass: Pass;
@@ -28,10 +19,7 @@ const PassNameInput = ({ pass, onDone }: Props) => {
   const check = engine.checkPassName(trimmed, pass.id);
 
   const commitName = () => {
-    console.log(trimmed);
-    if (check === MewoNameCheck.Ok && trimmed !== pass.name)
-      engine.renamePass(pass.id, trimmed);
-    console.log("here");
+    if (check === MewoNameCheck.Ok && trimmed !== pass.name) engine.renamePass(pass.id, trimmed);
     onDone();
   };
 
@@ -50,7 +38,6 @@ const PassNameInput = ({ pass, onDone }: Props) => {
             onDone();
           }
         }}
-        defaultValue={pass.name}
         placeholder={pass.name}
         aria-invalid={check !== MewoNameCheck.Ok}
         className="min-w-0 rounded-md bg-surface px-2 py-1 leading-none text-fg-normal placeholder:text-fg-subtle focus:outline-2 focus:outline-accent-light"
@@ -58,7 +45,7 @@ const PassNameInput = ({ pass, onDone }: Props) => {
       {check !== MewoNameCheck.Ok && (
         <div className="flex items-start gap-x-1.5 text-sm">
           <span className="flex h-lh items-center">
-            <BadgeExclamationPointIcon size={12} className="shrink-0" />
+            <BadgeExclamationPointIcon size={0.875 * kIconSize} className="shrink-0" />
           </span>
           <p>{kNameErrorMessages[check]}</p>
         </div>

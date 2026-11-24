@@ -34,6 +34,9 @@ type EngineSnapshot = {
     passes: ReadonlySet<PassId>;
     common: boolean;
   };
+  project: {
+    name: string;
+  };
 };
 type FrameStats = { deltaTime: number; sessionTime: number; dimensions: Dimensions };
 
@@ -207,6 +210,15 @@ class Engine implements Disposable {
     this.#sessionHolder.value?.reset();
   }
 
+  setProjectName(newName: string) {
+    this.#project.setName(newName);
+    this.#emit();
+  }
+
+  checkProjectName(proposedName: string): MewoNameCheck {
+    return Project.checkName(proposedName);
+  }
+
   createSurfaceAndAttachCanvas(canvas: HTMLCanvasElement): () => void {
     if (this.#surface !== null) throw new Error("canvas is already attached");
 
@@ -329,6 +341,9 @@ class Engine implements Disposable {
       dirty: {
         passes: new Set(this.#pendingPasses.keys()),
         common: this.#pendingCommon !== null,
+      },
+      project: {
+        name: this.#project.getName(),
       },
     };
   }
