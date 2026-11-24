@@ -4,8 +4,7 @@ import { check, readCString, wasm, withCStrings } from "../wasm";
 class Project implements Disposable {
   #handle: Ptr;
 
-  /** Empty means `"Untitled"`. */
-  constructor(firstPassName: string, firstPassSource: string, projectName: string = "") {
+  constructor(projectName: string, firstPassName: string, firstPassSource: string) {
     const handle = withCStrings([projectName, firstPassName, firstPassSource], ([pn, n, s]) =>
       wasm._project_create(pn!, n!, s!),
     );

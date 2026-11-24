@@ -134,7 +134,6 @@ void surface_resize(mewo_surface_t* surface, uint32_t width, uint32_t height) {
   mewo_surface_resize(surface, width, height);
 }
 
-/** An empty `name` means `"Untitled"`. */
 EMSCRIPTEN_KEEPALIVE
 mewo_project_t* project_create(
   const char* name,

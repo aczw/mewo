@@ -62,8 +62,7 @@ typedef enum mewo_name_check {
  */
 typedef struct mewo_project_descriptor {
   /**
-   * Name of the project. Must follow the name rules. Empty (zero-initialized) means the project
-   * is assigned the name "Untitled."
+   * Name of the project. Must follow the name rules.
    */
   mewo_string_view_t name;
   mewo_string_view_t first_pass_name;
@@ -111,8 +110,7 @@ mewo_string_view_t mewo_project_get_name(mewo_project_t* project);
  * Renames the project.
  *
  * @param project Pointer to the project.
- * @param name New name. Must follow the name rules (see `mewo_project_create()`). Unlike in the
- * descriptor, empty is rejected rather than meaning `"Untitled"`.
+ * @param name New name. Must follow the name rules (see `mewo_project_create()`).
  * @return `MEWO_ERROR_INVALID_ARGUMENT` if the string view is invalid or the name breaks the name
  * rules, and `MEWO_SUCCESS` otherwise. On failure the project keeps its old name.
  */

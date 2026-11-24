@@ -70,7 +70,7 @@ class Engine implements Disposable {
 
   constructor() {
     this.#runtime = this.#stack.use(new Runtime());
-    this.#project = this.#stack.use(new Project("Pass 1", kDefaultPassSource));
+    this.#project = this.#stack.use(new Project("Untitled", "Pass 1", kDefaultPassSource));
     this.#sessionHolder = this.#stack.use(new Mutable<Session>());
 
     this.#selection = { kind: "pass", id: this.#project.getPassId(0)! };

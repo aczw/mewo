@@ -362,6 +362,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     return SDL_APP_FAILURE;
 
   mewo_project_descriptor_t project_desc = {0};
+  project_desc.name = (mewo_string_view_t){.data = "Untitled", .length = MEWO_STRING_VIEW_SENTINEL};
   project_desc.first_pass_name = (mewo_string_view_t){.data = "Pass 1", .length = 6};
   project_desc.first_pass_source =
     (mewo_string_view_t){.data = kDefaultPassSource, sizeof(kDefaultPassSource) - 1};

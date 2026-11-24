@@ -48,19 +48,15 @@ mewo_result_t mewo_project_create(const mewo_project_descriptor_t* desc, mewo_pr
   *out = nullptr;
 
   try {
-    auto project_name_opt = mewo::impl::to_string(desc->name);
+    auto project_name_opt = mewo::impl::to_std_string_view(desc->name);
     auto name_opt = mewo::impl::to_string(desc->first_pass_name);
     auto source_opt = mewo::impl::to_string(desc->first_pass_source);
 
     if (!project_name_opt || !name_opt || !source_opt)
       return MEWO_ERROR_INVALID_ARGUMENT;
 
-    // An empty name means the default, so zero-initialized descriptors work
-    if (project_name_opt->empty())
-      project_name_opt = std::nullopt;
-
     auto project_opt = mewo::impl::Project::create(
-      std::move(project_name_opt), std::move(name_opt.value()), std::move(source_opt.value())
+      project_name_opt.value(), std::move(name_opt.value()), std::move(source_opt.value())
     );
 
     if (!project_opt)

@@ -23,9 +23,9 @@ class Project : private Pinned {
     kFailedBecauseLast,
   };
 
-  /** @return Nothing if the first pass name breaks the name rules. */
+  /** @return Nothing if the project name or the first pass name breaks the name rules. */
   static std::optional<std::unique_ptr<Project>> create(
-    std::optional<std::string> project_name,
+    std::string_view project_name,
     std::string&& first_pass_name,
     std::string&& first_pass_source
   );

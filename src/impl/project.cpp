@@ -16,14 +16,14 @@
 namespace mewo::impl {
 
 std::optional<std::unique_ptr<Project>> Project::create(
-  std::optional<std::string> project_name,
+  std::string_view project_name,
   std::string&& first_pass_name,
   std::string&& first_pass_source
 ) {
   // Constructor is private so can't use `std::make_unique`
   std::unique_ptr<Project> project(new Project());
 
-  if (!project->set_name(project_name.value_or("Untitled")))
+  if (!project->set_name(project_name))
     return std::nullopt;
 
   if (!project->add_pass(std::move(first_pass_name), std::move(first_pass_source)))
