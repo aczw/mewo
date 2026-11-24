@@ -40,46 +40,52 @@ typedef struct mewo_diagnostic {
   uint64_t column;
 } mewo_diagnostic_t;
 
-typedef enum mewo_pass_name_check {
-  MEWO_PASS_NAME_CHECK_OK = 0,
-  MEWO_PASS_NAME_CHECK_EMPTY,
+typedef enum mewo_name_check {
+  MEWO_NAME_CHECK_OK = 0,
+  MEWO_NAME_CHECK_EMPTY,
   /** Longer than 64 characters. */
-  MEWO_PASS_NAME_CHECK_TOO_LONG,
+  MEWO_NAME_CHECK_TOO_LONG,
   /** Contains a character outside the allowed set. */
-  MEWO_PASS_NAME_CHECK_INVALID_CHARACTER,
+  MEWO_NAME_CHECK_INVALID_CHARACTER,
   /** Starts or ends with a space or `.` */
-  MEWO_PASS_NAME_CHECK_LEADING_OR_TRAILING,
+  MEWO_NAME_CHECK_LEADING_OR_TRAILING,
   /** A Windows reserved device name. */
-  MEWO_PASS_NAME_CHECK_RESERVED,
+  MEWO_NAME_CHECK_RESERVED,
   /** Another pass already has this name, compared case-insensitively. */
-  MEWO_PASS_NAME_CHECK_TAKEN,
-  MEWO_PASS_NAME_CHECK_FORCE_INT = MEWO_ENUM_FORCE_INT,
-} mewo_pass_name_check_t;
+  MEWO_NAME_CHECK_TAKEN,
+  MEWO_NAME_CHECK_FORCE_INT = MEWO_ENUM_FORCE_INT,
+} mewo_name_check_t;
 
 /**
  * A project always has at least 1 pass. Therefore, the descriptor for the project asks you
  * to provide the first pass name and source.
  */
 typedef struct mewo_project_descriptor {
+  /**
+   * Name of the project. Must follow the name rules. Empty (zero-initialized) means the project
+   * is assigned the name "Untitled."
+   */
+  mewo_string_view_t name;
   mewo_string_view_t first_pass_name;
   mewo_string_view_t first_pass_source;
 } mewo_project_descriptor_t;
 
 /**
- * Pass names become file names when a project is saved, so they must be valid on every OS:
+ * Project and pass names become file names when a project is saved, so they must be valid on
+ * every OS:
  *
  * - 1 to 64 characters.
  * - Only ASCII letters and digits, space, `_`, `-`, `(`, `)`, `+`, and `.`
  * - No leading or trailing space or `.`
  * - Not a Windows reserved device name (`CON`, `PRN`, `AUX`, `NUL`, `COM0`-`COM9`,
  *   `LPT0`-`LPT9`), compared case-insensitively against the part before the first `.`
- * - Unique within the project, compared case-insensitively.
+ * - Pass names only: unique within the project, compared case-insensitively.
  *
  * @param desc Pointer to the project descriptor.
  * @param out Out parameter where a pointer to the project will be stored. Set to `NULL` on
  * failure.
- * @return `MEWO_ERROR_INVALID_ARGUMENT` if a string view is invalid or the first pass name breaks
- * the pass name rules, and `MEWO_SUCCESS` otherwise.
+ * @return `MEWO_ERROR_INVALID_ARGUMENT` if a string view is invalid or the project name or first
+ * pass name breaks the name rules, and `MEWO_SUCCESS` otherwise.
  */
 mewo_result_t mewo_project_create(const mewo_project_descriptor_t* desc, mewo_project_t** out);
 
@@ -89,6 +95,39 @@ mewo_result_t mewo_project_create(const mewo_project_descriptor_t* desc, mewo_pr
  * @param project Pointer to the project. If `NULL` is passed, nothing happens.
  */
 void mewo_project_destroy(mewo_project_t* project);
+
+/**
+ * Gets the project's name.
+ *
+ * The returned view points into the project. It is valid until the next call that modifies the
+ * project or until the project is destroyed.
+ *
+ * @param project Pointer to the project.
+ * @return A view of the name. Never empty.
+ */
+mewo_string_view_t mewo_project_get_name(mewo_project_t* project);
+
+/**
+ * Renames the project.
+ *
+ * @param project Pointer to the project.
+ * @param name New name. Must follow the name rules (see `mewo_project_create()`). Unlike in the
+ * descriptor, empty is rejected rather than meaning `"Untitled"`.
+ * @return `MEWO_ERROR_INVALID_ARGUMENT` if the string view is invalid or the name breaks the name
+ * rules, and `MEWO_SUCCESS` otherwise. On failure the project keeps its old name.
+ */
+mewo_result_t mewo_project_set_name(mewo_project_t* project, mewo_string_view_t name);
+
+/**
+ * Checks whether a name could be used for a project.
+ *
+ * @param name The name to check.
+ * @param out Out parameter where the result will be stored. Set to `MEWO_NAME_CHECK_OK` on
+ * failure.
+ * @return `MEWO_ERROR_INVALID_ARGUMENT` if the string view is invalid, and `MEWO_SUCCESS`
+ * otherwise. A rejected name is still `MEWO_SUCCESS`.
+ */
+mewo_result_t mewo_check_project_name(mewo_string_view_t name, mewo_name_check_t* out);
 
 mewo_result_t mewo_project_set_pass_source(
   mewo_project_t* project,
@@ -130,7 +169,7 @@ mewo_result_t mewo_project_set_common_source(mewo_project_t* project, mewo_strin
  * @param pass_id The pass being renamed, whose own name (in any capitalization) doesn't count as
  * taken, or `MEWO_PASS_ID_NONE` when checking a name for a new pass.
  * @param name The name to check.
- * @param out Out parameter where the result will be stored. Set to `MEWO_PASS_NAME_CHECK_OK` on
+ * @param out Out parameter where the result will be stored. Set to `MEWO_NAME_CHECK_OK` on
  * failure.
  * @return `MEWO_ERROR_INVALID_ARGUMENT` if the pass ID is neither `MEWO_PASS_ID_NONE` nor a pass in
  * the project, or the string view is invalid, and `MEWO_SUCCESS` otherwise. A rejected name is
@@ -140,7 +179,7 @@ mewo_result_t mewo_project_check_pass_name(
   mewo_project_t* project,
   mewo_pass_id_t pass_id,
   mewo_string_view_t name,
-  mewo_pass_name_check_t* out
+  mewo_name_check_t* out
 );
 
 /**

@@ -4,6 +4,7 @@
 #include <mewo/mewo.h>
 
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -29,7 +30,7 @@ constexpr mewo_project_descriptor_t kDescriptor = {
 
 /** A project whose single pass is named `kName` with source `kSource`. */
 std::unique_ptr<Project> create_project() {
-  std::optional<std::unique_ptr<Project>> project = Project::create(kName, kSource);
+  std::optional<std::unique_ptr<Project>> project = Project::create(std::nullopt, kName, kSource);
   REQUIRE(project);
   return std::move(project.value());
 }
@@ -70,9 +71,7 @@ TEST_CASE("mewo_project_create rejects an invalid first pass name", "[project][c
     desc.first_pass_name = {"con.v2", MEWO_STRING_VIEW_SENTINEL};
   }
 
-  SECTION("an invalid string view") {
-    desc.first_pass_name = {nullptr, 4};
-  }
+  SECTION("an invalid string view") { desc.first_pass_name = {nullptr, 4}; }
 
   CHECK(mewo_project_create(&desc, &project) == MEWO_ERROR_INVALID_ARGUMENT);
   CHECK(project == nullptr);
@@ -106,7 +105,10 @@ TEST_CASE("mewo_project_add_pass rejects invalid and taken names", "[project][c_
   mewo_project_destroy(project);
 }
 
-TEST_CASE("mewo_project_check_pass_name reports why a name can't be used", "[project][c_api][names]") {
+TEST_CASE(
+  "mewo_project_check_pass_name reports why a name can't be used",
+  "[project][c_api][names]"
+) {
   mewo_project_t* project = nullptr;
   REQUIRE(mewo_project_create(&kDescriptor, &project) == MEWO_SUCCESS);
   const mewo_pass_id_t first = mewo_project_get_pass_id(project, 0);
@@ -119,66 +121,131 @@ TEST_CASE("mewo_project_check_pass_name reports why a name can't be used", "[pro
   );
 
   auto check = [&](mewo_pass_id_t pass_id, mewo_string_view_t name) {
-    mewo_pass_name_check_t result = MEWO_PASS_NAME_CHECK_FORCE_INT;
+    mewo_name_check_t result = MEWO_NAME_CHECK_FORCE_INT;
     REQUIRE(mewo_project_check_pass_name(project, pass_id, name, &result) == MEWO_SUCCESS);
     return result;
   };
 
   SECTION("maps every rule to its own value") {
-    CHECK(check(MEWO_PASS_ID_NONE, {"Bloom", MEWO_STRING_VIEW_SENTINEL}) == MEWO_PASS_NAME_CHECK_OK);
-    CHECK(check(MEWO_PASS_ID_NONE, {"", 0}) == MEWO_PASS_NAME_CHECK_EMPTY);
+    CHECK(check(MEWO_PASS_ID_NONE, {"Bloom", MEWO_STRING_VIEW_SENTINEL}) == MEWO_NAME_CHECK_OK);
+    CHECK(check(MEWO_PASS_ID_NONE, {"", 0}) == MEWO_NAME_CHECK_EMPTY);
     const std::string too_long(65, 'a');
-    CHECK(
-      check(MEWO_PASS_ID_NONE, {too_long.data(), too_long.size()}) ==
-      MEWO_PASS_NAME_CHECK_TOO_LONG
-    );
+    CHECK(check(MEWO_PASS_ID_NONE, {too_long.data(), too_long.size()}) == MEWO_NAME_CHECK_TOO_LONG);
     CHECK(
       check(MEWO_PASS_ID_NONE, {"a/b", MEWO_STRING_VIEW_SENTINEL}) ==
-      MEWO_PASS_NAME_CHECK_INVALID_CHARACTER
+      MEWO_NAME_CHECK_INVALID_CHARACTER
     );
     CHECK(
       check(MEWO_PASS_ID_NONE, {"blur.", MEWO_STRING_VIEW_SENTINEL}) ==
-      MEWO_PASS_NAME_CHECK_LEADING_OR_TRAILING
+      MEWO_NAME_CHECK_LEADING_OR_TRAILING
     );
-    CHECK(
-      check(MEWO_PASS_ID_NONE, {"con", MEWO_STRING_VIEW_SENTINEL}) == MEWO_PASS_NAME_CHECK_RESERVED
-    );
-    CHECK(
-      check(MEWO_PASS_ID_NONE, {"bLUR", MEWO_STRING_VIEW_SENTINEL}) == MEWO_PASS_NAME_CHECK_TAKEN
-    );
+    CHECK(check(MEWO_PASS_ID_NONE, {"con", MEWO_STRING_VIEW_SENTINEL}) == MEWO_NAME_CHECK_RESERVED);
+    CHECK(check(MEWO_PASS_ID_NONE, {"bLUR", MEWO_STRING_VIEW_SENTINEL}) == MEWO_NAME_CHECK_TAKEN);
   }
 
   SECTION("respects the explicit length, not the NUL terminator") {
     // "Blur" is taken, but only "Bl" is checked
-    CHECK(check(MEWO_PASS_ID_NONE, {"Blur", 2}) == MEWO_PASS_NAME_CHECK_OK);
+    CHECK(check(MEWO_PASS_ID_NONE, {"Blur", 2}) == MEWO_NAME_CHECK_OK);
   }
 
   SECTION("a pass's own name isn't taken when renaming it") {
-    CHECK(check(second, {"BLUR", MEWO_STRING_VIEW_SENTINEL}) == MEWO_PASS_NAME_CHECK_OK);
-    CHECK(check(first, {"Blur", MEWO_STRING_VIEW_SENTINEL}) == MEWO_PASS_NAME_CHECK_TAKEN);
+    CHECK(check(second, {"BLUR", MEWO_STRING_VIEW_SENTINEL}) == MEWO_NAME_CHECK_OK);
+    CHECK(check(first, {"Blur", MEWO_STRING_VIEW_SENTINEL}) == MEWO_NAME_CHECK_TAKEN);
   }
 
   SECTION("rejects an unknown pass ID and an invalid string view") {
-    mewo_pass_name_check_t result = MEWO_PASS_NAME_CHECK_TAKEN;
+    mewo_name_check_t result = MEWO_NAME_CHECK_TAKEN;
 
     CHECK(
       mewo_project_check_pass_name(
         project, second + 100, {"Bloom", MEWO_STRING_VIEW_SENTINEL}, &result
       ) == MEWO_ERROR_INVALID_ARGUMENT
     );
-    CHECK(result == MEWO_PASS_NAME_CHECK_OK);
+    CHECK(result == MEWO_NAME_CHECK_OK);
 
-    result = MEWO_PASS_NAME_CHECK_TAKEN;
+    result = MEWO_NAME_CHECK_TAKEN;
     CHECK(
       mewo_project_check_pass_name(project, MEWO_PASS_ID_NONE, {nullptr, 3}, &result) ==
       MEWO_ERROR_INVALID_ARGUMENT
     );
-    CHECK(result == MEWO_PASS_NAME_CHECK_OK);
+    CHECK(result == MEWO_NAME_CHECK_OK);
   }
 
   CHECK(mewo_project_get_pass_count(project) == 2);
 
   mewo_project_destroy(project);
+}
+
+TEST_CASE("mewo_project_create names the project", "[project][c_api][names]") {
+  mewo_project_descriptor_t desc = kDescriptor;
+  mewo_project_t* project = nullptr;
+
+  SECTION("an empty name means Untitled") {
+    REQUIRE(mewo_project_create(&desc, &project) == MEWO_SUCCESS);
+    mewo_string_view_t name = mewo_project_get_name(project);
+    CHECK(std::string_view(name.data, name.length) == "Untitled");
+  }
+
+  SECTION("a given name is kept") {
+    desc.name = {"My Shader", MEWO_STRING_VIEW_SENTINEL};
+    REQUIRE(mewo_project_create(&desc, &project) == MEWO_SUCCESS);
+    mewo_string_view_t name = mewo_project_get_name(project);
+    CHECK(std::string_view(name.data, name.length) == "My Shader");
+  }
+
+  SECTION("a name that breaks the rules or an invalid view is rejected") {
+    desc.name = GENERATE(
+      mewo_string_view_t{"a/b", MEWO_STRING_VIEW_SENTINEL},
+      mewo_string_view_t{"con", MEWO_STRING_VIEW_SENTINEL},
+      mewo_string_view_t{nullptr, 3}
+    );
+    CHECK(mewo_project_create(&desc, &project) == MEWO_ERROR_INVALID_ARGUMENT);
+    CHECK(project == nullptr);
+  }
+
+  mewo_project_destroy(project);
+}
+
+TEST_CASE("mewo_project_set_name renames the project", "[project][c_api][names]") {
+  mewo_project_t* project = nullptr;
+  REQUIRE(mewo_project_create(&kDescriptor, &project) == MEWO_SUCCESS);
+
+  auto name = [&] {
+    mewo_string_view_t view = mewo_project_get_name(project);
+    return std::string(view.data, view.length);
+  };
+
+  CHECK(mewo_project_set_name(project, {"Bloom Test", MEWO_STRING_VIEW_SENTINEL}) == MEWO_SUCCESS);
+  CHECK(name() == "Bloom Test");
+
+  // Rejected names keep the old one; empty is rejected here, unlike in the descriptor
+  CHECK(mewo_project_set_name(project, {"", 0}) == MEWO_ERROR_INVALID_ARGUMENT);
+  CHECK(
+    mewo_project_set_name(project, {"trailing.", MEWO_STRING_VIEW_SENTINEL}) ==
+    MEWO_ERROR_INVALID_ARGUMENT
+  );
+  CHECK(mewo_project_set_name(project, {nullptr, 3}) == MEWO_ERROR_INVALID_ARGUMENT);
+  CHECK(name() == "Bloom Test");
+
+  mewo_project_destroy(project);
+}
+
+TEST_CASE("mewo_check_project_name reports why a name can't be used", "[project][c_api][names]") {
+  auto check = [](mewo_string_view_t name) {
+    mewo_name_check_t result = MEWO_NAME_CHECK_FORCE_INT;
+    REQUIRE(mewo_check_project_name(name, &result) == MEWO_SUCCESS);
+    return result;
+  };
+
+  CHECK(check({"My Shader", MEWO_STRING_VIEW_SENTINEL}) == MEWO_NAME_CHECK_OK);
+  CHECK(check({"", 0}) == MEWO_NAME_CHECK_EMPTY);
+  CHECK(check({"a|b", MEWO_STRING_VIEW_SENTINEL}) == MEWO_NAME_CHECK_INVALID_CHARACTER);
+  CHECK(check({" a", MEWO_STRING_VIEW_SENTINEL}) == MEWO_NAME_CHECK_LEADING_OR_TRAILING);
+  CHECK(check({"LPT1.v2", MEWO_STRING_VIEW_SENTINEL}) == MEWO_NAME_CHECK_RESERVED);
+
+  mewo_name_check_t result = MEWO_NAME_CHECK_TAKEN;
+  CHECK(mewo_check_project_name({nullptr, 3}, &result) == MEWO_ERROR_INVALID_ARGUMENT);
+  CHECK(result == MEWO_NAME_CHECK_OK);
 }
 
 TEST_CASE("set_pass_source edits one pass and bumps its revision", "[project]") {
@@ -401,9 +468,9 @@ TEST_CASE("add_pass rejects invalid and taken names", "[project][structure][name
 }
 
 TEST_CASE("Project::create rejects an invalid first pass name", "[project][names]") {
-  CHECK_FALSE(Project::create("", kSource));
-  CHECK_FALSE(Project::create("a:b", kSource));
-  CHECK_FALSE(Project::create("NUL", kSource));
+  CHECK_FALSE(Project::create(std::nullopt, "", kSource));
+  CHECK_FALSE(Project::create(std::nullopt, "a:b", kSource));
+  CHECK_FALSE(Project::create(std::nullopt, "NUL", kSource));
 }
 
 TEST_CASE("check_pass_name reports why a name can't be used", "[project][names]") {
@@ -489,9 +556,7 @@ TEST_CASE("set_pass_name validates the new name", "[project][names]") {
     CHECK(project->passes().front().name() == "PASS");
   }
 
-  SECTION("an unknown ID fails") {
-    CHECK_FALSE(project->set_pass_name(other + 100, "Bloom"));
-  }
+  SECTION("an unknown ID fails") { CHECK_FALSE(project->set_pass_name(other + 100, "Bloom")); }
 }
 
 TEST_CASE("remove_pass removes one pass and keeps the rest in order", "[project][structure]") {

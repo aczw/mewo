@@ -25,9 +25,14 @@ class Project : private Pinned {
 
   /** @return Nothing if the first pass name breaks the name rules. */
   static std::optional<std::unique_ptr<Project>> create(
+    std::optional<std::string> project_name,
     std::string&& first_pass_name,
     std::string&& first_pass_source
   );
+
+  const std::string& name() const { return name_; }
+
+  bool set_name(std::string_view new_name);
 
   const std::vector<Pass>& passes() const { return passes_; }
 
@@ -85,6 +90,8 @@ class Project : private Pinned {
 
   /** True if a pass other than `except` has this name, compared case-insensitively. */
   bool is_name_taken(std::string_view name, std::optional<Pass::Id> except = std::nullopt) const;
+
+  std::string name_;
 
   /**
    * Single source of truth for the order in which passes operate.

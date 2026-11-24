@@ -7,7 +7,7 @@ import {
   type Dimensions,
   MewoDiagnosticSource,
   MewoEvent,
-  MewoPassNameCheck,
+  MewoNameCheck,
   type Pass,
   type PassId,
 } from "../../mewo/types";
@@ -103,7 +103,7 @@ class Engine implements Disposable {
     do {
       passName = `Pass ${counter}`;
       counter += 1;
-    } while (this.#project.checkPassName(passName) !== MewoPassNameCheck.Ok);
+    } while (this.#project.checkPassName(passName) !== MewoNameCheck.Ok);
 
     this.#selection = {
       kind: "pass",
@@ -143,7 +143,7 @@ class Engine implements Disposable {
     this.#emit();
   }
 
-  checkPassName(proposedName: string, passIdToRename: PassId): MewoPassNameCheck {
+  checkPassName(proposedName: string, passIdToRename: PassId): MewoNameCheck {
     return this.#project.checkPassName(proposedName, passIdToRename);
   }
 

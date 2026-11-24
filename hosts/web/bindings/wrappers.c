@@ -161,7 +161,7 @@ void project_set_pass_name(mewo_project_t* project, mewo_pass_id_t pass_id, cons
 /** `pass_id` is `MEWO_PASS_ID_NONE` when checking a name for a new pass. */
 EMSCRIPTEN_KEEPALIVE
 int project_check_pass_name(mewo_project_t* project, mewo_pass_id_t pass_id, const char* name) {
-  mewo_pass_name_check_t check = MEWO_PASS_NAME_CHECK_OK;
+  mewo_name_check_t check = MEWO_NAME_CHECK_OK;
   stored_result = mewo_project_check_pass_name(project, pass_id, to_string_view(name), &check);
   return (int)check;
 }

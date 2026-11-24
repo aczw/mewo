@@ -16,16 +16,47 @@
 namespace mewo::impl {
 
 std::optional<std::unique_ptr<Project>> Project::create(
+  std::optional<std::string> project_name,
   std::string&& first_pass_name,
   std::string&& first_pass_source
 ) {
   // Constructor is private so can't use `std::make_unique`
   std::unique_ptr<Project> project(new Project());
 
+  if (!project->set_name(project_name.value_or("Untitled")))
+    return std::nullopt;
+
   if (!project->add_pass(std::move(first_pass_name), std::move(first_pass_source)))
     return std::nullopt;
 
   return project;
+}
+
+bool Project::set_name(std::string_view new_name) {
+  if (check_name(new_name))
+    return false;
+
+  name_ = new_name;
+  return true;
+}
+
+std::optional<NameError> Project::check_pass_name(
+  std::string_view name,
+  std::optional<Pass::Id> except
+) const {
+  if (auto error = check_name(name))
+    return error;
+
+  if (is_name_taken(name, except))
+    return NameError::kTaken;
+
+  return std::nullopt;
+}
+
+bool Project::is_name_taken(std::string_view name, std::optional<Pass::Id> except) const {
+  return std::ranges::any_of(passes_, [&](const Pass& pass) {
+    return pass.id() != except && equals_ignore_case(pass.name(), name);
+  });
 }
 
 std::optional<Pass::Id> Project::add_pass(std::string name, std::string source) {
@@ -109,25 +140,6 @@ bool Project::set_pass_name(Pass::Id pass_id, std::string new_name) {
 void Project::set_common_source(std::string new_source) {
   common_source_ = std::move(new_source);
   common_revision_ += 1;
-}
-
-std::optional<NameError> Project::check_pass_name(
-  std::string_view name,
-  std::optional<Pass::Id> except
-) const {
-  if (auto error = check_name(name))
-    return error;
-
-  if (is_name_taken(name, except))
-    return NameError::kTaken;
-
-  return std::nullopt;
-}
-
-bool Project::is_name_taken(std::string_view name, std::optional<Pass::Id> except) const {
-  return std::ranges::any_of(passes_, [&](const Pass& pass) {
-    return pass.id() != except && equals_ignore_case(pass.name(), name);
-  });
 }
 
 Pass* Project::find_pass(Pass::Id pass_id) {

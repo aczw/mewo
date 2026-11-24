@@ -17,7 +17,7 @@ type MewoResult = (typeof MewoResult)[keyof typeof MewoResult];
 const MewoPassCompileStatus = { Pending: 0, Success: 1, Error: 2 } as const;
 type MewoPassCompileStatus = (typeof MewoPassCompileStatus)[keyof typeof MewoPassCompileStatus];
 
-const MewoPassNameCheck = {
+const MewoNameCheck = {
   Ok: 0,
   Empty: 1,
   TooLong: 2,
@@ -26,7 +26,7 @@ const MewoPassNameCheck = {
   Reserved: 5,
   Taken: 6,
 } as const;
-type MewoPassNameCheck = (typeof MewoPassNameCheck)[keyof typeof MewoPassNameCheck];
+type MewoNameCheck = (typeof MewoNameCheck)[keyof typeof MewoNameCheck];
 
 const MewoDiagnosticSeverity = { Error: 0, Warning: 1, Info: 2 } as const;
 type MewoDiagnosticSeverity = (typeof MewoDiagnosticSeverity)[keyof typeof MewoDiagnosticSeverity];
@@ -69,7 +69,7 @@ export {
   MewoDiagnosticSource,
   MewoEvent,
   MewoPassCompileStatus,
-  MewoPassNameCheck,
+  MewoNameCheck,
   MewoResult,
   kNull,
   kPassIdNone,
