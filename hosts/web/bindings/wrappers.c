@@ -134,9 +134,15 @@ void surface_resize(mewo_surface_t* surface, uint32_t width, uint32_t height) {
   mewo_surface_resize(surface, width, height);
 }
 
+/** An empty `name` means `"Untitled"`. */
 EMSCRIPTEN_KEEPALIVE
-mewo_project_t* project_create(const char* first_pass_name, const char* first_pass_source) {
+mewo_project_t* project_create(
+  const char* name,
+  const char* first_pass_name,
+  const char* first_pass_source
+) {
   mewo_project_descriptor_t desc = {0};
+  desc.name = to_string_view(name);
   desc.first_pass_name = to_string_view(first_pass_name);
   desc.first_pass_source = to_string_view(first_pass_source);
 
@@ -147,6 +153,24 @@ mewo_project_t* project_create(const char* first_pass_name, const char* first_pa
 
 EMSCRIPTEN_KEEPALIVE
 void project_destroy(mewo_project_t* project) { mewo_project_destroy(project); }
+
+EMSCRIPTEN_KEEPALIVE
+const char* project_get_name(mewo_project_t* project) {
+  return to_c_string(mewo_project_get_name(project));
+}
+
+EMSCRIPTEN_KEEPALIVE
+void project_set_name(mewo_project_t* project, const char* name) {
+  stored_result = mewo_project_set_name(project, to_string_view(name));
+}
+
+/** Wraps `mewo_check_project_name`, which needs no project. */
+EMSCRIPTEN_KEEPALIVE
+int project_check_name(const char* name) {
+  mewo_name_check_t check = MEWO_NAME_CHECK_OK;
+  stored_result = mewo_check_project_name(to_string_view(name), &check);
+  return (int)check;
+}
 
 EMSCRIPTEN_KEEPALIVE
 void project_set_pass_source(mewo_project_t* project, mewo_pass_id_t pass_id, const char* source) {

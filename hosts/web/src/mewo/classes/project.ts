@@ -4,9 +4,10 @@ import { check, readCString, wasm, withCStrings } from "../wasm";
 class Project implements Disposable {
   #handle: Ptr;
 
-  constructor(firstPassName: string, firstPassSource: string) {
-    const handle = withCStrings([firstPassName, firstPassSource], ([n, s]) =>
-      wasm._project_create(n!, s!),
+  /** Empty means `"Untitled"`. */
+  constructor(firstPassName: string, firstPassSource: string, projectName: string = "") {
+    const handle = withCStrings([projectName, firstPassName, firstPassSource], ([pn, n, s]) =>
+      wasm._project_create(pn!, n!, s!),
     );
     this.#handle = check(handle, "project creation failed");
   }
@@ -14,6 +15,20 @@ class Project implements Disposable {
   get handle(): Ptr {
     if (this.#handle === kNull) throw new Error("project used after dispose");
     return this.#handle;
+  }
+
+  static checkName(name: string): MewoNameCheck {
+    const result = withCStrings([name], ([n]) => wasm._project_check_name(n!));
+    return check(result as MewoNameCheck, "failed to check project name");
+  }
+
+  getName(): string {
+    return readCString(wasm._project_get_name(this.handle));
+  }
+
+  setName(name: string): void {
+    withCStrings([name], ([n]) => wasm._project_set_name(this.handle, n!));
+    check(undefined, "failed to rename project");
   }
 
   setPassSource(passId: PassId, source: string): void {
