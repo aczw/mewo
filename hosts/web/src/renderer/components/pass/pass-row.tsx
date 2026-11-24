@@ -1,10 +1,11 @@
-import { Button, Input } from "@base-ui/react";
+import { Button } from "@base-ui/react";
 import { ArrowDownIcon, ArrowUpIcon, PencilIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 
-import type { Pass } from "../../mewo/types";
-import { useEngine, useEngineSnapshot } from "../engine/context";
-import { kIconSize } from "../scripts/constants";
+import type { Pass } from "../../../mewo/types";
+import { useEngine, useEngineSnapshot } from "../../engine/context";
+import { kIconSize } from "../../scripts/constants";
+import { PassNameInput } from "./pass-name-input";
 
 type Props = {
   index: number;
@@ -23,40 +24,21 @@ const PassRow = ({ index, pass, active, canDelete }: Props) => {
 
   return (
     <li
-      className="relative flex items-center justify-between gap-x-1.5 border-b border-b-border p-1.5 hover:bg-base data-[active='true']:bg-base"
+      className="relative flex items-start justify-between gap-x-1.5 border-b border-b-border px-1.5 py-2.5 hover:bg-base data-[active='true']:bg-base"
       data-active={active}
     >
-      <div className="flex min-w-0 items-center">
-        <p className="shrink-0 px-1.5 text-fg-subtle">{index + 1}</p>
+      <div className="flex min-w-0 items-start">
+        <p className="shrink-0 p-1.5 leading-none text-fg-subtle">{index + 1}</p>
 
         {active ? (
           isEditingName ? (
-            <Input
-              autoFocus
-              onFocus={(ev) => ev.currentTarget.select()}
-              onBlur={(ev) => {
-                const trimmed = ev.currentTarget.value.trim();
-                if (trimmed.length > 0) engine.renamePass(pass.id, trimmed);
-                setIsEditingName(false);
-              }}
-              onKeyDown={(ev) => {
-                if (ev.key === "Enter") {
-                  ev.currentTarget.blur();
-                } else if (ev.key === "Escape") {
-                  ev.currentTarget.value = pass.name;
-                  ev.currentTarget.blur();
-                }
-              }}
-              defaultValue={pass.name}
-              placeholder={pass.name}
-              className="min-w-0 rounded-md bg-surface px-2 py-0.75 leading-none text-fg-normal placeholder:text-fg-subtle focus:outline-2 focus:outline-accent-light"
-            />
+            <PassNameInput pass={pass} onDone={() => setIsEditingName(false)} />
           ) : (
             <Button
               className="btn btn-icon group min-w-0 hover:bg-overlay"
               onClick={() => setIsEditingName(true)}
             >
-              <span className="truncate">{pass.name}</span>
+              <span className="-my-0.5 truncate py-0.5">{pass.name}</span>
               <PencilIcon size={kIconSize} className="hidden shrink-0 group-hover:block" />
             </Button>
           )

@@ -3,7 +3,7 @@ import { AsteriskIcon, ComponentIcon, SquarePlusIcon } from "lucide-react";
 
 import { useEngine, useEngineSnapshot } from "../engine/context";
 import { kIconSize } from "../scripts/constants";
-import { PassList } from "./pass-list";
+import { PassList } from "./pass/pass-list";
 
 const Controller = () => {
   const engine = useEngine();
@@ -24,7 +24,7 @@ const Controller = () => {
 
       <div className="flex min-h-0 grow flex-col bg-surface">
         <Tabs.Panel value="passes" className="@container flex h-full flex-col">
-          <div className="flex shrink-0 items-center justify-between border-b border-b-border p-1.5">
+          <div className="flex shrink-0 items-center justify-between gap-x-1.5 border-b border-b-border p-1.5">
             <Button
               onClick={() => engine.addPass()}
               className="btn btn-icon w-1/2 hover:bg-overlay"
