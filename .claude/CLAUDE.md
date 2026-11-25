@@ -184,6 +184,7 @@ Ordered so each step builds on the previous one and is used by the next one or t
 **Later (split when reached)**
 12. Mouse: field-table entries, generated init filling a nested `mw.mouse`, `mewo_session_set_mouse`, host wiring. Independent; can move anywhere after step 3.
 13. Image inputs: host provides bytes, stb decode/upload, bind group 2 with `<name>_tex`/`<name>_smp`, black fallback, input-name validation. Its named inputs go in each manifest pass entry, and images become more loader-required paths under `assets/`.
+15. Standalone Common compile: the session also compiles Common + generated prelude as its own module (shader module + compilation info, no pipeline), giving Common its own diagnostics. Why: Common diagnostics today only come out of each pass's module (pass source → Common → prelude), and Tint's parser stops at the first error it can't resynchronize from (e.g. a stray identifier that starts a failing statement; a lone stray `/` is skipped), so a pass with its own error can hide Common's errors (the web host's Common count drops to 0). Decide first: Common may then not call functions defined in a pass (record the rule under "Shader contract"). Replaces the web host's merging of Common diagnostics across passes in `Engine.#readSnapshot`.
 
 ## Learning list
 Topics the user wants to learn through this project (teach from first principles when they come up):

@@ -1,5 +1,5 @@
 import { Button } from "@base-ui/react";
-import { InfoIcon, OctagonXIcon, TriangleAlertIcon } from "lucide-react";
+import { ComponentIcon, InfoIcon, OctagonXIcon, TriangleAlertIcon } from "lucide-react";
 
 import { MewoDiagnosticSeverity, MewoDiagnosticSource } from "../../../mewo/types";
 import { useEngineSnapshot } from "../../engine/context";
@@ -41,6 +41,16 @@ const DiagnosticsCount = ({ showDiagnostics, setShowDiagnostics }: Props) => {
           <InfoIcon size={kIconSize} />
           {count(MewoDiagnosticSeverity.Info)}
         </li>
+
+        {selection.kind === "pass" && (
+          <li>
+            <ComponentIcon size={kIconSize} />
+            {
+              commonDiagnostics.filter((diag) => diag.severity === MewoDiagnosticSeverity.Error)
+                .length
+            }
+          </li>
+        )}
       </ul>
     </Button>
   );
